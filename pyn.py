@@ -29,7 +29,7 @@ def main(argv=None, stdout=None, stderr=None):
 
 
 def run(args, stdout, stderr):
-    n = Parser()
+    n = NinjaParser()
     try:
         ast = n.parse(sample1)
         print(ast, file=stdout)
@@ -76,17 +76,18 @@ class NinjaParser(pymeta_helper.ParserBase):
 
 grammar    = decls:ds end -> ds
 
-decls      = spaces_or_comments decl:d decls:ds -> [d] + ds
-           | spaces_or_comments decl            -> [d]
-           | spaces_or_comments                 -> []
+decls      = spaces_or_comments decl:d  decls:ds -> [d] + ds
+           | spaces_or_comments decl:d           -> [d]
+           | spaces_or_comments                  -> []
 
 decl       = rule | build_edge | variable | default | reference | pool
 
-rule       = "rule" spaces ident:name eol indented_var+:vars -> ['rule', name, vars]
+rule       = "rule" spaces ident:n eol indented_var+:vs -> ['rule', n, vs]
 
-build_edge = "build" spaces outputs:os spaces ":" spaces inputs:is spaces optional_deps:ds -> ['build', os, is, ds]
+build_edge = "build" spaces paths:os spaces ":" spaces ident:rule spaces paths:ins "|" spaces targets:ts eol -> ['build', os, rule, ins, ts]
+build_edge = "build" spaces paths:os spaces ":" spaces ident:rule spaces paths:ins eol -> ['build', os, rule, ins, []]
 
-variable   = ident:name spaces "=" spaces values:v eol -> ['var', name, v]
+variable   = ident:n spaces "=" spaces values:v eol -> ['var', n, v]
 
 values     = (~eol anything)+:v  -> ''.join(v)
 
@@ -97,20 +98,27 @@ reference  = "subninja" spaces path:p  -> ['subninja', p]
 
 pool       = "pool" spaces ident:name eol indented_var+:vars -> ['pool', name, vars]
 
-indented_var = spaces variable:v -> v
+indented_var = indent variable:v -> v
 
 targets    = ident:i spaces targets:ts -> [i] + ts
            | ident:i                   -> [i]
 
-spaces_or_comments = (' '|'\t'|'\n'|comment)*
+indent     = (' '|'\t')+
+
+spaces_or_comments = (' '|'\t'|('$' '\n')|'\n'|comment)*
 
 comment    = "#" ~('\n') '\n'
 
 eol        = comment
-           | ' '* ~('$') '\n'
+           | ' '* ~('$' '\n') '\n'
 
-ident      = (letter|'_'):hd (letter)*:tl -> ''.join([hd] + tl)
+ident      = (letter|'_'|'$'):hd (letter)*:tl -> ''.join([hd] + tl)
 
+paths      = path:p spaces paths:ps -> [p] + ps
+           | path:p -> [p]
+
+path       = '"' (~('"'|'\n') anything)+:p '"' -> ''.join(p)
+           | (~(' '|':'|'='|eol) anything)+:p -> ''.join(p)
 """
 
 
