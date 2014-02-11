@@ -5,8 +5,6 @@ from __future__ import print_function
 import multiprocessing
 import argparse
 import sys
-import textwrap
-
 
 import pymeta_helper
 
@@ -74,46 +72,46 @@ def parse_args(argv):
 class NinjaParser(pymeta_helper.ParserBase):
     name = "pyn"
 
-    grammar = textwrap.dedent("""
+    grammar = """
 
-        grammar    = decls:ds end -> ds
+grammar    = decls:ds end -> ds
 
-        decls      = spaces_or_comments decl:d decls:ds -> [d] + ds
-                | spaces_or_comments decl            -> [d]
-                | spaces_or_comments                 -> []
+decls      = spaces_or_comments decl:d decls:ds -> [d] + ds
+           | spaces_or_comments decl            -> [d]
+           | spaces_or_comments                 -> []
 
-        decl       = rule | build_edge | variable | default | reference | pool
+decl       = rule | build_edge | variable | default | reference | pool
 
-        rule       = "rule" spaces ident:name eol indented_var+:vars -> ['rule', name, vars]
+rule       = "rule" spaces ident:name eol indented_var+:vars -> ['rule', name, vars]
 
-        build_edge = "build" spaces outputs:os spaces ":" spaces inputs:is spaces optional_deps:ds -> ['build', os, is, ds]
+build_edge = "build" spaces outputs:os spaces ":" spaces inputs:is spaces optional_deps:ds -> ['build', os, is, ds]
 
-        variable   = ident:name spaces "=" spaces values:v eol -> ['var', name, v]
+variable   = ident:name spaces "=" spaces values:v eol -> ['var', name, v]
 
-        values     = (~eol anything)+:v  -> ''.join(v)
+values     = (~eol anything)+:v  -> ''.join(v)
 
-        default    = "default" spaces targets:ts -> ['default', ts]
+default    = "default" spaces targets:ts -> ['default', ts]
 
-        reference  = "subninja" spaces path:p  -> ['subninja', p]
-                | "include" spaces path:p   -> ['import', p]
+reference  = "subninja" spaces path:p  -> ['subninja', p]
+           | "include" spaces path:p   -> ['import', p]
 
-        pool       = "pool" spaces ident:name eol indented_var+:vars -> ['pool', name, vars]
+pool       = "pool" spaces ident:name eol indented_var+:vars -> ['pool', name, vars]
 
-        indented_var = spaces variable:v -> v
+indented_var = spaces variable:v -> v
 
-        targets    = ident:i spaces targets:ts -> [i] + ts
-                | ident:i                   -> [i]
+targets    = ident:i spaces targets:ts -> [i] + ts
+           | ident:i                   -> [i]
 
-        spaces_or_comments = (' '|'\t'|'\n'|comment)*
+spaces_or_comments = (' '|'\t'|'\n'|comment)*
 
-        comment    = "#" ~('\n') '\n'
+comment    = "#" ~('\n') '\n'
 
-        eol        = comment
-                | ' '* ~('$') '\n'
+eol        = comment
+           | ' '* ~('$') '\n'
 
-        ident      = (letter|'_'):hd (letter)*:tl -> ''.join([hd] + tl)
+ident      = (letter|'_'):hd (letter)*:tl -> ''.join([hd] + tl)
 
-        """)
+"""
 
 
 if __name__ == '__main__':
