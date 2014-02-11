@@ -30,6 +30,7 @@ class ParserBase(object):
         except Exception as e:
             if isinstance(e, self.parser_module._MaybeParseError):
                 raise ParseError(parser.currentError.formatError(txt))
+            raise e
 
     def generated_grammar(self):
         if not os.path.exists(self.filename):
