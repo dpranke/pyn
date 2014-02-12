@@ -5,6 +5,7 @@ from __future__ import print_function
 import argparse
 import importlib
 import os
+import sys
 
 
 class ParseError(Exception):
@@ -67,7 +68,7 @@ class ParserBase(object):
                      'pylint')
             fp.write(runtime_str)
             fp.write('\n\n')
-            fp.write('%s = """%s"""\n\n' % (self.grammar_constant_name,
+            fp.write('%s = """\n%s\n"""\n\n' % (self.grammar_constant_name,
                                             self.grammar))
             fp.write('GrammarBase = OMetaBase\n')
             fp.write('\n\n')
@@ -98,7 +99,7 @@ def main():
     basename = os.path.basename(args.grammar[0]).replace('.pym', '')
     name = args.name or basename.capitalize()
 
-    p = ParserBase(grammar=grammar, name=name)
+    ParserBase(grammar=grammar, name=name)
 
 if __name__ == '__main__':
     main()

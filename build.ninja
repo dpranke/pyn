@@ -7,24 +7,23 @@ rule pytest
   description = pytest $in
 
 rule pymeta
-  command = python -c 'import pyn; pyn.NinjaParser().generate_parser_module()'
+  command = python pymeta_helper.py $in
   description = generating $out
 
 build lint : phony $
   .pylint.pymeta_helper.py $
   .pylint.pyn.py $
-  .pylint.pyn_parser.py $
-  .pylint.pyn_test.py
+  .pylint.ninja_parser.py $
+  .pylint.ninja_parser_test.py
 
-build test : phony .pytest.pyn_test.py
+build ninja_parser.py : pymeta ninja.pym
 
-build pyn_parser.py : pymeta pyn.py
+build test : phony .pytest.ninja_parser_test.py
 
+build .pylint.ninja_parser.py : pylint ninja_parser.py
+build .pylint.ninja_parser_test.py : pylint ninja_parser_test.py
 build .pylint.pyn.py : pylint pyn.py
-build .pylint.pyn_test.py : pylint pyn_test.py
 build .pylint.pymeta_helper.py : pylint pymeta_helper.py
-build .pylint.pyn_parser.py : pylint pyn_parser.py
-
-build .pytest.pyn_test.py : pytest pyn_test.py | pyn_parser.py
+build .pytest.ninja_parser_test.py : pytest ninja_parser_test.py | ninja_parser.py
 
 default lint test

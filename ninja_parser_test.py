@@ -1,16 +1,21 @@
 #!/usr/bin/env python
+import os
+import sys
 import textwrap
 import unittest
 
 try:
     import ninja_parser
 except ImportError as e:
+    _gen_parser()
+    import ninja_parser
+
+def _gen_parser():
     import subprocess
-    err = subprocess.check_call([sys.executable, 'pymeta_helper.py', 'ninja.pym'],
-                                cwd=os.path.dirname(__file__))
+    err = subprocess.check_call([sys.executable, 'pymeta_helper.py',
+                                 'ninja.pym'], cwd=os.path.dirname(__file__))
     if err:
         sys.exit(err)
-    import ninja_parser
 
 
 class TestNinjaParser(unittest.TestCase):
