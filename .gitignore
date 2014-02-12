@@ -3,4 +3,6 @@
 
 .ninja_deps
 .ninja_log
+hello.o
+hello
 pyn_parser.py

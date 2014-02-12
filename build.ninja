@@ -7,9 +7,29 @@ rule cc
     command = cc -c $in -o $out
     description = CC $out
     
+rule pylint 
+    command = pylint --rcfile pylintrc $in
+    description = lint $in
+
+rule pytest
+    command = python $in
+    description = pytest $in
+
 build hello : link hello.o
 
 build hello.o : cc hello.c
 
-default hello
+build test : phony | .pytest.pyn_test.py
+
+build .pytest.pyn_test.py : pytest pyn_test.py
+
+build lint : phony | .pylint.pyn_test.py .pylint.pyn.py .pylint.pymeta_helper.py .pylint.pyn_parser.py
+
+build .pylint.pyn.py : pylint pyn.py
+build .pylint.pyn_test.py : pylint pyn_test.py
+build .pylint.pymeta_helper.py : pylint pymeta_helper.py
+build .pylint.pyn_parser.py : pylint pyn_parser.py
+
+
+default lint test
 
