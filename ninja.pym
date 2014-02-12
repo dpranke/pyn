@@ -11,13 +11,13 @@ rule       = "rule" ws ident:n eol indented_var+:vs -> ['rule', n, vs]
 build      = "build" ws paths:os ws ":" ws ident:rule ws paths:ins deps:ds eol
            -> ['build', os, rule, ins, ds]
 
-deps       = "|" targets:ts -> ts
+deps       = "|" paths:ps -> ps
            | -> []
 
 var        = ident:n ws "=" spaces (~eol anything)+:v eol
            -> ['var', n, ''.join(v)]
 
-default    = "default" ws targets:ts -> ['default', ts]
+default    = "default" ws paths:ps -> ['default', ps]
 
 subninja   = "subninja" ws path:p    -> ['subninja', p]
 
@@ -27,20 +27,15 @@ pool       = "pool" ws ident:name eol indented_var+:vars -> ['pool', name, vars]
 
 indented_var = ws var:v              -> v
 
-targets    = ident:i ws targets:ts   -> [i] + ts
-           | ident:i                 -> [i]
-
 ident      = (letter|'_'|'$'|'.'):hd (letter|'.'|'_')*:tl -> ''.join([hd] + tl)
 
 paths      = path:p ws paths:ps -> [p] + ps
            | path:p -> [p]
 
 path       = '"' (~('"'|'\n') anything)+:p '"' -> ''.join(p)
-           | (~(' '|':'|'='|eol) anything)+:p -> ''.join(p)
+           | (~(' '|':'|'='|eol) anything)+:p  -> ''.join(p)
 
-eol        = comment
+eol        = '#' (~'\n' anything)* '\n'
            | ' '* ~('$' '\n') '\n'
-
-comment    = "#" (~'\n' anything)* '\n'
 
 ws         = (' '|('$' '\n'))+
