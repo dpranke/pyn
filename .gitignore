@@ -7,4 +7,4 @@
 .pytest.*
 hello/hello.o
 hello/hello
-pyn_parser.py
+ninja_parser.py

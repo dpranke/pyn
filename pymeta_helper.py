@@ -1,3 +1,8 @@
+#/usr/bin/python
+
+from __future__ import print_function
+
+import argparse
 import importlib
 import os
 
@@ -10,14 +15,18 @@ class ParserBase(object):
     name = None
     grammar = None
 
-    def __init__(self):
+    def __init__(self, name=None, grammar=None,
+                 src_dir=None, filename=None,
+                 classname=None):
+        self.grammar = grammar or self.grammar
+        self.name = name or self.name
+        self.src_dir = src_dir or os.path.dirname(os.path.abspath(__file__))
+        self.filename = filename or self.name.lower() + '_parser.py'
+        self.classname = classname or self.name.capitalize() + 'Parser'
+        self.grammar_constant_name = self.name.upper() + '_GRAMMAR'
+
         assert self.name
         assert self.grammar
-
-        self.src_dir = os.path.dirname(os.path.abspath(__file__))
-        self.filename = self.name.lower() + '_parser.py'
-        self.classname = self.name.capitalize() + 'Parser'
-        self.grammar_constant_name = self.name.upper() + '_GRAMMAR'
 
         if self.generated_grammar() != self.grammar:
             self.generate_parser_module()
@@ -65,3 +74,31 @@ class ParserBase(object):
 
             parser_cls_code = builder.writePython(tree)
             fp.write(parser_cls_code)
+
+
+def main():
+    parser = argparse.ArgumentParser(prog='pymeta_helper')
+    parser.usage = '[options] grammar'
+    parser.add_argument('grammar', nargs=1,
+        help=argparse.SUPPRESS)
+    parser.add_argument('-o', metavar='FILE', dest='output',
+        help='destination file (defaults to s/grammar.pym/grammar.py)')
+    parser.add_argument('-n', '--name',
+        help='base name of grammar')
+    args = parser.parse_args()
+
+    filename = args.grammar[0]
+    if not os.path.exists(filename):
+        print("Error: '%s' not found", file=sys.stderr)
+        sys.exit(1)
+
+    with open(filename) as f:
+        grammar = f.read()
+
+    basename = os.path.basename(args.grammar[0]).replace('.pym', '')
+    name = args.name or basename.capitalize()
+
+    p = ParserBase(grammar=grammar, name=name)
+
+if __name__ == '__main__':
+    main()

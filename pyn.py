@@ -8,8 +8,16 @@ import os
 import pprint
 import sys
 
+try:
+    import ninja_parser
+except ImportError as e:
+    import subprocess
+    err = subprocess.check_call([sys.executable, 'pymeta_helper.py', 'ninja.pym'],
+                                cwd=os.path.dirname(__file__))
+    if err:
+        sys.exit(err)
+    import ninja_parser
 
-import pymeta_helper
 
 VERSION = '0.1'
 
@@ -53,8 +61,7 @@ def parse_build_files(args):
         with open(args.file) as f:
             build_txt = f.read()
 
-        n = NinjaParser()
-        return n.parse(build_txt), None
+        return ninja_parser.NinjaParser.parse(build_txt), None
     except Exception as e:
         return None, 'Error: %s' % str(e)
 
@@ -98,63 +105,6 @@ def parse_args(argv):
         help=argparse.SUPPRESS)
     return parser.parse_args(args=argv)
 
-
-ParseError = pymeta_helper.ParseError  # pylint: disable=C0103
-
-
-class NinjaParser(pymeta_helper.ParserBase):
-    name = "pyn"
-
-    grammar = """
-
-grammar    = decls:ds end -> ds
-
-decls      = (ws|'\n')* decl:d  decls:ds -> [d] + ds
-           | (ws|'\n')* decl:d           -> [d]
-           | (ws|'\n')*                 -> []
-
-decl       = rule | build | var | default | subninja | import | pool
-
-rule       = "rule" ws ident:n eol indented_var+:vs -> ['rule', n, vs]
-
-build      = "build" ws paths:os ws ":" ws ident:rule ws paths:ins deps:ds eol
-           -> ['build', os, rule, ins, ds]
-
-deps       = "|" targets:ts -> ts
-           | -> []
-
-var        = ident:n ws "=" spaces (~eol anything)+:v eol
-           -> ['var', n, ''.join(v)]
-
-default    = "default" ws targets:ts -> ['default', ts]
-
-subninja   = "subninja" ws path:p    -> ['subninja', p]
-
-import     = "include" ws path:p     -> ['import', p]
-
-pool       = "pool" ws ident:name eol indented_var+:vars -> ['pool', name, vars]
-
-indented_var = ws var:v              -> v
-
-targets    = ident:i ws targets:ts   -> [i] + ts
-           | ident:i                 -> [i]
-
-ident      = (letter|'_'|'$'|'.'):hd (letter|'.'|'_')*:tl -> ''.join([hd] + tl)
-
-paths      = path:p ws paths:ps -> [p] + ps
-           | path:p -> [p]
-
-path       = '"' (~('"'|'\n') anything)+:p '"' -> ''.join(p)
-           | (~(' '|':'|'='|eol) anything)+:p -> ''.join(p)
-
-eol        = comment
-           | ' '* ~('$' '\n') '\n'
-
-comment    = "#" (~'\n' anything)* '\n'
-
-ws         = (' '|('$' '\n'))+
-
-"""
 
 if __name__ == '__main__':
     main()

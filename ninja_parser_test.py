@@ -2,20 +2,27 @@
 import textwrap
 import unittest
 
-import pyn
+try:
+    import ninja_parser
+except ImportError as e:
+    import subprocess
+    err = subprocess.check_call([sys.executable, 'pymeta_helper.py', 'ninja.pym'],
+                                cwd=os.path.dirname(__file__))
+    if err:
+        sys.exit(err)
+    import ninja_parser
 
 
 class TestNinjaParser(unittest.TestCase):
     def check(self, text, ast):
-        parser = pyn.NinjaParser()
         dedented_text = textwrap.dedent(text)
-        actual_ast = parser.parse(dedented_text)
+        actual_ast = ninja_parser.NinjaParser.parse(dedented_text)
         self.assertEquals(actual_ast, ast)
 
     def err(self, text):
-        parser = pyn.NinjaParser()
         dedented_text = textwrap.dedent(text)
-        self.assertRaises(pyn.ParseError, parser.parse, dedented_text)
+        self.assertRaises(ninja_parser.ParseError,
+                          ninja_parser.NinjaParser.parse, dedented_text)
 
     def test_syntax_err(self):
         self.err('rule foo')
