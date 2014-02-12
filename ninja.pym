@@ -2,7 +2,7 @@ grammar    = decls:ds end -> ds
 
 decls      = (ws|'\n')* decl:d  decls:ds -> [d] + ds
            | (ws|'\n')* decl:d           -> [d]
-           | (ws|'\n')*                 -> []
+           | (ws|'\n')*                  -> []
 
 decl       = rule | build | var | default | subninja | import | pool
 
