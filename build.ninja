@@ -10,10 +10,10 @@ rule pymeta
   command = python pymeta_helper.py $in
 
 build lint : phony $
-  .pylint.pymeta_helper.py $
-  .pylint.pyn.py $
   .pylint.ninja_parser.py $
-  .pylint.ninja_parser_test.py
+  .pylint.ninja_parser_test.py $
+  .pylint.pymeta_helper.py $
+  .pylint.pyn.py 
 
 build ninja_parser.py : pymeta ninja.pym
 
