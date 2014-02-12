@@ -1,14 +1,13 @@
 rule pylint 
   command = pylint --rcfile pylintrc $in > $out.tmp; if [ -s $out.tmp ]; then cat $out.tmp 1>&2 ; rm -f $out.tmp; false; else rm $out.tmp; fi
-  description = lint $in
+  description = pylint --rcfile pylintrc $in
 
 rule pytest
   command = python $in 2> $out.tmp; if grep FAILED $out.tmp; then cat $out.tmp 1>&2 ; rm $out.tmp; false; else rm $out.tmp; fi
-  description = pytest $in
+  description = python $in
 
 rule pymeta
   command = python pymeta_helper.py $in
-  description = generating $out
 
 build lint : phony $
   .pylint.pymeta_helper.py $
