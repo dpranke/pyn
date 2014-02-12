@@ -8,19 +8,19 @@ import os
 import pprint
 import sys
 
-try:
-    import ninja_parser
-except ImportError as e:
-    _gen_parser()
-    import ninja_parser
-
-
 def _gen_parser():
     import subprocess
     err = subprocess.check_call([sys.executable, 'pymeta_helper.py',
                                  'ninja.pym'], cwd=os.path.dirname(__file__))
     if err:
         sys.exit(err)
+
+try:
+    import ninja_parser
+except ImportError as e:
+    _gen_parser()
+    import ninja_parser
+
 
 
 VERSION = '0.1'
