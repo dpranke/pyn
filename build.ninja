@@ -10,19 +10,30 @@ rule pymeta
   command = python pymeta_helper.py $in
 
 build lint : phony $
+  .pylint.analyzer.py $
+  .pylint.builder.py $
+  .pylint.host.py $
+  .pylint.main.py $
   .pylint.ninja_parser.py $
-  .pylint.ninja_parser_test.py $
+  .pylint.parsers.py $
+  .pylint.parsers_test.py $
   .pylint.pymeta_helper.py $
-  .pylint.pyn.py 
+  .pylint.pyn_exceptions.py
 
 build ninja_parser.py : pymeta ninja.pymeta
 
-build test : phony .pytest.ninja_parser_test.py
+build test : phony .pytest.parsers_test.py
 
+build .pylint.analyzer.py : pylint analyzer.py
+build .pylint.builder.py : pylint builder.py
+build .pylint.host.py : pylint host.py
+build .pylint.main.py : pylint main.py
 build .pylint.ninja_parser.py : pylint ninja_parser.py
-build .pylint.ninja_parser_test.py : pylint ninja_parser_test.py | ninja_parser.py
-build .pylint.pyn.py : pylint pyn.py
+build .pylint.parsers.py : pylint parsers.py | ninja_parser.py
+build .pylint.parsers_test.py : pylint parsers_test.py | ninja_parser.py
 build .pylint.pymeta_helper.py : pylint pymeta_helper.py
-build .pytest.ninja_parser_test.py : pytest ninja_parser_test.py | ninja_parser.py
+build .pylint.pyn_exceptions.py : pylint pyn_exceptions.py
+
+build .pytest.parsers_test.py : pytest parsers_test.py
 
 default ninja_parser.py

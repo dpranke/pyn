@@ -1,0 +1,3 @@
+
+class PynException(Exception):
+    pass

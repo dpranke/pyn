@@ -22,17 +22,18 @@ class ParserBase(object):
         self.grammar = grammar or self.grammar
         self.name = name or self.name
         self.src_dir = src_dir or os.path.dirname(os.path.abspath(__file__))
-        self.filename = filename or self.name.lower() + '_parser.py'
+        self.basename = filename or self.name.lower() + '_parser.py'
         self.classname = classname or self.name.capitalize() + 'Parser'
         self.grammar_constant_name = self.name.upper() + '_GRAMMAR'
+        self.filename = os.path.join(self.src_dir, self.basename)
 
         assert self.name
         assert self.grammar
 
-        if self.generated_grammar() != self.grammar:
+        if self.generated_grammar() != self.grammar.strip():
             self.generate_parser_module()
 
-        self._module = importlib.import_module(self.filename.replace('.py', ''))
+        self._module = importlib.import_module(self.basename.replace('.py', ''))
         self._cls = getattr(self._module, self.classname)
 
         # pylint: disable=W0212
@@ -52,8 +53,8 @@ class ParserBase(object):
             lines = fp.readlines()
             start = lines.index('%s = """\n' % self.grammar_constant_name)
             end = lines[start:].index('"""\n')
-            txt = '\n' + ''.join(lines[start+1:start + end])
-            return txt
+            txt = ''.join(lines[start+1:start + end])
+            return txt.strip()
 
     def generate_parser_module(self):
         from pymeta.grammar import OMetaGrammar
@@ -77,6 +78,15 @@ class ParserBase(object):
             fp.write(parser_cls_code)
 
 
+def make_parser(grammar_file, name=None, _output=None):
+    with open(grammar_file) as f:
+        grammar = f.read()
+
+    basename = os.path.basename(grammar_file).replace('.pymeta', '')
+    name = name or basename.capitalize()
+    return ParserBase(grammar=grammar, name=name)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog='pymeta_helper')
     parser.usage = '[options] grammar'
@@ -88,18 +98,11 @@ def main(argv=None):
         help='base name of grammar')
     args = parser.parse_args(args=argv)
 
-    filename = args.grammar[0]
-    if not os.path.exists(filename):
-        print("Error: '%s' not found", file=sys.stderr)
+    try:
+        make_parser(args.grammar[0], args.name, args.output)
+    except IOError:
+        print("Error: '%s' not found" % args.grammar, file=sys.stderr)
         sys.exit(1)
-
-    with open(filename) as f:
-        grammar = f.read()
-
-    basename = os.path.basename(args.grammar[0]).replace('.pymeta', '')
-    name = args.name or basename.capitalize()
-
-    ParserBase(grammar=grammar, name=name)
 
 if __name__ == '__main__':
     main()

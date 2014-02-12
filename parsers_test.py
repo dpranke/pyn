@@ -1,31 +1,25 @@
 #!/usr/bin/env python
-import os
-import sys
 import textwrap
 import unittest
 
-def _gen_parser():
-    import pymeta_helper
-    import subprocess
-    subprocess.check_call([sys.executable, 'pymeta_helper.py', 'ninja.pymeta'],
-                          cwd=os.path.dirname(pymeta_helper.__file__))
+import parsers
 
-_gen_parser()
+from host import Host
+from pyn_exceptions import PynException
 
-import ninja_parser
 
 class TestNinjaParser(unittest.TestCase):
     # disable 'too many public methods' pylint: disable=R0904
 
     def check(self, text, ast):
         dedented_text = textwrap.dedent(text)
-        actual_ast = ninja_parser.NinjaParser.parse(dedented_text)
+        actual_ast = parsers.parse_ninja_text(Host(), dedented_text)
         self.assertEquals(actual_ast, ast)
 
     def err(self, text):
         dedented_text = textwrap.dedent(text)
-        self.assertRaises(ninja_parser.ParseError,
-                          ninja_parser.NinjaParser.parse, dedented_text)
+        self.assertRaises(PynException, parsers.parse_ninja_text,
+                          Host(), dedented_text)
 
     def test_syntax_err(self):
         self.err('rule foo')
