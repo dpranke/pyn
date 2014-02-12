@@ -1,2 +1,5 @@
 #!/bin/bash
-/usr/bin/env python /src/pyn/pyn.py $@
+pushd $(dirname $0) > /dev/null
+SCRIPTDIR=$(pwd -P)
+popd > /dev/null
+python $SCRIPTDIR/pyn.py $@
