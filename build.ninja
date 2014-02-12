@@ -8,7 +8,7 @@ rule pytest
 
 rule pymeta
   command = python -c 'import pyn; pyn.NinjaParser().generate_parser_module()'
-  description= generating $out
+  description = generating $out
 
 build lint : phony $
   .pylint.pymeta_helper.py $
