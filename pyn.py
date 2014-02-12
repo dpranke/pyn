@@ -2,9 +2,12 @@
 
 from __future__ import print_function
 
-import multiprocessing
 import argparse
+import multiprocessing
+import os
+import pprint
 import sys
+
 
 import pymeta_helper
 
@@ -17,37 +20,54 @@ def main(argv=None, stdout=None, stderr=None):
 
     if args.version:
         print(VERSION, file=stdout)
-        sys.exit(1)
+        return 1
 
+    graph, err = parse_build_files(args)
+    if not graph or err:
+        print(err, file=stderr)
+        return 1
+
+    if args.debug:
+        print('-d is not supported yet', file=stderr)
+        return 1
+    if args.tool:
+        print('-t is not supported yet', file=stderr)
+        return 1
+    if args.dry_run:
+        print('-n is not supported yet', file=stderr)
+        return 1
+
+    return build_graph(graph, args, stderr)
+
+
+def parse_build_files(args):
     if args.dir:
         if not os.path.exists(args.dir):
-            print("Error: '%s' does not exist" % args.dir, file=stderr)
-            sys.exit(1)
-        os.chdir(options.dir)
+            return None, "Error: '%s' does not exist" % args.dir
+        os.chdir(args.dir)
 
-    sys.exit(run(args, stdout, stderr))
-
-
-def run(args, stdout, stderr):
-    n = NinjaParser()
-
-    with open(args.file) as build_file:
-        build_txt = build_file.read()
+    if not os.path.exists(args.file):
+        return None, "Error: '%s' does not exist" % args.file
 
     try:
-        ast = n.parse(build_txt)
-        print(ast, file=stdout)
+        with open(args.file) as f:
+            build_txt = f.read()
+
+        n = NinjaParser()
+        return n.parse(build_txt), None
     except Exception as e:
-        print(e, file=stderr)
+        return None, 'Error: %s' % str(e)
 
 
-ParseError = pymeta_helper.ParseError
+def build_graph(graph, args, stderr):
+    pprint.pprint(graph, stream=stderr)
+
 
 def parse_args(argv):
     DEFAULT_TARGET = 'default'
 
-    parser = argparse.ArgumentParser()
-    parser.usage = 'pyn [options] [targets...]'
+    parser = argparse.ArgumentParser(prog='pyn')
+    parser.usage = '%(prog)s [options] [targets...]'
     parser.description = (
             'if targets are unspecified, builds the \'%s\' '
             'target (see manual)' % DEFAULT_TARGET)
@@ -55,25 +75,30 @@ def parse_args(argv):
         help='print pyn version ("%s")' % VERSION)
     parser.add_argument('-C', metavar='DIR', dest='dir',
         help='change to DIR before doing anything else')
-    parser.add_argument('-f', metavar='FILE', default='build.ninja',
+    parser.add_argument('-f', metavar='FILE', dest='file', default='build.ninja',
         help='specify input build file [default=%(default)s]')
-    parser.add_argument('-j', default=multiprocessing.cpu_count(), metavar='N',
+    parser.add_argument('-j', metavar='N', type=int, dest='jobs',
+        default=multiprocessing.cpu_count(),
         help=('run N jobs in parallel [default=%(default)s, '
               'derived from CPUs available]'))
-    parser.add_argument('-l', metavar='N',
+    parser.add_argument('-l', metavar='N', type=float,
         help='do not start new jobs if the load average is greater than N')
-    parser.add_argument('-k', metavar='N', default=1,
+    parser.add_argument('-k', metavar='N', type=int, dest='errors', default=1,
         help='keep going until N jobs fail [default=default]')
-    parser.add_argument('-n', action='store_true',
+    parser.add_argument('-n', action='store_true', dest='dry_run',
         help='dry run (don\'t run commands but act like they succeeded)')
     parser.add_argument('-v', action='store_true',
         help='show all command lines while building')
-    parser.add_argument('-d', metavar='MODE',
+    parser.add_argument('-d', metavar='MODE', dest='debug',
         help='enable debugging (use -d list to list modes)')
-    parser.add_argument('-t', metavar='TOOL',
+    parser.add_argument('-t', metavar='TOOL', dest='tool',
         help='run a subtool (use -t list to list subtools)')
-    parser.add_argument('targets', nargs='*', default=[DEFAULT_TARGET])
+    parser.add_argument('targets', nargs='*', default=[DEFAULT_TARGET],
+        help=argparse.SUPPRESS)
     return parser.parse_args()
+
+
+ParseError = pymeta_helper.ParseError
 
 
 class NinjaParser(pymeta_helper.ParserBase):
