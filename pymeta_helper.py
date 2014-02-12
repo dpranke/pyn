@@ -13,6 +13,7 @@ class ParserBase(object):
         assert self.name
         assert self.grammar
 
+        self.src_dir = os.path.dirname(os.path.abspath(__file__))
         self.filename = self.name.lower() + '_parser.py'
         self.classname = self.name.capitalize() + 'Parser'
         self.grammar_constant_name = self.name.upper() + '_GRAMMAR'
@@ -48,9 +49,9 @@ class ParserBase(object):
         from pymeta import builder
 
         tree = OMetaGrammar(self.grammar).parseGrammar(self.classname, builder.TreeBuilder)
-        with open('pymeta/runtime.py') as fp:
+        with open(os.path.join(self.src_dir, 'pymeta', 'runtime.py')) as fp:
             runtime_str = fp.read()
-        with open(self.filename, 'w') as fp:
+        with open(os.path.join(self.src_dir, self.filename), 'w') as fp:
             fp.write(runtime_str)
             fp.write('\n\n')
             fp.write('%s = """%s"""\n\n' % (self.grammar_constant_name, self.grammar))
