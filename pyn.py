@@ -109,9 +109,9 @@ class NinjaParser(pymeta_helper.ParserBase):
 
 grammar    = decls:ds end -> ds
 
-decls      = ws_or_comments decl:d  decls:ds -> [d] + ds
-           | ws_or_comments decl:d           -> [d]
-           | ws_or_comments                  -> []
+decls      = (ws|'\n')* decl:d  decls:ds -> [d] + ds
+           | (ws|'\n')* decl:d           -> [d]
+           | (ws|'\n')*                 -> []
 
 decl       = rule | build | var | default | subninja | import | pool
 
@@ -139,7 +139,7 @@ indented_var = ws var:v              -> v
 targets    = ident:i ws targets:ts   -> [i] + ts
            | ident:i                 -> [i]
 
-ident      = (letter|'_'|'$'):hd (letter)*:tl -> ''.join([hd] + tl)
+ident      = (letter|'_'|'$'|'.'):hd (letter|'.'|'_')*:tl -> ''.join([hd] + tl)
 
 paths      = path:p ws paths:ps -> [p] + ps
            | path:p -> [p]
@@ -152,9 +152,7 @@ eol        = comment
 
 comment    = "#" (~'\n' anything)* '\n'
 
-ws         = ' '+
-
-ws_or_comments = (' '|('$' '\n')|'\n'|comment)*
+ws         = (' '|('$' '\n'))+
 
 """
 
