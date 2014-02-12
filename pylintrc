@@ -66,37 +66,13 @@ load-plugins=
 # CHANGED:
 # C0103: Invalid name ""
 # C0111: Missing docstring
-# C0301: Line too long
-# C0302: Too many lines in module (N)
-# I0010: Unable to consider inline option ''
 # I0011: Locally disabling WNNNN
-#
-# R0201: Method could be a function
-# R0801: Similar lines in N files
-# R0901: Too many ancestors (8/7)
-# R0902: Too many instance attributes (N/7)
-# R0903: Too few public methods (N/2)
-# R0904: Too many public methods (N/20)
-# R0911: Too many return statements (N/6)
-# R0912: Too many branches (N/12)
-# R0913: Too many arguments (N/5)
-# R0914: Too many local variables (N/15)
-# R0915: Too many statements (N/50)
-# R0921: Abstract class not referenced
-# R0922: Abstract class is only referenced 1 times
-# W0122: Use of the exec statement
-# W0141: Used builtin function ''
-# W0212: Access to a protected member X of a client class
+# R0904: Too many public methods
 # W0142: Used * or ** magic
-# W0401: Wildcard import X
-# W0402: Uses of a deprecated module 'string'
-# W0404: 41: Reimport 'XX' (imported line NN)
 # W0511: TODO
-# W0603: Using the global statement
 # W0614: Unused import X from wildcard import
 # W0703: Catch "Exception"
-# W1201: Specify string format arguments as logging function parameters
-disable=C0103,C0111,C0301,C0302,I0010,I0011,R0201,R0801,R0901,R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,R0921,R0922,W0122,W0141,W0142,W0212,W0401,W0402,W0404,W0511,W0603,W0614,W0703,W1201
+disable=C0111,I0010,I0011,R0904,W0142,W0511,W0703
 
 
 [REPORTS]
@@ -151,7 +127,7 @@ ignore-mixin-members=yes
 
 # List of classes names for which member attributes should not be checked
 # (useful for classes with attributes dynamically set).
-ignored-classes=SQLObject,twisted.internet.reactor,hashlib,google.appengine.api.memcache
+ignored-classes=
 
 # When zope mode is activated, add a predefined set of Zope acquired attributes
 # to generated-members.
@@ -160,7 +136,7 @@ zope=no
 # List of members which are set dynamically and missed by pylint inference
 # system, and so shouldn't trigger E0201 when accessed. Python regular
 # expressions are accepted.
-generated-members=REQUEST,acl_users,aq_parent
+generated-members=
 
 
 [MISCELLANEOUS]
@@ -184,10 +160,10 @@ ignore-docstrings=yes
 [FORMAT]
 
 # Maximum number of characters on a single line.
-max-line-length=200
+# max-line-length=200
 
 # Maximum number of lines in a module
-max-module-lines=1000
+# max-module-lines=1000
 
 # String used as indentation unit. This is usually " " (4 spaces) or "\t" (1
 # tab).
@@ -225,7 +201,7 @@ attr-rgx=[a-z_][a-z0-9_]{2,30}$
 argument-rgx=[a-z_][a-z0-9_]{2,30}$
 
 # Regular expression which should only match correct variable names
-variable-rgx=[a-z_][a-z0-9_]{2,30}$
+variable-rgx=[a-z_][a-z0-9_]{0,30}$
 
 # Regular expression which should only match correct list comprehension /
 # generator expression variable names

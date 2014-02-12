@@ -24,12 +24,15 @@ class ParserBase(object):
         self.parser_module = __import__(self.filename.replace('.py', ''))
         self.parser_cls = getattr(self.parser_module, self.classname)
 
+        # pylint: disable=W0212
+        self.maybe_parse_error = self.parser_module._MaybeParseError
+
     def parse(self, txt):
         parser = self.parser_cls(txt)
         try:
             return parser.apply('grammar')[0]
         except Exception as e:
-            if isinstance(e, self.parser_module._MaybeParseError):
+            if isinstance(e, self.maybe_parse_error): # pylint
                 raise ParseError(parser.currentError.formatError(txt))
             raise e
 
@@ -48,13 +51,16 @@ class ParserBase(object):
         from pymeta.grammar import OMetaGrammar
         from pymeta import builder
 
-        tree = OMetaGrammar(self.grammar).parseGrammar(self.classname, builder.TreeBuilder)
+        tree = OMetaGrammar(self.grammar).parseGrammar(self.classname,
+                                                       builder.TreeBuilder)
         with open(os.path.join(self.src_dir, 'pymeta', 'runtime.py')) as fp:
             runtime_str = fp.read()
         with open(os.path.join(self.src_dir, self.filename), 'w') as fp:
             fp.write(runtime_str)
             fp.write('\n\n')
-            fp.write('%s = """%s"""\n\n' % (self.grammar_constant_name, self.grammar))
+            fp.write('%s = """%s"""\n\n' % (self.grammar_constant_name,
+                                            self.grammar))
+            fp.write('\n# %s: disable=C0103\n\n' % 'pylint')
             fp.write('GrammarBase = OMetaBase\n')
             fp.write('\n\n')
 

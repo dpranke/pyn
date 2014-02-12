@@ -23,7 +23,8 @@ class TestNinjaParser(unittest.TestCase):
             build foo.o : cc foo.c
             """,
             [['var', 'cflags', '-Wall'],
-             ['rule', 'cc', [['var', 'command', 'gcc $cflags -c $in -o $out']]],
+             ['rule', 'cc',
+               [['var', 'command', 'gcc $cflags -c $in -o $out']]],
              ['build', ['foo.o'], 'cc', ['foo.c'], []]])
 
 
@@ -40,7 +41,8 @@ class TestNinjaParser(unittest.TestCase):
             rule cc
                 command = gcc $cflags -c $in -o $out
             ''',
-            [['rule', 'cc', [['var', 'command', 'gcc $cflags -c $in -o $out']]]])
+            [['rule', 'cc',
+               [['var', 'command', 'gcc $cflags -c $in -o $out']]]])
 
 
 if __name__ == '__main__':

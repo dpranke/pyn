@@ -64,18 +64,19 @@ def build_graph(graph, _args, stderr):
 
 
 def parse_args(argv):
-    DEFAULT_TARGET = 'default'
+    default_target = 'default'
 
-    parser = argparse.ArgumentParser(prog='pyn', argv=argv)
+    parser = argparse.ArgumentParser(prog='pyn')
     parser.usage = '%(prog)s [options] [targets...]'
     parser.description = (
             'if targets are unspecified, builds the \'%s\' '
-            'target (see manual)' % DEFAULT_TARGET)
+            'target (see manual)' % default_target)
     parser.add_argument('--version', action='store_true',
         help='print pyn version ("%s")' % VERSION)
     parser.add_argument('-C', metavar='DIR', dest='dir',
         help='change to DIR before doing anything else')
-    parser.add_argument('-f', metavar='FILE', dest='file', default='build.ninja',
+    parser.add_argument('-f', metavar='FILE', dest='file',
+        default='build.ninja',
         help='specify input build file [default=%(default)s]')
     parser.add_argument('-j', metavar='N', type=int, dest='jobs',
         default=multiprocessing.cpu_count(),
@@ -93,12 +94,12 @@ def parse_args(argv):
         help='enable debugging (use -d list to list modes)')
     parser.add_argument('-t', metavar='TOOL', dest='tool',
         help='run a subtool (use -t list to list subtools)')
-    parser.add_argument('targets', nargs='*', default=[DEFAULT_TARGET],
+    parser.add_argument('targets', nargs='*', default=[default_target],
         help=argparse.SUPPRESS)
-    return parser.parse_args()
+    return parser.parse_args(args=argv)
 
 
-ParseError = pymeta_helper.ParseError
+ParseError = pymeta_helper.ParseError  # pylint: disable=C0103
 
 
 class NinjaParser(pymeta_helper.ParserBase):
