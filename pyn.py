@@ -30,8 +30,12 @@ def main(argv=None, stdout=None, stderr=None):
 
 def run(args, stdout, stderr):
     n = NinjaParser()
+
+    with open(args.file) as build_file:
+        build_txt = build_file.read()
+
     try:
-        ast = n.parse(sample1)
+        ast = n.parse(build_txt)
         print(ast, file=stdout)
     except Exception as e:
         print(e, file=stderr)
