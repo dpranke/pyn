@@ -15,6 +15,8 @@ _gen_parser()
 import ninja_parser
 
 class TestNinjaParser(unittest.TestCase):
+    # disable 'too many public methods' pylint: disable=R0904
+
     def check(self, text, ast):
         dedented_text = textwrap.dedent(text)
         actual_ast = ninja_parser.NinjaParser.parse(dedented_text)

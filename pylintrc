@@ -69,13 +69,14 @@ load-plugins=
 # I0011: Locally disabling WNNNN
 # R0801: Similar lines
 # R0902: Too many instance attributes
+# R0903: Too few public methods
 # R0904: Too many public methods
 # R0913: Too many arguments
 # W0142: Used * or ** magic
 # W0511: TODO
 # W0614: Unused import X from wildcard import
 # W0703: Catch "Exception"
-disable=C0111,I0010,I0011,R0801,R0902,R0904,R0913,W0142,W0511,W0703
+disable=C0111,I0010,I0011,R0801,W0142,W0511,W0703
 
 
 [REPORTS]
@@ -224,7 +225,7 @@ no-docstring-rgx=__.*__
 [DESIGN]
 
 # Maximum number of arguments for function / method
-max-args=5
+max-args=6
 
 # Argument names that match this expression will be ignored. Default to name
 # with leading underscore
@@ -246,10 +247,10 @@ max-statements=50
 max-parents=7
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=7
+max-attributes=10
 
 # Minimum number of public methods for a class (see R0903).
-min-public-methods=2
+min-public-methods=0
 
 # Maximum number of public methods for a class (see R0904).
 max-public-methods=20

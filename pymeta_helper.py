@@ -64,7 +64,7 @@ class ParserBase(object):
         with open(os.path.join(self.src_dir, 'pymeta', 'runtime.py')) as fp:
             runtime_str = fp.read()
         with open(os.path.join(self.src_dir, self.filename), 'w') as fp:
-            fp.write('# %s: disable=C0103,C0301,C0302,R0201,R0903\n\n' %
+            fp.write('# %s: disable=C0103,C0301,C0302,R0201,R0903,R0904\n\n' %
                      'pylint')
             fp.write(runtime_str)
             fp.write('\n\n')
