@@ -59,14 +59,14 @@ def parse_build_files(args):
         return None, 'Error: %s' % str(e)
 
 
-def build_graph(graph, args, stderr):
+def build_graph(graph, _args, stderr):
     pprint.pprint(graph, stream=stderr)
 
 
 def parse_args(argv):
     DEFAULT_TARGET = 'default'
 
-    parser = argparse.ArgumentParser(prog='pyn')
+    parser = argparse.ArgumentParser(prog='pyn', argv=argv)
     parser.usage = '%(prog)s [options] [targets...]'
     parser.description = (
             'if targets are unspecified, builds the \'%s\' '
