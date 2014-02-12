@@ -12,6 +12,13 @@ class TestNinjaParser(unittest.TestCase):
         actual_ast = parser.parse(dedented_text)
         self.assertEquals(actual_ast, ast)
 
+    def err(self, text):
+        parser = pyn.NinjaParser()
+        dedented_text = textwrap.dedent(text)
+        self.assertRaises(pyn.ParseError, parser.parse, dedented_text)
+
+    def test_syntax_err(self):
+        self.err('rule foo')
 
     def test_sample(self):
         self.check("""

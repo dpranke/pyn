@@ -67,12 +67,13 @@ load-plugins=
 # C0103: Invalid name ""
 # C0111: Missing docstring
 # I0011: Locally disabling WNNNN
+# R0801: Similar lines
 # R0904: Too many public methods
 # W0142: Used * or ** magic
 # W0511: TODO
 # W0614: Unused import X from wildcard import
 # W0703: Catch "Exception"
-disable=C0111,I0010,I0011,R0904,W0142,W0511,W0703
+disable=C0111,I0010,I0011,R0801,R0904,W0142,W0511,W0703
 
 
 [REPORTS]
