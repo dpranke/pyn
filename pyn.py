@@ -153,24 +153,33 @@ def compute_graph(ast):
     return graph
 
 
-def build(graph, _args, stderr):
+def build(graph, args, stderr):
     sorted_nodes = tsort(graph)
     max = len(sorted_nodes)
     for cur, name in enumerate(sorted_nodes, start=1):
-        print('[%d/%d] %s' % (cur, max, name), file=stderr)
+        if args.verbose:
+            print('[%d/%d] %s' % (cur, max, name), file=stderr)
 
 
 def tsort(graph):
+    # This performs a topological sort of the nodes in the graph by
+    # picking nodes arbitrarily, and then doing depth-first searches
+    # across the graph from there. It should run in O(|nodes|) time.
+    # See http://en.wikipedia.org/wiki/Topological_sorting and Tarjan (1976).
+    #
+    # This algorithm diverges a bit from the Wikipedia algorithm by
+    # inserting new nodes at the tail of the sorted node list instead of the
+    # head, because we want to ultimately do a bottom-up traversal.
     def visit(n, visited_nodes, sorted_nodes, unvisited_nodes):
-        if n in visited_nodes and n not in sorted_nodes:
+        if n in visited_nodes:
             raise PynException("'%s' is part of a cycle" % n)
-        if n not in visited_nodes and n not in sorted_nodes:
-            visited_nodes.add(n)
-            for m in graph.nodes[n].deps:
-                if m in graph.nodes:
-                    visit(m, visited_nodes, sorted_nodes, unvisited_nodes)
-            unvisited_nodes.remove(n)
-            sorted_nodes.append(n)
+
+        visited_nodes.add(n)
+        for m in graph.nodes[n].deps:
+            if m in graph.nodes and m not in sorted_nodes:
+                visit(m, visited_nodes, sorted_nodes, unvisited_nodes)
+        unvisited_nodes.remove(n)
+        sorted_nodes.append(n)
 
     visited_nodes = set()
     sorted_nodes = []
@@ -205,7 +214,7 @@ def parse_args(argv):
         help='keep going until N jobs fail [default=default]')
     parser.add_argument('-n', action='store_true', dest='dry_run',
         help='dry run (don\'t run commands but act like they succeeded)')
-    parser.add_argument('-v', action='store_true',
+    parser.add_argument('-v', action='store_true', dest='verbose',
         help='show all command lines while building')
     parser.add_argument('-d', metavar='MODE', dest='debug',
         help='enable debugging (use -d list to list modes)')
