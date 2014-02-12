@@ -15,7 +15,7 @@ build lint : phony $
   .pylint.pymeta_helper.py $
   .pylint.pyn.py 
 
-build ninja_parser.py : pymeta ninja.pym
+build ninja_parser.py : pymeta ninja.pymeta
 
 build test : phony .pytest.ninja_parser_test.py
 

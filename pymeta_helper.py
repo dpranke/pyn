@@ -83,7 +83,7 @@ def main(argv=None):
     parser.add_argument('grammar', nargs=1,
         help=argparse.SUPPRESS)
     parser.add_argument('-o', metavar='FILE', dest='output',
-        help='destination file (defaults to s/grammar.pym/grammar.py)')
+        help='destination file (defaults to s/grammar.pymeta/grammar.py)')
     parser.add_argument('-n', '--name',
         help='base name of grammar')
     args = parser.parse_args(args=argv)
@@ -96,7 +96,7 @@ def main(argv=None):
     with open(filename) as f:
         grammar = f.read()
 
-    basename = os.path.basename(args.grammar[0]).replace('.pym', '')
+    basename = os.path.basename(args.grammar[0]).replace('.pymeta', '')
     name = args.name or basename.capitalize()
 
     ParserBase(grammar=grammar, name=name)

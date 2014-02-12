@@ -7,7 +7,7 @@ import unittest
 def _gen_parser():
     import pymeta_helper
     import subprocess
-    subprocess.check_call([sys.executable, 'pymeta_helper.py', 'ninja.pym'],
+    subprocess.check_call([sys.executable, 'pymeta_helper.py', 'ninja.pymeta'],
                           cwd=os.path.dirname(pymeta_helper.__file__))
 
 _gen_parser()

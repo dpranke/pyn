@@ -10,7 +10,7 @@ import sys
 
 def _gen_parser():
     import subprocess
-    subprocess.check_call([sys.executable, 'pymeta_helper.py', 'ninja.pym'],
+    subprocess.check_call([sys.executable, 'pymeta_helper.py', 'ninja.pymeta'],
                           cwd=os.path.dirname(__file__))
 
 _gen_parser()
