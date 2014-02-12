@@ -77,7 +77,7 @@ class ParserBase(object):
             fp.write(parser_cls_code)
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(prog='pymeta_helper')
     parser.usage = '[options] grammar'
     parser.add_argument('grammar', nargs=1,
@@ -86,7 +86,7 @@ def main():
         help='destination file (defaults to s/grammar.pym/grammar.py)')
     parser.add_argument('-n', '--name',
         help='base name of grammar')
-    args = parser.parse_args()
+    args = parser.parse_args(args=argv)
 
     filename = args.grammar[0]
     if not os.path.exists(filename):

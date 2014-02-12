@@ -5,12 +5,14 @@ import textwrap
 import unittest
 
 def _gen_parser():
+    import pymeta_helper
     import subprocess
     subprocess.check_call([sys.executable, 'pymeta_helper.py', 'ninja.pym'],
-                          cwd=os.path.dirname(__file__))
+                          cwd=os.path.dirname(pymeta_helper.__file__))
 
 _gen_parser()
 
+import ninja_parser
 
 class TestNinjaParser(unittest.TestCase):
     def check(self, text, ast):
