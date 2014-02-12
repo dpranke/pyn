@@ -10,20 +10,16 @@ import sys
 
 def _gen_parser():
     import subprocess
-    err = subprocess.check_call([sys.executable, 'pymeta_helper.py',
-                                 'ninja.pym'], cwd=os.path.dirname(__file__))
-    if err:
-        sys.exit(err)
+    subprocess.check_call([sys.executable, 'pymeta_helper.py', 'ninja.pym'],
+                          cwd=os.path.dirname(__file__))
 
-try:
-    import ninja_parser
-except ImportError as e:
-    _gen_parser()
-    import ninja_parser
+_gen_parser()
 
+import ninja_parser
 
 
 VERSION = '0.1'
+
 
 def main(argv=None, stdout=None, stderr=None):
     stdout = stdout or sys.stdout
