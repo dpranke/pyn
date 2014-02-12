@@ -1,35 +1,25 @@
-
-rule link
-    command = cc $in -o $out
-    description = LINK $out
-
-rule cc
-    command = cc -c $in -o $out
-    description = CC $out
-    
 rule pylint 
-    command = pylint --rcfile pylintrc $in
-    description = lint $in
+  command = pylint --rcfile pylintrc $in
+  description = lint $in
 
 rule pytest
-    command = python $in
-    description = pytest $in
+  command = python $in
+  description = pytest $in
 
-build hello : link hello.o
+build lint : phony | $
+  .pylint.pymeta_helper.py $
+  .pylint.pyn.py $
+  .pylint.pyn_parser.py $
+  .pylint.pyn_test.py $
 
-build hello.o : cc hello.c
-
-build test : phony | .pytest.pyn_test.py
-
-build .pytest.pyn_test.py : pytest pyn_test.py
-
-build lint : phony | .pylint.pyn_test.py .pylint.pyn.py .pylint.pymeta_helper.py .pylint.pyn_parser.py
+build test : phony | $
+    .pytest.pyn_test.py
 
 build .pylint.pyn.py : pylint pyn.py
 build .pylint.pyn_test.py : pylint pyn_test.py
 build .pylint.pymeta_helper.py : pylint pymeta_helper.py
 build .pylint.pyn_parser.py : pylint pyn_parser.py
 
+build .pytest.pyn_test.py : pytest pyn_test.py
 
 default lint test
-
