@@ -6,19 +6,25 @@ rule pytest
   command = python $in 2> $out; if grep FAILED $out; then cat $out 1>&2 ; rm $out; false; fi
   description = pytest $in
 
+rule pymeta
+  command = python -c 'import pyn; pyn.NinjaParser().generate_parser_module()'
+  description= generating $out
+
 build lint : phony $
   .pylint.pymeta_helper.py $
   .pylint.pyn.py $
   .pylint.pyn_parser.py $
-  .pylint.pyn_test.py $
+  .pylint.pyn_test.py
 
 build test : phony .pytest.pyn_test.py
 
+build pyn_parser.py : pymeta pyn.py
+
 build .pylint.pyn.py : pylint pyn.py
-build .pylint.pyn_test.py : pylint pyn_test.py | pyn.py pymeta_helper.py
+build .pylint.pyn_test.py : pylint pyn_test.py
 build .pylint.pymeta_helper.py : pylint pymeta_helper.py
 build .pylint.pyn_parser.py : pylint pyn_parser.py
 
-build .pytest.pyn_test.py : pytest pyn_test.py
+build .pytest.pyn_test.py : pytest pyn_test.py | pyn_parser.py
 
 default lint test
