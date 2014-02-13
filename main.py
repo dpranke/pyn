@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 import argparse
+import sys
 
 import analyzer
 import builder
 import parsers
 
-from pyn_exceptions import PynException
+from pyn_exceptions import PynException, PynExit
 from host import Host
 
 
@@ -17,12 +18,10 @@ def main(host, argv=None):
     args = parse_args(host, argv)
 
     if args.version:
-        raise PynException(VERSION)
+        raise PynExit(VERSION)
 
     if args.debug:
         raise PynException('-d is not supported yet')
-    if args.tool:
-        raise PynException('-t is not supported yet')
 
     if args.dir:
         if not host.exists(args.dir):
@@ -32,7 +31,17 @@ def main(host, argv=None):
     ast = parsers.parse_ninja_file(host, args.file)
     graph = analyzer.analyze_ninja_ast(host, args, ast,
                                        parsers.parse_ninja_file)
-    builder.build(host, args, graph)
+
+    if args.tool:
+        if args.tool == 'list':
+            raise PynExit("pyn subtools:\n"
+                          "  clean  clean built files")
+        elif args.tool == 'clean':
+            builder.clean(host, args, graph)
+        else:
+            raise PynException("Unsupported tool '%s'" % args.tool)
+    else:
+        builder.build(host, args, graph)
 
 
 def parse_args(host, argv):
@@ -69,16 +78,18 @@ def parse_args(host, argv):
 
 def _actual_main():
     h = Host()
+    code = 0
     try:
         main(h)
+    except PynExit as e:
+        h.print_out(e)
     except PynException as e:
-        s = str(e)
-        if s == VERSION:
-            h.print_err(s)
-        else:
-            h.print_err('Error: ' + s)
-        h.exit(1)
-
+        h.print_err('Error: ' + e)
+        code = 1
+    except Exception as e:
+        h.print_err('Unexpected error: ' + e)
+        code = 1
+    return code
 
 if __name__ == '__main__':
-    _actual_main()
+    sys.exit(_actual_main())

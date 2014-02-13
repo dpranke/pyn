@@ -31,6 +31,18 @@ def build(host, args, graph):
         host.print_err('pyn: no work to do')
 
 
+def clean(host, args, graph):
+    outputs = [n.name for n in graph.nodes.values()
+               if n.rule_name != 'phony' and host.exists(n.name)]
+    host.print_err('Cleaning...')
+    for o in outputs:
+        if args.verbose:
+            host.print_err('Remove %s' % o)
+        if not args.dry_run:
+            host.remove(o)
+    host.print_err('%d files' % len(outputs))
+
+
 def _check_mtime(host, mtimes, name):
     if not name in mtimes:
         mtimes[name] = host.mtime(name)

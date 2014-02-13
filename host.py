@@ -32,9 +32,6 @@ class Host(object):
     def exists(self, *comps):
         return os.path.exists(self.join(*comps))
 
-    def exit(self, code):
-        sys.exit(code)
-
     def join(self, *comps):
         return os.path.join(*comps)
 
@@ -62,3 +59,6 @@ class Host(object):
         path = self.join(*comps)
         with open(path) as f:
             return f.read()
+
+    def remove(self, *comps):
+        os.remove(self.join(*comps))
