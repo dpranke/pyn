@@ -5,10 +5,13 @@ def build(host, args, graph):
     requested_targets = args.targets or graph.defaults
     nodes_to_build = _find_nodes_to_build(graph, requested_targets)
     sorted_nodes = _tsort(graph, nodes_to_build)
+    sorted_nodes = [n for n in sorted_nodes
+                    if graph.nodes[n].rule_name != 'phony']
     total_nodes = len(sorted_nodes)
     for cur, name in enumerate(sorted_nodes, start=1):
         node = graph.nodes[name]
         _build_node(host, args, graph, node, cur, total_nodes)
+
 
 def _find_nodes_to_build(graph, requested_targets):
     unvisited_nodes = requested_targets[:]
@@ -16,11 +19,15 @@ def _find_nodes_to_build(graph, requested_targets):
     while unvisited_nodes:
         node = unvisited_nodes.pop(0)
         nodes_to_build.add(node)
-        unvisited_nodes.extend([d for d in graph.nodes[node].deps if d not in nodes_to_build and d in graph.nodes])
+        for d in graph.nodes[node].deps:
+            if d not in nodes_to_build and d in graph.nodes:
+                unvisited_nodes.append(d)
     return nodes_to_build
+
 
 def _build_node(host, args, graph, node, cur, total_nodes):
     if node.rule_name == 'phony':
+        host.print_err('[%d/%d] %s' % (cur, total_nodes, node.name))
         return
 
     rule = graph.rules[node.rule_name]
