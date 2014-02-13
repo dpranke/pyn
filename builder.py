@@ -8,9 +8,33 @@ def build(host, args, graph):
     sorted_nodes = [n for n in sorted_nodes
                     if graph.nodes[n].rule_name != 'phony']
     total_nodes = len(sorted_nodes)
-    for cur, name in enumerate(sorted_nodes, start=1):
+    mtimes = {}
+    num_builds = 0
+
+    for name in sorted_nodes:
         node = graph.nodes[name]
-        _build_node(host, args, graph, node, cur, total_nodes)
+        if host.exists(name):
+            my_mtime = _check_mtime(host, mtimes, name)
+            do_build = any(_check_mtime(host, mtimes, d) > my_mtime for
+                           d in node.deps)
+        else:
+            do_build = True
+
+        if do_build:
+            num_builds += 1
+            _build_node(host, args, graph, node, num_builds, total_nodes)
+            mtimes[name] = host.mtime(name)
+        else:
+            total_nodes -= 1
+
+    if not num_builds:
+        host.print_err('pyn: no work to do')
+
+
+def _check_mtime(host, mtimes, name):
+    if not name in mtimes:
+        mtimes[name] = host.mtime(name)
+    return mtimes[name]
 
 
 def _find_nodes_to_build(graph, requested_targets):
@@ -44,6 +68,8 @@ def _build_node(host, args, graph, node, cur, total_nodes):
             host.print_out(out)
         if err:
             host.print_err(err)
+        if ret:
+            raise PynException('build failed')
     else:
         desc = rule.rule_vars.get('description', '%s $out' % node.rule_name)
         desc = desc.replace('$out', node.name)
