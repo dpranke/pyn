@@ -3,12 +3,12 @@
 import argparse
 import sys
 
-import analyzer
 import builder
 import parsers
 
-from pyn_exceptions import PynException, PynExit
+from analyzer import NinjaAnalyzer
 from host import Host
+from pyn_exceptions import PynException, PynExit
 
 
 VERSION = '0.2'
@@ -29,8 +29,8 @@ def main(host, argv=None):
         host.chdir(args.dir)
 
     ast = parsers.parse_ninja_file(host, args.file)
-    graph = analyzer.analyze_ninja_ast(host, args, ast,
-                                       parsers.parse_ninja_file)
+    analyzer = NinjaAnalyzer(host, args, parsers.parse_ninja_file)
+    graph = analyzer.analyze(ast)
 
     if args.tool:
         if args.tool == 'list':
