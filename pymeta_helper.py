@@ -18,7 +18,7 @@ class ParserBase(object):
 
     def __init__(self, name=None, grammar=None,
                  src_dir=None, filename=None,
-                 classname=None):
+                 classname=None, force=False):
         self.grammar = grammar or self.grammar
         self.name = name or self.name
         self.src_dir = src_dir or os.path.dirname(os.path.abspath(__file__))
@@ -31,8 +31,8 @@ class ParserBase(object):
         assert self.grammar
 
         module_name = self.basename.replace('.py', '')
-        if module_name not in sys.modules:
-            if self.generated_grammar() != self.grammar.strip():
+        if force or module_name not in sys.modules:
+            if force or (self.generated_grammar() != self.grammar.strip()):
                 self.generate_parser_module()
             self._module = importlib.import_module(module_name)
         else:
@@ -69,8 +69,8 @@ class ParserBase(object):
         with open(os.path.join(self.src_dir, 'pymeta', 'runtime.py')) as fp:
             runtime_str = fp.read()
         with open(os.path.join(self.src_dir, self.filename), 'w') as fp:
-            fp.write('# %s: disable=C0103,C0301,C0302,R0201,R0903,R0904\n\n' %
-                     'pylint')
+            fp.write('# pylint: disable=C0103,C0301,C0302,R0201,'
+                     'R0903,R0904,R0912\n\n')
             fp.write(runtime_str)
             fp.write('\n\n')
             fp.write('%s = """\n%s\n"""\n\n' % (self.grammar_constant_name,
@@ -82,13 +82,13 @@ class ParserBase(object):
             fp.write(parser_cls_code)
 
 
-def make_parser(grammar_file, name=None, _output=None):
+def make_parser(grammar_file, name=None, _output=None, force=False):
     with open(grammar_file) as f:
         grammar = f.read()
 
     basename = os.path.basename(grammar_file).replace('.pymeta', '')
     name = name or basename.capitalize()
-    return ParserBase(grammar=grammar, name=name)
+    return ParserBase(grammar=grammar, name=name, force=force)
 
 
 def main(argv=None):
@@ -103,7 +103,7 @@ def main(argv=None):
     args = parser.parse_args(args=argv)
 
     try:
-        make_parser(args.grammar[0], args.name, args.output)
+        make_parser(args.grammar[0], args.name, args.output, force=True)
     except IOError:
         print("Error: '%s' not found" % args.grammar, file=sys.stderr)
         sys.exit(1)

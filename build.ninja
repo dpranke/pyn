@@ -20,7 +20,7 @@ build lint : phony $
   .pylint.pymeta_helper.py $
   .pylint.pyn_exceptions.py
 
-build ninja_parser.py : pymeta ninja.pymeta
+build ninja_parser.py : pymeta ninja.pymeta | pymeta_helper.py
 
 build test : phony .pytest.parsers_test.py
 
