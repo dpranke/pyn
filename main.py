@@ -11,7 +11,7 @@ from pyn_exceptions import PynException, PynExit
 from host import Host
 
 
-VERSION = '0.1'
+VERSION = '0.2'
 
 
 def main(host, argv=None):
@@ -76,7 +76,8 @@ def parse_args(host, argv):
     return ap.parse_args(args=argv)
 
 
-def _actual_main():
+if __name__ == '__main__':
+    # pylint: disable=C0103
     h = Host()
     code = 0
     try:
@@ -84,12 +85,9 @@ def _actual_main():
     except PynExit as e:
         h.print_out(e)
     except PynException as e:
-        h.print_err('Error: ' + e)
+        h.print_err('Error: ' + str(e))
         code = 1
     except Exception as e:
-        h.print_err('Unexpected error: ' + e)
+        h.print_err('Unexpected error: ' + str(e))
         code = 1
-    return code
-
-if __name__ == '__main__':
-    sys.exit(_actual_main())
+    sys.exit(code)
