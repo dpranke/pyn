@@ -1,9 +1,9 @@
 rule pylint 
-  command = pylint --rcfile pylintrc $in > $out.tmp; if [ -s $out.tmp ]; then cat $out.tmp 1>&2 ; rm -f $out.tmp; false; else rm $out.tmp; fi
+  command = pylint --rcfile pylintrc $in > $out.tmp; if [ -s $out.tmp ]; then cat $out.tmp 1>&2 ; rm -f $out.tmp; false; else mv $out.tmp $out; fi
   description = pylint $in
 
 rule pytest
-  command = python $in 2> $out.tmp; if grep FAILED $out.tmp; then cat $out.tmp 1>&2 ; rm $out.tmp; false; else rm $out.tmp; fi
+  command = python $in 2> $out.tmp; if grep FAILED $out.tmp; then cat $out.tmp 1>&2 ; rm $out.tmp; false; else mv $out.tmp $out; fi
   description = python $in
 
 rule pymeta
@@ -24,16 +24,16 @@ build ninja_parser.py : pymeta ninja.pymeta | pymeta_helper.py
 
 build test : phony .pytest.parsers_test.py
 
-build .pylint.analyzer.py : pylint analyzer.py
-build .pylint.builder.py : pylint builder.py
+build .pylint.analyzer.py : pylint analyzer.py | host.py pyn_exceptions.py
+build .pylint.builder.py : pylint builder.py | host.py pyn_exceptions.py
 build .pylint.host.py : pylint host.py
-build .pylint.main.py : pylint main.py
+build .pylint.main.py : pylint main.py | host.py analyzer.py builder.py parsers.py
 build .pylint.ninja_parser.py : pylint ninja_parser.py
 build .pylint.parsers.py : pylint parsers.py | ninja_parser.py
 build .pylint.parsers_test.py : pylint parsers_test.py | ninja_parser.py
 build .pylint.pymeta_helper.py : pylint pymeta_helper.py
 build .pylint.pyn_exceptions.py : pylint pyn_exceptions.py
 
-build .pytest.parsers_test.py : pytest parsers_test.py
+build .pytest.parsers_test.py : pytest parsers_test.py | parsers.py ninja_parser.py
 
-default ninja_parser.py
+default lint test
