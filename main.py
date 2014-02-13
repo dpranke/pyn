@@ -69,8 +69,8 @@ def parse_args(host, argv):
     return ap.parse_args(args=argv)
 
 
-if __name__ == '__main__':
-    h = Host() # pylint: disable=C0103
+def _actual_main():
+    h = Host()
     try:
         main(h)
     except PynException as e:
@@ -80,3 +80,7 @@ if __name__ == '__main__':
         else:
             h.print_err('Error: ' + s)
         h.exit(1)
+
+
+if __name__ == '__main__':
+    _actual_main()
