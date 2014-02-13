@@ -47,6 +47,10 @@ class TestNinjaParser(unittest.TestCase):
         self.check("cflags = -Wall -O1\n",
                    [['var', 'cflags', '-Wall -O1']])
 
+    def test_simple_default(self):
+        self.check("default foo bar\n",
+                   [['default', ['foo', 'bar']]])
+
     def test_simple_rule(self):
         self.check('''
             rule cc

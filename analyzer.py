@@ -63,7 +63,7 @@ def _decl_build(_host, graph, decl):
 
 
 def _decl_default(_host, graph, decl):
-    graph.defaults = decl[1:]
+    graph.defaults = decl[1]
 
 
 def _decl_import(_host, _graph, _decl):
