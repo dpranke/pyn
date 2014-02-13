@@ -30,10 +30,14 @@ class ParserBase(object):
         assert self.name
         assert self.grammar
 
-        if self.generated_grammar() != self.grammar.strip():
-            self.generate_parser_module()
+        module_name = self.basename.replace('.py', '')
+        if module_name not in sys.modules:
+            if self.generated_grammar() != self.grammar.strip():
+                self.generate_parser_module()
+            self._module = importlib.import_module(module_name)
+        else:
+            self._module = sys.modules[module_name]
 
-        self._module = importlib.import_module(self.basename.replace('.py', ''))
         self._cls = getattr(self._module, self.classname)
 
         # pylint: disable=W0212
