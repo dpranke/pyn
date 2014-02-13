@@ -63,5 +63,10 @@ class TestNinjaParser(unittest.TestCase):
         self.check('build foo.o : cc foo.c | foo.h\n',
                    [['build', ['foo.o'], 'cc', ['foo.c'], ['foo.h']]])
 
+    def test_no_space_between_output_and_colon(self):
+        self.check('build foo.o: cc foo.c\n',
+                   [['build', ['foo.o'], 'cc', ['foo.c'], []]])
+
+
 if __name__ == '__main__':
     unittest.main()

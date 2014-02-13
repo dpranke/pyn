@@ -8,7 +8,7 @@ decl       = rule | build | var | default | subninja | import | pool
 
 rule       = "rule" ws ident:n eol indented_var+:vs -> ['rule', n, vs]
 
-build      = "build" ws paths:os ws ":" ws ident:rule ws paths:ins deps:ds eol
+build      = "build" ws paths:os ws? ":" ws ident:rule ws paths:ins deps:ds eol
            -> ['build', os, rule, ins, ds]
 
 deps       = ws "|" ws paths:ps -> ps
