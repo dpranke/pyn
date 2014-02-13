@@ -29,7 +29,7 @@ class TestNinjaParser(unittest.TestCase):
                    cflags = -Wall
 
                    rule cc
-                   command = gcc $cflags -c $in -o $out
+                       command = gcc $cflags -c $in -o $out
 
                    build foo.o : cc foo.c
                    ''',
@@ -53,7 +53,7 @@ class TestNinjaParser(unittest.TestCase):
     def test_simple_rule(self):
         self.check('''
                    rule cc
-                   command = gcc $cflags -c $in -o $out
+                       command = gcc $cflags -c $in -o $out
                    ''',
                    [['rule', 'cc',
                      [['var', 'command', 'gcc $cflags -c $in -o $out']]]])

@@ -3,10 +3,10 @@
 import argparse
 import sys
 
-import builder
 import parsers
 
 from analyzer import NinjaAnalyzer
+from builder import Builder
 from host import Host
 from pyn_exceptions import PynException, PynExit
 
@@ -28,8 +28,10 @@ def main(host, argv=None):
             raise PynException("'%s' does not exist" % args.dir)
         host.chdir(args.dir)
 
-    ast = parsers.parse_ninja_file(host, args.file)
     analyzer = NinjaAnalyzer(host, args, parsers.parse_ninja_file)
+    builder = Builder(host, args)
+
+    ast = parsers.parse_ninja_file(host, args.file)
     graph = analyzer.analyze(ast)
 
     if args.tool:
@@ -37,11 +39,11 @@ def main(host, argv=None):
             raise PynExit("pyn subtools:\n"
                           "  clean  clean built files")
         elif args.tool == 'clean':
-            builder.clean(host, args, graph)
+            builder.clean(graph)
         else:
             raise PynException("Unsupported tool '%s'" % args.tool)
     else:
-        builder.build(host, args, graph)
+        builder.build(graph)
 
 
 def parse_args(host, argv):
