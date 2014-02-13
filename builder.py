@@ -2,12 +2,22 @@ from pyn_exceptions import PynException
 
 
 def build(host, args, graph):
-    sorted_nodes = _tsort(graph)
+    requested_targets = args.targets or graph.defaults
+    nodes_to_build = _find_nodes_to_build(graph, requested_targets)
+    sorted_nodes = _tsort(graph, nodes_to_build)
     total_nodes = len(sorted_nodes)
     for cur, name in enumerate(sorted_nodes, start=1):
         node = graph.nodes[name]
         _build_node(host, args, graph, node, cur, total_nodes)
 
+def _find_nodes_to_build(graph, requested_targets):
+    unvisited_nodes = requested_targets[:]
+    nodes_to_build = set()
+    while unvisited_nodes:
+        node = unvisited_nodes.pop(0)
+        nodes_to_build.add(node)
+        unvisited_nodes.extend([d for d in graph.nodes[node].deps if d not in nodes_to_build and d in graph.nodes])
+    return nodes_to_build
 
 def _build_node(host, args, graph, node, cur, total_nodes):
     if node.rule_name == 'phony':
@@ -34,7 +44,7 @@ def _build_node(host, args, graph, node, cur, total_nodes):
         host.print_err('[%d/%d] %s' % (cur, total_nodes, desc))
 
 
-def _tsort(graph):
+def _tsort(graph, nodes_to_build):
     # This performs a topological sort of the nodes in the graph by
     # picking nodes arbitrarily, and then doing depth-first searches
     # across the graph from there. It should run in O(|nodes|) time.
@@ -56,7 +66,7 @@ def _tsort(graph):
 
     visited_nodes = set()
     sorted_nodes = []
-    unvisited_nodes = graph.nodes.keys()[:]
+    unvisited_nodes = [n for n in nodes_to_build]
     while unvisited_nodes:
         visit(unvisited_nodes[0], visited_nodes, sorted_nodes, unvisited_nodes)
     return sorted_nodes
