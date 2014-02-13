@@ -1,6 +1,6 @@
 rule pylint 
   command = pylint --rcfile pylintrc $in > $out.tmp; if [ -s $out.tmp ]; then cat $out.tmp 1>&2 ; rm -f $out.tmp; false; else rm $out.tmp; fi
-  description = pylint --rcfile pylintrc $in
+  description = pylint $in
 
 rule pytest
   command = python $in 2> $out.tmp; if grep FAILED $out.tmp; then cat $out.tmp 1>&2 ; rm $out.tmp; false; else rm $out.tmp; fi
