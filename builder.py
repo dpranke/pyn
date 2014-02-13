@@ -6,29 +6,33 @@ def build(host, args, graph):
     total_nodes = len(sorted_nodes)
     for cur, name in enumerate(sorted_nodes, start=1):
         node = graph.nodes[name]
-        if node.rule_name == 'phony':
-            continue
+        _build_node(host, args, graph, node, cur, total_nodes)
 
-        rule = graph.rules[node.rule_name]
-        command = rule.rule_vars.get('command')
-        command = command.replace('$out', node.name)
-        command = command.replace('$in', ' '.join(node.inputs))
-        if args.dry_run:
-            ret, out, err = 0, '', ''
-        else:
-            ret, out, err = host.call(command)
-        if ret or args.dry_run:
-            host.print_err('[%d/%d] %s' % (cur, total_nodes, command))
-            if out:
-                host.print_out(out)
-            if err:
-                host.print_err(err)
 
-        if args.verbose:
-            desc = rule.rule_vars.get('description', '%s $out' % node.rule_name)
-            desc = desc.replace('$out', node.name)
-            desc = desc.replace('$in', ' '.join(node.inputs))
-            host.print_err('[%d/%d] %s' % (cur, total_nodes, desc))
+def _build_node(host, args, graph, node, cur, total_nodes):
+    if node.rule_name == 'phony':
+        return
+
+    rule = graph.rules[node.rule_name]
+    command = rule.rule_vars.get('command')
+    command = command.replace('$out', node.name)
+    command = command.replace('$in', ' '.join(node.inputs))
+    if args.dry_run:
+        ret, out, err = 0, '', ''
+    else:
+        ret, out, err = host.call(command)
+    if ret or out or err or args.verbose > 1:
+        host.print_err('[%d/%d] %s' % (cur, total_nodes, command))
+        if out:
+            host.print_out(out)
+        if err:
+            host.print_err(err)
+    else:
+        desc = rule.rule_vars.get('description', '%s $out' % node.rule_name)
+        desc = desc.replace('$out', node.name)
+        desc = desc.replace('$in', ' '.join(node.inputs))
+        host.print_err('[%d/%d] %s' % (cur, total_nodes, desc))
+
 
 def _tsort(graph):
     # This performs a topological sort of the nodes in the graph by

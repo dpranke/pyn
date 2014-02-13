@@ -56,7 +56,7 @@ def parse_args(host, argv):
         help='keep going until N jobs fail [default=default]')
     ap.add_argument('-n', action='store_true', dest='dry_run',
         help='dry run (don\'t run commands but act like they succeeded)')
-    ap.add_argument('-v', action='store_true', dest='verbose',
+    ap.add_argument('-v', action='count', dest='verbose',
         help='show all command lines while building')
     ap.add_argument('-d', metavar='MODE', dest='debug',
         help='enable debugging (use -d list to list modes)')
