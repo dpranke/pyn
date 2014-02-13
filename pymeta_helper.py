@@ -70,7 +70,7 @@ class ParserBase(object):
             runtime_str = fp.read()
         with open(os.path.join(self.src_dir, self.filename), 'w') as fp:
             fp.write('# pylint: disable=C0103,C0301,C0302,R0201,'
-                     'R0903,R0904,R0912\n\n')
+                     'R0903,R0904,R0912,R0914\n\n')
             fp.write(runtime_str)
             fp.write('\n\n')
             fp.write('%s = """\n%s\n"""\n\n' % (self.grammar_constant_name,
