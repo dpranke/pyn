@@ -9,6 +9,8 @@ rule pytest
 rule pymeta
   command = python pymeta_helper.py $in
 
+build all : phony ninja_parser.py
+
 build lint : phony $
   .pylint.analyzer.py $
   .pylint.builder.py $
@@ -20,9 +22,9 @@ build lint : phony $
   .pylint.pymeta_helper.py $
   .pylint.pyn_exceptions.py
 
-build ninja_parser.py : pymeta ninja.pymeta | pymeta_helper.py
-
 build test : phony .pytest.parsers_test.py
+
+build ninja_parser.py : pymeta ninja.pymeta | pymeta_helper.py
 
 build .pylint.analyzer.py : pylint analyzer.py | host.py pyn_exceptions.py
 build .pylint.builder.py : pylint builder.py | host.py pyn_exceptions.py
@@ -36,4 +38,4 @@ build .pylint.pyn_exceptions.py : pylint pyn_exceptions.py
 
 build .pytest.parsers_test.py : pytest parsers_test.py | parsers.py ninja_parser.py
 
-default lint test
+default all
