@@ -5,8 +5,16 @@ def build(host, args, graph):
     sorted_nodes = _tsort(graph)
     total_nodes = len(sorted_nodes)
     for cur, name in enumerate(sorted_nodes, start=1):
+        node = graph.nodes[name]
+        if node.rule_name == 'phony':
+            desc = '$out'
+        else:
+            rule = graph.rules[node.rule_name]
+            desc = rule.rule_vars.get('description', '%s $out' % node.rule_name)
+        desc = desc.replace('$out', node.name)
+        desc = desc.replace('$in', ' '.join(node.inputs))
         if args.verbose:
-            host.print_err('[%d/%d] %s' % (cur, total_nodes, name))
+            host.print_err('[%d/%d] %s' % (cur, total_nodes, desc))
 
 def _tsort(graph):
     # This performs a topological sort of the nodes in the graph by
