@@ -43,6 +43,9 @@ class Host(object):
         if not self.exists(path):
             os.mkdir(path)
 
+    def mtime(self, *comps):
+        return os.stat(self.join(*comps)).st_mtime
+
     def path_to_module(self, module_name):
         # __file__ is always an absolute path.
         return sys.modules[module_name].__file__
