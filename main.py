@@ -48,31 +48,33 @@ def parse_args(host, argv):
     ap = argparse.ArgumentParser(prog='pyn')
     ap.usage = '%(prog)s [options] [targets...]'
     ap.description = ("if targets are unspecified, builds the 'default' "
-                       "targets (see manual).")
+                      "targets (see manual).")
     ap.add_argument('--version', action='store_true',
-        help='print pyn version ("%s")' % VERSION)
+                    help='print pyn version ("%s")' % VERSION)
     ap.add_argument('-C', metavar='DIR', dest='dir',
-        help='change to DIR before doing anything else')
+                    help='change to DIR before doing anything else')
     ap.add_argument('-f', metavar='FILE', dest='file', default='build.ninja',
-        help='specify input build file [default=%(default)s]')
+                    help='specify input build file [default=%(default)s]')
     ap.add_argument('-j', metavar='N', type=int, dest='jobs',
-        default=host.cpu_count(),
-        help=('run N jobs in parallel [default=%(default)s, '
-              'derived from CPUs available]'))
+                    default=host.cpu_count(),
+                    help=('run N jobs in parallel [default=%(default)s, '
+                          'derived from CPUs available]'))
     ap.add_argument('-l', metavar='N', type=float,
-        help='do not start new jobs if the load average is greater than N')
+                    help=('do not start new jobs if the load average '
+                          'is greater than N'))
     ap.add_argument('-k', metavar='N', type=int, dest='errors', default=1,
-        help='keep going until N jobs fail [default=default]')
+                    help='keep going until N jobs fail [default=default]')
     ap.add_argument('-n', action='store_true', dest='dry_run',
-        help='dry run (don\'t run commands but act like they succeeded)')
+                    help=('dry run (don\'t run commands but act like they '
+                          'succeeded)'))
     ap.add_argument('-v', action='count', dest='verbose',
-        help='show all command lines while building')
+                    help='show all command lines while building')
     ap.add_argument('-d', metavar='MODE', dest='debug',
-        help='enable debugging (use -d list to list modes)')
+                    help='enable debugging (use -d list to list modes)')
     ap.add_argument('-t', metavar='TOOL', dest='tool',
-        help='run a subtool (use -t list to list subtools)')
+                    help='run a subtool (use -t list to list subtools)')
     ap.add_argument('targets', nargs='*', default=[],
-        help=argparse.SUPPRESS)
+                    help=argparse.SUPPRESS)
     return ap.parse_args(args=argv)
 
 

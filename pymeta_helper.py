@@ -74,7 +74,7 @@ class ParserBase(object):
             fp.write(runtime_str)
             fp.write('\n\n')
             fp.write('%s = """\n%s\n"""\n\n' % (self.grammar_constant_name,
-                                            self.grammar))
+                                                self.grammar))
             fp.write('GrammarBase = OMetaBase\n')
             fp.write('\n\n')
 
@@ -95,11 +95,12 @@ def main(argv=None):
     parser = argparse.ArgumentParser(prog='pymeta_helper')
     parser.usage = '[options] grammar'
     parser.add_argument('grammar', nargs=1,
-        help=argparse.SUPPRESS)
+                        help=argparse.SUPPRESS)
     parser.add_argument('-o', metavar='FILE', dest='output',
-        help='destination file (defaults to s/grammar.pymeta/grammar.py)')
+                        help=('destination file (defaults to '
+                              's/grammar.pymeta/grammar.py)'))
     parser.add_argument('-n', '--name',
-        help='base name of grammar')
+                        help='base name of grammar')
     args = parser.parse_args(args=argv)
 
     try:

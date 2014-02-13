@@ -25,39 +25,38 @@ class TestNinjaParser(unittest.TestCase):
         self.err('rule foo')
 
     def test_sample(self):
-        self.check("""
-            cflags = -Wall
+        self.check('''
+                   cflags = -Wall
 
-            rule cc
-              command = gcc $cflags -c $in -o $out
+                   rule cc
+                   command = gcc $cflags -c $in -o $out
 
-            build foo.o : cc foo.c
-            """,
-            [['var', 'cflags', '-Wall'],
-             ['rule', 'cc',
-               [['var', 'command', 'gcc $cflags -c $in -o $out']]],
-             ['build', ['foo.o'], 'cc', ['foo.c'], []]])
-
+                   build foo.o : cc foo.c
+                   ''',
+                   [['var', 'cflags', '-Wall'],
+                    ['rule', 'cc',
+                     [['var', 'command', 'gcc $cflags -c $in -o $out']]],
+                    ['build', ['foo.o'], 'cc', ['foo.c'], []]])
 
     def test_simple_build(self):
         self.check('build foo.o : cc foo.c\n',
                    [['build', ['foo.o'], 'cc', ['foo.c'], []]])
 
     def test_simple_cflags(self):
-        self.check("cflags = -Wall -O1\n",
+        self.check('cflags = -Wall -O1\n',
                    [['var', 'cflags', '-Wall -O1']])
 
     def test_simple_default(self):
-        self.check("default foo bar\n",
+        self.check('default foo bar\n',
                    [['default', ['foo', 'bar']]])
 
     def test_simple_rule(self):
         self.check('''
-            rule cc
-                command = gcc $cflags -c $in -o $out
-            ''',
-            [['rule', 'cc',
-               [['var', 'command', 'gcc $cflags -c $in -o $out']]]])
+                   rule cc
+                   command = gcc $cflags -c $in -o $out
+                   ''',
+                   [['rule', 'cc',
+                     [['var', 'command', 'gcc $cflags -c $in -o $out']]]])
 
     def test_build_with_deps(self):
         self.check('build foo.o : cc foo.c | foo.h\n',

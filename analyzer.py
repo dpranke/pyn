@@ -1,5 +1,6 @@
 from pyn_exceptions import PynException
 
+
 class _Graph(object):
     def __init__(self):
         self.nodes = {}
@@ -51,8 +52,9 @@ def analyze_ninja_ast(host, _args, ast, _parser_cb):
 
     return graph
 
+
 def _decl_build(_host, graph, decl):
-    _, outputs, rule_name, inputs, deps  = decl
+    _, outputs, rule_name, inputs, deps = decl
     if len(outputs) > 1:
         raise PynException("More than one output is not supported yet")
     output = outputs[0]
