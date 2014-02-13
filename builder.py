@@ -7,13 +7,27 @@ def build(host, args, graph):
     for cur, name in enumerate(sorted_nodes, start=1):
         node = graph.nodes[name]
         if node.rule_name == 'phony':
-            desc = '$out'
+            continue
+
+        rule = graph.rules[node.rule_name]
+        command = rule.rule_vars.get('command')
+        command = command.replace('$out', node.name)
+        command = command.replace('$in', ' '.join(node.inputs))
+        if args.dry_run:
+            ret, out, err = 0, '', ''
         else:
-            rule = graph.rules[node.rule_name]
-            desc = rule.rule_vars.get('description', '%s $out' % node.rule_name)
-        desc = desc.replace('$out', node.name)
-        desc = desc.replace('$in', ' '.join(node.inputs))
+            ret, out, err = host.call(command)
+        if ret or args.dry_run:
+            host.print_err('[%d/%d] %s' % (cur, total_nodes, command))
+            if out:
+                host.print_out(out)
+            if err:
+                host.print_err(err)
+
         if args.verbose:
+            desc = rule.rule_vars.get('description', '%s $out' % node.rule_name)
+            desc = desc.replace('$out', node.name)
+            desc = desc.replace('$in', ' '.join(node.inputs))
             host.print_err('[%d/%d] %s' % (cur, total_nodes, desc))
 
 def _tsort(graph):

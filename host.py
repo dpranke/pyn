@@ -14,8 +14,8 @@ class Host(object):
     stdout = sys.stdout
     python_interpreter = sys.executable
 
-    def call(self, cmd):
-        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,
+    def call(self, cmd_str):
+        proc = subprocess.Popen(cmd_str, shell=True, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
         stdout, stderr = proc.communicate()
         return proc.returncode, stdout, stderr

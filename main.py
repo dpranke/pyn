@@ -23,8 +23,6 @@ def main(host, argv=None):
         raise PynException('-d is not supported yet')
     if args.tool:
         raise PynException('-t is not supported yet')
-    if args.dry_run:
-        raise PynException('-n is not supported yet')
 
     if args.dir:
         if not host.exists(args.dir):
