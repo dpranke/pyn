@@ -97,6 +97,24 @@ class Scope(object):
         return 'Scope(name=%s, parent=%s, objs=%s)' % (
                 self.name, parent_scope, self.objs)
 
+    def __contains__(self, key):
+        if key in self.objs:
+            return True
+        if self.parent:
+            return key in self.parent
+        return False
+
+    def __getitem__(self, key):
+        if key in self.objs:
+            return self.objs[key]
+        if self.parent:
+            return self.parent[key]
+        raise KeyError(key)
+
+    def __setitem__(self, key, value):
+        self.objs[key] = value
+
+
 def expand_vars(msg, scope):
     """Expand the vars in the given string using the variables in scope."""
     expanded_msg = msg.replace('$out', scope.objs['out'])

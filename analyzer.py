@@ -28,8 +28,8 @@ class NinjaAnalyzer(object):
             raise PynException("build %' declared more than once")
 
         build_scope = Scope(build_name, scope)
-        build_scope.objs['out'] = ' '.join(outputs)
-        build_scope.objs['in'] = ' '.join(inputs)
+        build_scope['out'] = ' '.join(outputs)
+        build_scope['in'] = ' '.join(inputs)
         for name, val in build_vars:
             if name in build_scope.objs:
                 raise PynException("'var %s' declared more than once "
@@ -84,10 +84,10 @@ class NinjaAnalyzer(object):
 
         rule_scope = Scope(rule_name, scope.name)
         for _, var_name, val in rule_vars:
-            if var_name in rule_scope.objs:
+            if var_name in rule_scope:
                 raise PynException("'var %s' declared more than once "
                                    " in rule %s'" % (var_name, rule_name))
-            rule_scope.objs[var_name] = val
+            rule_scope[var_name] = val
 
         rule = Rule(rule_name, rule_scope)
         graph.rules[rule_name] = rule
@@ -113,9 +113,9 @@ class NinjaAnalyzer(object):
     def _decl_var(self, graph, scope, decl):
         _, var_name, value = decl
 
-        if var_name in scope.objs:
+        if var_name in scope:
             raise PynException("'var %s' is declared more than once "
                                "in the same scope" % var_name)
 
-        scope.objs[var_name] = value
+        scope[var_name] = value
         return graph

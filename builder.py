@@ -40,7 +40,7 @@ class Builder(object):
             return
 
         rule = graph.rules[node.rule_name]
-        command = expand_vars(rule.scope.objs['command'], node.scope)
+        command = expand_vars(rule.scope['command'], node.scope)
         if self._args.dry_run:
             ret, out, err = 0, '', ''
         else:
@@ -54,7 +54,7 @@ class Builder(object):
             if ret:
                 raise PynException('build failed')
         else:
-            desc = expand_vars(rule.scope.objs['description'], node.scope)
+            desc = expand_vars(rule.scope['description'], node.scope)
             self._host.print_err('[%d/%d] %s' % (cur, total_nodes, desc))
 
     def clean(self, graph):
