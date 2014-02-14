@@ -2,24 +2,30 @@
 import textwrap
 import unittest
 
+import pymeta_helper
 
 from common import PynException
 from host import Host
-from parsers import parse_ninja_text
 
 
 class TestNinjaParser(unittest.TestCase):
-    # disable 'too many public methods' pylint: disable=R0904
+    # 'too many public methods' pylint: disable=R0904
+
+    def setUp(self):  # 'invalid name' pylint: disable=C0103
+        host = Host()
+        d = host.dirname(host.path_to_module(__name__))
+        path = host.join(d, 'ninja.pymeta')
+        self.parser = pymeta_helper.make_parser(path)
 
     def check(self, text, ast):
         dedented_text = textwrap.dedent(text)
-        actual_ast = parse_ninja_text(Host(), dedented_text)
+        actual_ast = self.parser.parse(dedented_text)
         self.assertEquals(actual_ast, ast)
 
     def err(self, text):
         dedented_text = textwrap.dedent(text)
-        self.assertRaises(PynException, parse_ninja_text,
-                          Host(), dedented_text)
+        self.assertRaises(pymeta_helper.ParseError, self.parser.parse,
+                          dedented_text)
 
     def test_syntax_err(self):
         self.err('rule foo')

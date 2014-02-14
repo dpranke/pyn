@@ -14,28 +14,27 @@ build all : phony ninja_parser.py
 build lint : phony $
   .pylint.analyzer.py $
   .pylint.builder.py $
+  .pylint.common.py $
   .pylint.host.py $
   .pylint.main.py $
   .pylint.ninja_parser.py $
-  .pylint.parsers.py $
-  .pylint.parsers_test.py $
-  .pylint.pymeta_helper.py $
-  .pylint.common.py
+  .pylint.ninja_parser_test.py $
+  .pylint.pymeta_helper.py
 
-build test : phony .pytest.parsers_test.py
+build test : phony .pytest.ninja_parser_test.py
 
 build ninja_parser.py : pymeta ninja.pymeta | pymeta_helper.py
 
 build .pylint.analyzer.py : pylint analyzer.py | host.py common.py
 build .pylint.builder.py : pylint builder.py | host.py common.py
-build .pylint.host.py : pylint host.py
-build .pylint.main.py : pylint main.py | host.py analyzer.py builder.py parsers.py
-build .pylint.ninja_parser.py : pylint ninja_parser.py
-build .pylint.parsers.py : pylint parsers.py | ninja_parser.py
-build .pylint.parsers_test.py : pylint parsers_test.py | ninja_parser.py
-build .pylint.pymeta_helper.py : pylint pymeta_helper.py
 build .pylint.common.py : pylint common.py
+build .pylint.host.py : pylint host.py
+build .pylint.main.py : pylint main.py | host.py analyzer.py builder.py ninja_parser.py
+build .pylint.ninja_parser.py : pylint ninja_parser.py
+build .pylint.ninja_parser_test.py : pylint ninja_parser_test.py | ninja_parser.py
+build .pylint.parsers.py : pylint parsers.py | ninja_parser.py
+build .pylint.pymeta_helper.py : pylint pymeta_helper.py
 
-build .pytest.parsers_test.py : pytest parsers_test.py | parsers.py ninja_parser.py
+build .pytest.ninja_parser_test.py : pytest ninja_parser_test.py
 
 default all

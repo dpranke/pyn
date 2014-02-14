@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-
 import argparse
 import sys
 
-import parsers
+import pymeta_helper
 
 from analyzer import NinjaAnalyzer
 from builder import Builder
@@ -16,24 +15,26 @@ VERSION = '0.2'
 
 def main(host, argv=None):
     args = parse_args(host, argv)
-
     if args.version:
         raise PynExit(VERSION)
-
     if args.debug:
         raise PynException('-d is not supported yet')
-
     if args.dir:
         if not host.exists(args.dir):
             raise PynException("'%s' does not exist" % args.dir)
         host.chdir(args.dir)
+    if not host.exists(args.file):
+        raise PynException("'%s' does not exist" % args.file)
 
-    analyzer = NinjaAnalyzer(host, args, parsers.parse_ninja_file)
-    builder = Builder(host, args)
+    d = host.dirname(host.path_to_module(__name__))
+    parser = pymeta_helper.make_parser(host.join(d, 'ninja.pymeta'))
+    ast = parser.parse(host.read(args.file))
 
-    ast = parsers.parse_ninja_file(host, args.file)
+    analyzer = NinjaAnalyzer(host, args, parser)
+
     graph = analyzer.analyze(ast)
 
+    builder = Builder(host, args)
     if args.tool:
         if args.tool == 'list':
             raise PynExit("pyn subtools:\n"
@@ -90,8 +91,5 @@ if __name__ == '__main__':
         h.print_out(e)
     except PynException as e:
         h.print_err('Error: ' + str(e))
-        code = 1
-    except Exception as e:
-        h.print_err('Unexpected error: ' + str(e))
         code = 1
     sys.exit(code)
