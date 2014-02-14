@@ -26,6 +26,9 @@ It uses [PyMeta 2](https://bitbucket.org/wkornewald/pymeta/src),
 as a parser generator. PyMeta 2 is an implementation of
 [OMeta](https://github.com/alexwarth/ometa-js) in Python.
 
+pyn is licensed under the Apache Source License. For more information see
+the LICENSE file in the source repo.
+
 ## Things that still need to be implemented
 
 * the 'import' directive
