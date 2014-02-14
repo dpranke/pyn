@@ -33,6 +33,7 @@ class _Node(object):
         return 'Node(name=%s, rule_name=%s, inputs=%s, deps=%s)' % (
             self.name, self.rule_name, self.inputs, self.deps)
 
+
 class NinjaAnalyzer(object):
     # "method could be a function" pylint: disable=R0201
     def __init__(self, host, args, parser):
@@ -76,7 +77,7 @@ class NinjaAnalyzer(object):
         for _, var_name, val in rule_vars:
             if var_name in rule.rule_vars:
                 raise PynException("'var %s' declared more than once "
-                                " in rule %s'" % (var_name, rule_name))
+                                   " in rule %s'" % (var_name, rule_name))
             rule.rule_vars[var_name] = val
 
     def _decl_subninja(self, _graph, _decl):
@@ -86,5 +87,5 @@ class NinjaAnalyzer(object):
         _, var_name, value = decl
         if var_name in graph.global_vars:
             raise PynException("'var %s' is declared more than once "
-                            "at the top level" % var_name)
+                               "at the top level" % var_name)
         graph.global_vars[var_name] = value
