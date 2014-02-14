@@ -15,13 +15,14 @@ build lint : phony $
   .pylint.analyzer.py $
   .pylint.builder.py $
   .pylint.common.py $
+  .pylint.common_test.py $
   .pylint.host.py $
   .pylint.main.py $
   .pylint.ninja_parser.py $
   .pylint.ninja_parser_test.py $
   .pylint.pymeta_helper.py
 
-build test : phony .pytest.ninja_parser_test.py
+build test : phony .pytest.ninja_parser_test.py .pytest.common_test.py
 
 build ninja_parser.py : pymeta ninja.pymeta | pymeta_helper.py
 
@@ -36,5 +37,6 @@ build .pylint.parsers.py : pylint parsers.py | ninja_parser.py
 build .pylint.pymeta_helper.py : pylint pymeta_helper.py
 
 build .pytest.ninja_parser_test.py : pytest ninja_parser_test.py
+build .pytest.common_test.py : pytest common_test.py
 
 default all
