@@ -41,6 +41,8 @@ the LICENSE file in the source repo.
 * rspfiles
 * NINJA_STATUS parsing and options
 * support for rules with multiple outputs.
+* detecting when the command needed for a build has changed and the
+  outputs should be rebuilt.
 
 ### Also:
 
@@ -48,8 +50,8 @@ the LICENSE file in the source repo.
 * various tools (-t browse, commands, deps, graph, query, targets, compdb,
   recompact)
   * also -t clean for targets
-* something like the .ninja_log support for faster startup and to detect
-  command line changes
+* a database (like .ninja_log) for faster startup
+* hash-based build tracking in addition to mtime-based tracking?
 * more tests
 * code coverage integration into the build.ninja file
 * additional linting support for pyflakes, pep8 as well as pylint.
