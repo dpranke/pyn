@@ -1,6 +1,6 @@
 import pymeta_helper
 
-from pyn_exceptions import PynException
+from common import PynException
 
 
 def parse_ninja_file(host, path):

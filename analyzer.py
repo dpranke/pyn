@@ -1,37 +1,4 @@
-from pyn_exceptions import PynException
-
-
-class _Graph(object):
-    def __init__(self):
-        self.nodes = {}
-        self.rules = {}
-        self.global_vars = {}
-        self.defaults = {}
-
-    def __repr__(self):
-        return 'Graph(nodes=%s, rules=%s, global_vars=%s, defaults=%s)' % (
-            self.nodes, self.rules, self.global_vars, self.defaults)
-
-
-class _Rule(object):
-    def __init__(self, name):
-        self.name = name
-        self.rule_vars = {}
-
-    def __repr__(self):
-        return 'Rule(name=%s, rule_vars=%s)' % (self.name, self.rule_vars)
-
-
-class _Node(object):
-    def __init__(self, name, rule_name, inputs, deps):
-        self.name = name
-        self.rule_name = rule_name
-        self.inputs = inputs
-        self.deps = deps
-
-    def __repr__(self):
-        return 'Node(name=%s, rule_name=%s, inputs=%s, deps=%s)' % (
-            self.name, self.rule_name, self.inputs, self.deps)
+from common import Graph, Node, Rule, PynException
 
 
 class NinjaAnalyzer(object):
@@ -42,7 +9,7 @@ class NinjaAnalyzer(object):
         self.parser = parser
 
     def analyze(self, ast):
-        graph = _Graph()
+        graph = Graph()
         for decl in ast:
             getattr(self, '_decl_' + decl[0])(graph, decl)
         return graph
@@ -55,7 +22,7 @@ class NinjaAnalyzer(object):
         if output in graph.nodes:
             raise PynException("build %' declared more than once")
 
-        graph.nodes[output] = _Node(output, rule_name, inputs, inputs + deps)
+        graph.nodes[output] = Node(output, rule_name, inputs, inputs + deps)
 
     def _decl_default(self, graph, decl):
         graph.defaults = decl[1]
@@ -72,7 +39,7 @@ class NinjaAnalyzer(object):
         if rule_name in graph.rules:
             raise PynException("'rule %s' declared more than once" % rule_name)
 
-        rule = _Rule(rule_name)
+        rule = Rule(rule_name)
         graph.rules[rule_name] = rule
         for _, var_name, val in rule_vars:
             if var_name in rule.rule_vars:

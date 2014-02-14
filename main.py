@@ -7,8 +7,8 @@ import parsers
 
 from analyzer import NinjaAnalyzer
 from builder import Builder
+from common import PynException, PynExit
 from host import Host
-from pyn_exceptions import PynException, PynExit
 
 
 VERSION = '0.2'

@@ -2,10 +2,10 @@
 import textwrap
 import unittest
 
-import parsers
 
+from common import PynException
 from host import Host
-from pyn_exceptions import PynException
+from parsers import parse_ninja_text
 
 
 class TestNinjaParser(unittest.TestCase):
@@ -13,12 +13,12 @@ class TestNinjaParser(unittest.TestCase):
 
     def check(self, text, ast):
         dedented_text = textwrap.dedent(text)
-        actual_ast = parsers.parse_ninja_text(Host(), dedented_text)
+        actual_ast = parse_ninja_text(Host(), dedented_text)
         self.assertEquals(actual_ast, ast)
 
     def err(self, text):
         dedented_text = textwrap.dedent(text)
-        self.assertRaises(PynException, parsers.parse_ninja_text,
+        self.assertRaises(PynException, parse_ninja_text,
                           Host(), dedented_text)
 
     def test_syntax_err(self):
