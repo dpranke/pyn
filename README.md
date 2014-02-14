@@ -29,22 +29,20 @@ as a parser generator. PyMeta 2 is an implementation of
 pyn is licensed under the Apache Source License. For more information see
 the LICENSE file in the source repo.
 
-## Things that still need to be implemented
+## Things that still need to be implemented:
 
-* the 'import' directive
-* the 'subninja' directive
 * proper variable expansion
-* per-build variables
 * parallel job execution
   * basic support, including handling of the -j flag
   * support for the -k flag for load throttling
-  * support for 'pools'
+  * support for pools
 * deps support
 * restat and generator support
 * rspfiles
 * NINJA_STATUS parsing and options
+* support for rules with multiple outputs.
 
-Also:
+### Also:
 
 * various debug modes (-d stats, explain, keeprsp)
 * various tools (-t browse, commands, deps, graph, query, targets, compdb,

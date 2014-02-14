@@ -1,41 +1,42 @@
-grammar    = decls:ds end -> ds
+grammar    = (ws|'\n')* decls:ds (ws|'\n')* end -> ds
 
-decls      = (ws|'\n')* decl:d  decls:ds -> [d] + ds
-           | (ws|'\n')* decl:d           -> [d]
-           | (ws|'\n')*                  -> []
+decls      = decl:d (ws|'\n')* decls:ds -> [d] + ds
+           | decl:d                     -> [d]
 
-decl       = rule | build | var | default | subninja | import | pool
-
-rule       = "rule" ws ident:n eol indented_var+:vs -> ['rule', n, vs]
+decl       = build | rule | var | subninja | include | pool | default
 
 build      = "build" ws paths:os ws? ":" ws ident:rule ws paths:ins deps:ds eol
-           -> ['build', os, rule, ins, ds]
+             indented_var*:vs -> ['build', os, rule, ins, ds, vs]
 
-deps       = ws "|" ws paths:ps -> ps
-           | -> []
+rule       = "rule" ws ident:n eol indented_var+:vs -> ['rule', n, vs]
 
 var        = ident:n ws "=" spaces (~eol anything)+:v eol
            -> ['var', n, ''.join(v)]
 
-default    = "default" ws paths:ps eol -> ['default', ps]
-
 subninja   = "subninja" ws path:p    -> ['subninja', p]
 
-import     = "include" ws path:p     -> ['import', p]
+include    = "include" ws path:p     -> ['include', p]
 
 pool       = "pool" ws ident:name eol indented_var+:vars -> ['pool', name, vars]
 
-indented_var = ws var:v              -> v
-
-ident      = (letter|'_'|'$'|'.'):hd (letter|'.'|'_')*:tl -> ''.join([hd] + tl)
+default    = "default" ws paths:ps eol -> ['default', ps]
 
 paths      = path:p ws paths:ps -> [p] + ps
            | path:p -> [p]
 
-path       = '"' (~('"'|'\n') anything)+:p '"' -> ''.join(p)
-           | (~(' '|':'|'='|'|'|eol) anything)+:p  -> ''.join(p)
+path       = (~('"'|' '|':'|'='|'|'|eol) anything)+:p  -> ''.join(p)
+           | '"' (~('"'|'\n') anything)+:p '"'         -> ''.join(p)
+
+ident      = (letter|'_'|'$'|'.'):hd (letter|'.'|'_')*:tl -> ''.join([hd] + tl)
+
+deps       = ws "|" ws paths:ps -> ps
+           | -> []
 
 eol        = '#' (~'\n' anything)* '\n'
            | ' '* ~('$' '\n') '\n'
 
 ws         = (' '|('$' '\n'))+
+
+indented_var = ws var:v -> v
+
+

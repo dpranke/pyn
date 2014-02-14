@@ -32,7 +32,7 @@ def main(host, argv=None):
 
     analyzer = NinjaAnalyzer(host, args, parser)
 
-    graph = analyzer.analyze(ast)
+    graph = analyzer.analyze(ast, args.file)
 
     builder = Builder(host, args)
     if args.tool:
