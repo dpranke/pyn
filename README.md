@@ -31,7 +31,6 @@ the LICENSE file in the source repo.
 
 ## Things that still need to be implemented:
 
-* proper variable expansion
 * parallel job execution
   * basic support, including handling of the -j flag
   * support for the -k flag for load throttling

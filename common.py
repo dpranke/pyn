@@ -115,7 +115,50 @@ class Scope(object):
 
 
 def expand_vars(msg, scope):
-    """Expand the vars in the given string using the variables in scope."""
-    expanded_msg = msg.replace('$out', scope.objs['out'])
-    expanded_msg = expanded_msg.replace('$in', scope.objs['in'])
-    return expanded_msg
+    """Expand the vars in the given string using the variables in scope.
+
+    Equivalent to the following grammar:
+
+      chunks = [chunk]*            -> ''.join(chunks)
+
+      chunk = ~'$' anything:a      -> a
+            | '$' (' '|':'|'$'):l  -> l
+            | '$' '{' ident:i '}'  -> scope[i]
+            | '$ ident:i           -> scope[i]
+    """
+    cur = 0
+    chunks = []
+    msg_len = len(msg)
+    while cur < msg_len:
+        if msg[cur] != '$':
+            chunks.append(msg[cur])
+            cur += 1
+        elif msg[cur + 1] in (' ', ':', '$'):
+            chunks.append(msg[cur+1])
+            cur += 2
+        elif msg[cur + 1] == '{':
+            end_curly = msg.find('}', cur + 2)
+            if end_curly == -1:
+                raise PynException("malformed command string '%s'" % msg)
+            var_name = msg[cur + 2 : end_curly]
+            try:
+                chunks.append(scope[var_name])
+            except KeyError:
+                raise PynException("undefined var '%s'" % var_name)
+            cur = end_curly + 1
+        else:
+            end_var = cur + 1
+            if (end_var == msg_len or
+                not msg[end_var].isalpha() and msg[end_var] not in ('_', '.')):
+               raise PynException("malformed command string '%s'" % msg)
+            end_var += 1
+            while (end_var < msg_len and
+                   (msg[end_var].isalpha() or msg[end_var]  in ('.', '_'))):
+                end_var += 1
+            var_name = msg[cur + 1 : end_var]
+            try:
+                chunks.append(scope[var_name])
+            except KeyError:
+                raise PynException("undefined var '%s'" % var_name)
+            cur = end_var
+    return ''.join(chunks)
