@@ -98,11 +98,13 @@ class Scope(object):
                 self.name, parent_scope, self.objs)
 
     def __contains__(self, key):
-        if key in self.objs:
-            return True
-        if self.parent:
-            return key in self.parent
-        return False
+        return key in self.objs or (self.parent and key in self.parent)
+
+    def __setitem__(self, key, value):
+        self.objs[key] = value
+
+    def __delitem__(self, key):
+        del self.objs[key]
 
     def __getitem__(self, key):
         if key in self.objs:
@@ -110,9 +112,6 @@ class Scope(object):
         if self.parent:
             return self.parent[key]
         raise KeyError(key)
-
-    def __setitem__(self, key, value):
-        self.objs[key] = value
 
 
 def expand_vars(msg, scope):
