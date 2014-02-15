@@ -74,4 +74,7 @@ class Builder(object):
         return self._mtimes[name]
 
     def _restat(self, name):
-        self._mtimes[name] = self._host.mtime(name)
+        if self._host.exists(name):
+            self._mtimes[name] = self._host.mtime(name)
+        elif name in self._mtimes:
+            del self._mtimes[name]

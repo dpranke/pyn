@@ -38,9 +38,9 @@ class TestNinjaParser(unittest.TestCase):
 
                    build foo.o : cc foo.c
                    ''',
-                   [['var', 'cflags', '-Wall'],
+                   [['var', 'cflags', ' -Wall'],
                     ['rule', 'cc',
-                     [['var', 'command', 'gcc $cflags -c $in -o $out']]],
+                     [['var', 'command', ' gcc $cflags -c $in -o $out']]],
                     ['build', ['foo.o'], 'cc', ['foo.c'], [], []]])
 
     def test_simple_build(self):
@@ -49,7 +49,7 @@ class TestNinjaParser(unittest.TestCase):
 
     def test_simple_cflags(self):
         self.check('cflags = -Wall -O1\n',
-                   [['var', 'cflags', '-Wall -O1']])
+                   [['var', 'cflags', ' -Wall -O1']])
 
     def test_simple_default(self):
         self.check('default foo bar\n',
@@ -61,7 +61,7 @@ class TestNinjaParser(unittest.TestCase):
                        command = gcc $cflags -c $in -o $out
                    ''',
                    [['rule', 'cc',
-                     [['var', 'command', 'gcc $cflags -c $in -o $out']]]])
+                     [['var', 'command', ' gcc $cflags -c $in -o $out']]]])
 
     def test_build_with_deps(self):
         self.check('build foo.o : cc foo.c | foo.h\n',

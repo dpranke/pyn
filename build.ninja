@@ -28,11 +28,7 @@ build coverage : phony .pycoverage_report
 
 rule pycov
     command = coverage erase && $
-              for i in $in ; $
-              do $
-                coverage run --append $$i > /dev/null 2>& 1 ; $
-              done && $
-              coverage --report 
+      for i in $in ; do coverage run --append $$i > /dev/null 2>& 1 ; done && coverage --report 
     description = generating python coverage
 
 build .pycoverage_report : pycov analyzer_test.py builder_test.py common_test.py main_test.py ninja_parser_test.py
