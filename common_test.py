@@ -41,8 +41,10 @@ class TestExpandVars(unittest.TestCase):
         self.check('${foo}', 'a')
         self.check('${foo}bar', 'abar')
 
+    def test_undefined_var_expands_to_nothing(self):
+        self.check('$baz', '')
+
     def test_errors(self):
-        self.err('$baz')
         self.err('${')
         self.err('${baz')
 

@@ -111,7 +111,7 @@ class Scope(object):
             return self.objs[key]
         if self.parent:
             return self.parent[key]
-        raise KeyError(key)
+        return ''
 
 
 def expand_vars(msg, scope):
