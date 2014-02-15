@@ -3,6 +3,7 @@
 
 .ninja_deps
 .ninja_log
+.coverage
 .pylint.*
 .pytest.*
 hello/hello.o

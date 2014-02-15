@@ -1,9 +1,9 @@
 rule pylint 
-  command = pylint --rcfile pylintrc $in > $out.tmp; if [ -s $out.tmp ]; then cat $out.tmp 1>&2 ; rm -f $out.tmp; false; else mv $out.tmp $out; fi
+  command = pylint --rcfile pylintrc $in > $out.tmp; if [ -s $out.tmp ]; then cat $out.tmp 1>&2 ; rm -f $out.tmp; false ; fi
   description = pylint $in
 
 rule pytest
-  command = python $in 2> $out.tmp; if grep FAILED $out.tmp; then cat $out.tmp 1>&2 ; rm $out.tmp; false; else mv $out.tmp $out; fi
+  command = python $in 2> $out.tmp; if grep FAILED $out.tmp; then cat $out.tmp 1>&2 ; rm $out.tmp; false; fi
   description = python $in
 
 rule pymeta
@@ -24,11 +24,25 @@ build lint : phony $
 
 build test : phony .pytest.ninja_parser_test.py .pytest.common_test.py
 
+build coverage : phony .pycoverage_report
+
+rule pycov
+    command = coverage erase && $
+              for i in $in ; $
+              do $
+                coverage run --append $$i > /dev/null 2>& 1 ; $
+              done && $
+              coverage --report 
+    description = generating python coverage
+
+build .pycoverage_report : pycov common_test.py ninja_parser_test.py
+
 build ninja_parser.py : pymeta ninja.pymeta | pymeta_helper.py
 
 build .pylint.analyzer.py : pylint analyzer.py | host.py common.py
 build .pylint.builder.py : pylint builder.py | host.py common.py
 build .pylint.common.py : pylint common.py
+build .pylint.common_test.py : pylint common_test.py
 build .pylint.host.py : pylint host.py
 build .pylint.main.py : pylint main.py | host.py analyzer.py builder.py ninja_parser.py
 build .pylint.ninja_parser.py : pylint ninja_parser.py
