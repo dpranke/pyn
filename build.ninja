@@ -35,16 +35,19 @@ rule pycov
               coverage --report 
     description = generating python coverage
 
-build .pycoverage_report : pycov common_test.py ninja_parser_test.py
+build .pycoverage_report : pycov analyzer_test.py builder_test.py common_test.py main_test.py ninja_parser_test.py
 
 build ninja_parser.py : pymeta ninja.pymeta | pymeta_helper.py
 
-build .pylint.analyzer.py : pylint analyzer.py | host.py common.py
-build .pylint.builder.py : pylint builder.py | host.py common.py
+build .pylint.analyzer.py : pylint analyzer.py
+build .pylint.analyzer_test.py : pylint analyzer_test.py
+build .pylint.builder.py : pylint builder.py
+build .pylint.builder_test.py : pylint builder_test.py
 build .pylint.common.py : pylint common.py
 build .pylint.common_test.py : pylint common_test.py
 build .pylint.host.py : pylint host.py
-build .pylint.main.py : pylint main.py | host.py analyzer.py builder.py ninja_parser.py
+build .pylint.main.py : pylint main.py
+build .pylint.main_test.py : pylint main_test.py
 build .pylint.ninja_parser.py : pylint ninja_parser.py
 build .pylint.ninja_parser_test.py : pylint ninja_parser_test.py | ninja_parser.py
 build .pylint.parsers.py : pylint parsers.py | ninja_parser.py
