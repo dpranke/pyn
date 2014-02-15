@@ -29,7 +29,7 @@ class Node(object):
 
     def __repr__(self):
         return 'Node(name=%s, scope=%s, rule_name=%s, deps=%s)' % (
-            self.name, self.scope, self.rule_name, self.deps)
+            self.name, self.scope.name, self.rule_name, self.deps)
 
 
 def find_nodes_to_build(graph, requested_targets):
@@ -80,7 +80,7 @@ class Rule(object):
         self.scope = scope
 
     def __repr__(self):
-        return 'Rule(name=%s, scope=%s)' % (self.name, self.scope)
+        return 'Rule(name=%s, scope=%s)' % (self.name, self.scope.name)
 
 
 class Scope(object):
@@ -95,7 +95,7 @@ class Scope(object):
         else:
             parent_scope = 'None'
         return 'Scope(name=%s, parent=%s, objs=%s)' % (
-                self.name, parent_scope, self.objs)
+            self.name, parent_scope, self.objs)
 
     def __contains__(self, key):
         return key in self.objs or (self.parent and key in self.parent)
@@ -104,7 +104,8 @@ class Scope(object):
         self.objs[key] = value
 
     def __delitem__(self, key):
-        del self.objs[key]
+        if key in self.objs:
+            del self.objs[key]
 
     def __getitem__(self, key):
         if key in self.objs:
@@ -133,32 +134,26 @@ def expand_vars(msg, scope):
         if msg[cur] != '$':
             chunks.append(msg[cur])
             cur += 1
-        elif msg[cur + 1] in (' ', ':', '$'):
+        elif cur < msg_len - 1 and msg[cur + 1] in (' ', ':', '$'):
             chunks.append(msg[cur+1])
             cur += 2
-        elif msg[cur + 1] == '{':
+        elif cur < msg_len - 1 and msg[cur + 1] == '{':
             end_curly = msg.find('}', cur + 2)
             if end_curly == -1:
                 raise PynException("malformed command string '%s'" % msg)
-            var_name = msg[cur + 2 : end_curly]
-            try:
-                chunks.append(scope[var_name])
-            except KeyError:
-                raise PynException("undefined var '%s'" % var_name)
+            var_name = msg[cur + 2: end_curly]
+            chunks.append(scope[var_name])
             cur = end_curly + 1
         else:
             end_var = cur + 1
-            if (end_var == msg_len or
-                not msg[end_var].isalpha() and msg[end_var] != '_'):
+            if end_var == msg_len or (not msg[end_var].isalpha() and
+                                      msg[end_var] != '_'):
                 raise PynException("malformed command string '%s'" % msg)
             end_var += 1
             while (end_var < msg_len and
-                   (msg[end_var].isalpha() or msg[end_var]  == '_')):
+                   (msg[end_var].isalpha() or msg[end_var] == '_')):
                 end_var += 1
-            var_name = msg[cur + 1 : end_var]
-            try:
-                chunks.append(scope[var_name])
-            except KeyError:
-                raise PynException("undefined var '%s'" % var_name)
+            var_name = msg[cur + 1: end_var]
+            chunks.append(scope[var_name])
             cur = end_var
     return ''.join(chunks)

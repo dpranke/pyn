@@ -32,7 +32,7 @@ class Builder(object):
 
     def _build_node(self, graph, node, cur, total_nodes):
         if node.rule_name == 'phony':
-            self._host.print_err('[%d/%d] %s' % (cur, total_nodes, node.name))
+            self._host.print_err('[%d/%d]%s' % (cur, total_nodes, node.name))
             return
 
         rule = graph.rules[node.rule_name]
@@ -42,7 +42,7 @@ class Builder(object):
         else:
             ret, out, err = self._host.call(command)
         if ret or out or err or self._args.verbose > 1:
-            self._host.print_err('[%d/%d] %s' % (cur, total_nodes, command))
+            self._host.print_err('[%d/%d]%s' % (cur, total_nodes, command))
             if out:
                 self._host.print_out(out)
             if err:
@@ -51,7 +51,7 @@ class Builder(object):
                 raise PynException('build failed')
         else:
             desc = expand_vars(rule.scope['description'], node.scope)
-            self._host.print_err('[%d/%d] %s' % (cur, total_nodes, desc))
+            self._host.print_err('[%d/%d]%s' % (cur, total_nodes, desc))
 
     def clean(self, graph):
         outputs = [n.name for n in graph.nodes.values()

@@ -52,7 +52,7 @@ the LICENSE file in the source repo.
 * a database (like .ninja_log) for faster startup
 * hash-based build tracking in addition to mtime-based tracking?
 * more tests
-* code coverage integration into the build.ninja file
+  * test comments
 * additional linting support for pyflakes, pep8 as well as pylint.
-* better cross-python module dependency checking inot the build.ninja file
+* better cross-python module dependency checking into the build.ninja file
   (python deps support?)
