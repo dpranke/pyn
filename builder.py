@@ -18,12 +18,8 @@ class Builder(object):
 
         for name in sorted_nodes:
             node = graph.nodes[name]
-            if self._host.exists(name):
-                my_mtime = self._mtime(name)
-                do_build = any(self._mtime(d) > my_mtime for d in node.deps)
-            else:
-                do_build = True
-
+            my_mtime = self._stat(name)
+            do_build = any(self._stat(d) >= my_mtime for d in node.deps)
             if do_build:
                 num_builds += 1
                 self._build_node(graph, node, num_builds, total_nodes)
@@ -68,13 +64,13 @@ class Builder(object):
                 self._host.remove(o)
         self._host.print_err('%d files' % len(outputs))
 
-    def _mtime(self, name):
+    def _stat(self, name):
         if not name in self._mtimes:
             self._restat(name)
-        return self._mtimes[name]
+        return self._mtimes.get(name, -1)
 
     def _restat(self, name):
         if self._host.exists(name):
             self._mtimes[name] = self._host.mtime(name)
-        elif name in self._mtimes:
-            del self._mtimes[name]
+        else:
+            self._mtimes[name] = -1
