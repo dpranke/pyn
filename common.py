@@ -150,7 +150,7 @@ def expand_vars(msg, scope):
             end_var = cur + 1
             if (end_var == msg_len or
                 not msg[end_var].isalpha() and msg[end_var] not in ('_', '.')):
-               raise PynException("malformed command string '%s'" % msg)
+                raise PynException("malformed command string '%s'" % msg)
             end_var += 1
             while (end_var < msg_len and
                    (msg[end_var].isalpha() or msg[end_var]  in ('.', '_'))):
