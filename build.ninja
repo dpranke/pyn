@@ -1,5 +1,5 @@
 rule pylint 
-  command = pylint --rcfile pylintrc $in > $out.tmp; if [ -s $out.tmp ]; then cat $out.tmp 1>&2 ; rm -f $out.tmp; false ; fi
+  command = pylint --rcfile pylintrc $in > $out.tmp; if [ -s $out.tmp ]; then cat $out.tmp 1>&2 ; rm -f $out.tmp; false ; else; rm -f $out.tmp ; fi
   description = pylint $in
 
 rule pytest
