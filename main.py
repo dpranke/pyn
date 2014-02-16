@@ -11,7 +11,7 @@ from common import PynException, PynExit
 from host import Host
 
 
-VERSION = '0.3'
+VERSION = '0.4a'
 
 
 def main(host, argv=None):
