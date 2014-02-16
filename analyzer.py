@@ -52,8 +52,8 @@ class NinjaAnalyzer(object):
         if not self.host.exists(path):
             raise PynException("'%s' not found." % path)
 
-        return self.parser.parse(self.host.read(path), filename=None,
-                                 graph=graph, scope=scope)
+        ast = self.parser.parse_file(path)
+        return self.analyze(ast, filename=None, graph=graph, scope=scope)
 
     def _decl_pool(self, graph, _scope, decl):
         _, name, pool_vars = decl
@@ -97,7 +97,8 @@ class NinjaAnalyzer(object):
         _, path = decl
         if not self.host.exists(path):
             raise PynException("'%s' not found." % path)
-        subgraph = self.parser.parse(self.host.read(path), path)
+        ast = self.parser.parse_file(path)
+        subgraph = self.analyze(ast, path)
         for s in subgraph.scopes:
             if s.name in graph.scopes:
                 raise PynException("scope '%s' declared in multiple files " %

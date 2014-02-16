@@ -9,6 +9,7 @@ class TestAnalyzer(unittest.TestCase):
 
     def test_basic(self):
         NinjaAnalyzer(None, None, None)
+        self.assertTrue(True)
 
 
 if __name__ == '__main__':

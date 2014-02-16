@@ -13,6 +13,7 @@ import main
 
 
 class TestMain(unittest.TestCase):
+    # 'too many public methods' pylint: disable=R0904
 
     def check(self, cmd_str, returncode, out_regex, err_regex):
         host = Host()
@@ -24,7 +25,7 @@ class TestMain(unittest.TestCase):
         self.assertTrue(re.match(err_regex, result[2], re.MULTILINE),
                         '%s does not match %s' % (err_regex, result[2]))
 
-    def runMain(self, argv, out_regex, err_regex):
+    def check_main(self, argv, out_regex, err_regex):
         out = StringIO()
         err = StringIO()
         host = Host()
@@ -47,14 +48,18 @@ class TestMain(unittest.TestCase):
 
     def test_version(self):
         self.check('--version', 0, main.VERSION + '\n', '')
-        self.runMain(['--version'], main.VERSION + '\n', '')
+        try:
+            self.check_main(['--version'], main.VERSION + '\n', '')
+            self.fail('should have raise PynExit()')
+        except Exception as ex:
+            self.assertEqual(ex.message, '0.2')
 
     def test_usage(self):
         self.check('--help', 0, 'usage:.+', '')
         self.check('-h', 0, 'usage:.+', '')
 
     def test_dry_run(self):
-        self.runMain(['-n'], '', '.+')
+        self.check_main(['-n'], '', '.+')
 
 
 if __name__ == '__main__':

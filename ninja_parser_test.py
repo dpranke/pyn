@@ -2,7 +2,8 @@
 import textwrap
 import unittest
 
-import pymeta_helper
+from pymeta.grammar import OMeta
+from pymeta.runtime import ParseError
 
 from host import Host
 
@@ -14,16 +15,16 @@ class TestNinjaParser(unittest.TestCase):
         host = Host()
         d = host.dirname(host.path_to_module(__name__))
         path = host.join(d, 'ninja.pymeta')
-        self.parser = pymeta_helper.make_parser(path)
+        self.ninja_parser_cls = OMeta.makeGrammar(host.read(path), {})
 
     def check(self, text, ast):
         dedented_text = textwrap.dedent(text)
-        actual_ast = self.parser.parse(dedented_text)
+        actual_ast = self.ninja_parser_cls.parse(dedented_text)
         self.assertEquals(actual_ast, ast)
 
     def err(self, text):
         dedented_text = textwrap.dedent(text)
-        self.assertRaises(pymeta_helper.ParseError, self.parser.parse,
+        self.assertRaises(ParseError, self.ninja_parser_cls.parse,
                           dedented_text)
 
     def test_syntax_err(self):
