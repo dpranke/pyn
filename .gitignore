@@ -9,4 +9,3 @@
 .pytest.*
 hello/hello.o
 hello/hello
-ninja_parser.py
