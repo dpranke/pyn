@@ -2,9 +2,13 @@
 import textwrap
 import unittest
 
-import pymeta_helper
+from pymeta.grammar import OMeta
+from pymeta.runtime import ParseError
 
 from host import Host
+
+
+NinjaParser = OMeta.makeGrammar(open('ninja.pymeta').read(), {})
 
 
 class TestNinjaParser(unittest.TestCase):
@@ -13,18 +17,15 @@ class TestNinjaParser(unittest.TestCase):
     def setUp(self):  # 'invalid name' pylint: disable=C0103
         host = Host()
         d = host.dirname(host.path_to_module(__name__))
-        path = host.join(d, 'ninja.pymeta')
-        self.parser = pymeta_helper.make_parser(path)
 
     def check(self, text, ast):
         dedented_text = textwrap.dedent(text)
-        actual_ast = self.parser.parse(dedented_text)
+        actual_ast = NinjaParser.parse(dedented_text)
         self.assertEquals(actual_ast, ast)
 
     def err(self, text):
         dedented_text = textwrap.dedent(text)
-        self.assertRaises(pymeta_helper.ParseError, self.parser.parse,
-                          dedented_text)
+        self.assertRaises(ParseError, NinjaParser.parse, dedented_text)
 
     def test_syntax_err(self):
         self.err('rule foo')

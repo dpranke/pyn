@@ -2,7 +2,8 @@
 import argparse
 import sys
 
-import pymeta_helper
+from pymeta.grammar import OMeta
+from pymeta.runtime import ParseError
 
 from analyzer import NinjaAnalyzer
 from builder import Builder
@@ -27,10 +28,18 @@ def main(host, argv=None):
         raise PynException("'%s' does not exist" % args.file)
 
     d = host.dirname(host.path_to_module(__name__))
-    parser = pymeta_helper.make_parser(host.join(d, 'ninja.pymeta'))
-    ast = parser.parse(host.read(args.file))
 
-    analyzer = NinjaAnalyzer(host, args, parser)
+    NinjaParser = OMeta.makeGrammar(host.read('ninja.pymeta'), {})
+
+    def parse_file(path):
+        try:
+            return NinjaParser.parse(host.read(path))
+        except ParseError as e:
+            raise PynException(str(e))
+
+    ast = parse_file(args.file)
+
+    analyzer = NinjaAnalyzer(host, args, parse_file)
 
     graph = analyzer.analyze(ast, args.file)
 
