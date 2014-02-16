@@ -22,15 +22,14 @@ pool       = "pool" ws ident:name eol indented_var+:vars -> ['pool', name, vars]
 default    = "default" ws paths:ps eol -> ['default', ps]
 
 paths      = path:p ws paths:ps -> [p] + ps
-           | path:p -> [p]
+           | path:p             -> [p]
 
-path       = (~('"'|' '|':'|'='|'|'|eol) anything)+:p  -> ''.join(p)
-           | '"' (~('"'|'\n') anything)+:p '"'         -> ''.join(p)
+path       = (~(' '|':'|'='|'|'|eol) anything)+:p  -> ''.join(p)
 
 ident      = (letter|'_'|'$'|'.'):hd (letter|'.'|'_')*:tl -> ''.join([hd] + tl)
 
 deps       = ws "|" ws paths:ps -> ps
-           | -> []
+           |                    -> []
 
 eol        = '#' (~'\n' anything)* '\n'
            | ' '* ~('$' '\n') '\n'
@@ -38,5 +37,3 @@ eol        = '#' (~'\n' anything)* '\n'
 ws         = (' '|('$' '\n'))+
 
 indented_var = ws var:v -> v
-
-
