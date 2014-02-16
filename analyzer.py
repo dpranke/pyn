@@ -3,10 +3,10 @@ from common import Graph, Node, PynException, Rule, Scope
 
 class NinjaAnalyzer(object):
     # "method could be a function" pylint: disable=R0201
-    def __init__(self, host, args, parser):
+    def __init__(self, host, args, parse):
         self.host = host
         self.args = args
-        self.parser = parser
+        self.parse = parse
 
     def analyze(self, ast, filename=None, graph=None, scope=None):
         assert filename or (graph and scope)
@@ -52,7 +52,7 @@ class NinjaAnalyzer(object):
         if not self.host.exists(path):
             raise PynException("'%s' not found." % path)
 
-        ast = self.parser.parse_file(path)
+        ast = self.parse(host.read(path))
         return self.analyze(ast, filename=None, graph=graph, scope=scope)
 
     def _decl_pool(self, graph, _scope, decl):
@@ -97,7 +97,7 @@ class NinjaAnalyzer(object):
         _, path = decl
         if not self.host.exists(path):
             raise PynException("'%s' not found." % path)
-        ast = self.parser.parse_file(path)
+        ast = self.parse(host.read(path))
         subgraph = self.analyze(ast, path)
         for s in subgraph.scopes:
             if s.name in graph.scopes:

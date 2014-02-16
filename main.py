@@ -2,13 +2,11 @@
 import argparse
 import sys
 
-from pymeta.grammar import OMeta
-from pymeta.runtime import ParseError
-
 from analyzer import NinjaAnalyzer
 from builder import Builder
 from common import PynException, PynExit
 from host import Host
+from ninja_parser import parse, expand_vars
 
 
 VERSION = '0.4a'
@@ -27,24 +25,12 @@ def main(host, argv=None):
     if not host.exists(args.file):
         raise PynException("'%s' does not exist" % args.file)
 
-    d = host.dirname(host.path_to_module(__name__))
-    path = host.join(d, 'ninja.pymeta')
+    ast = parse(host.read(args.file))
+    analyzer = NinjaAnalyzer(host, args, parse)
 
-    ninja_parser_cls = OMeta.makeGrammar(host.read(path), {})
+    graph = analyzer.analyze(ast, args.file, parse)
 
-    def parse_file(path):
-        try:
-            return ninja_parser_cls.parse(host.read(path))
-        except ParseError as e:
-            raise PynException(str(e))
-
-    ast = parse_file(args.file)
-
-    analyzer = NinjaAnalyzer(host, args, parse_file)
-
-    graph = analyzer.analyze(ast, args.file)
-
-    builder = Builder(host, args)
+    builder = Builder(host, args, expand_vars)
     if args.tool:
         if args.tool == 'list':
             raise PynExit("pyn subtools:\n"

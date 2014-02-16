@@ -1,9 +1,18 @@
+import textwrap
+
+from pymeta.grammar import OMeta
+from pymeta.runtime import ParseError
+
+from common import PynException
+
+
+NinjaParser = OMeta.makeGrammar("""
 grammar  = ((ws|'\n')* decl)+:ds (ws|'\n')* end        -> ds
 
 decl     = build | rule | var | subninja | include
          | pool | default
 
-build    = "build" ws paths:os ws? ':' ws name:rule 
+build    = "build" ws paths:os ws? ':' ws name:rule
            ws paths:ins deps:ds eol (ws var)*:vs       -> ['build', os, rule,
                                                            ins, ds, vs]
 
@@ -34,3 +43,25 @@ eol      = '#' (~'\n' anything)* '\n'
          | ' '* ~('$' '\n') '\n'
 
 ws       = (' '|('$' '\n'))+
+""", {})
+
+
+def parse(msg):
+    try:
+        return NinjaParser.parse(msg)
+    except ParseError as e:
+        raise PynException(str(e))
+
+
+def expand_vars(msg, scope):
+    try:
+        return OMeta.makeGrammar(textwrap.dedent("""
+            grammar = chunk*:cs end         -> ''.join(cs)
+            chunk   = ~'$' anything:c       -> c
+                    | '$' (' '|':'|'$'):c   -> c
+                    | '$' '{' varname:v '}' -> scope[v]
+                    | '$' varname:v         -> scope[v]
+            varname = (letter|'_')+:ls      -> ''.join(ls)
+            """), {'scope': scope}).parse(msg)
+    except ParseError as e:
+        raise PynException(e.message)

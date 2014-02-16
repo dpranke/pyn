@@ -1,10 +1,11 @@
-from common import expand_vars, find_nodes_to_build, tsort, PynException
+from common import find_nodes_to_build, tsort, PynException
 
 
 class Builder(object):
-    def __init__(self, host, args):
+    def __init__(self, host, args, expand_vars):
         self._host = host
         self._args = args
+        self.expand_vars = expand_vars
         self._mtimes = {}
 
     def build(self, graph):
@@ -36,19 +37,19 @@ class Builder(object):
             return
 
         rule = graph.rules[node.rule_name]
-        command = expand_vars(rule.scope['command'], node.scope)
+        command = self.expand_vars(rule.scope['command'], node.scope)
         if self._args.dry_run:
             ret, out, err = 0, '', ''
         else:
             ret, out, err = self._host.call(command)
 
-        desc = expand_vars(rule.scope['description'], node.scope)
+        desc = self.expand_vars(rule.scope['description'], node.scope)
         if ret or out or err or self._args.verbose > 1:
             if ret or self._args.verbose > 1:
                 self._host.print_err('[%d/%d] %s' % (cur, total_nodes,
                                                      command))
             else:
-                desc = expand_vars(rule.scope['description'], node.scope)
+                desc = self.expand_vars(rule.scope['description'], node.scope)
                 self._host.print_err('[%d/%d] %s' % (cur, total_nodes, desc))
 
             if out:
@@ -58,7 +59,7 @@ class Builder(object):
             if ret:
                 raise PynException('build failed')
         else:
-            desc = expand_vars(rule.scope['description'], node.scope)
+            desc = self.expand_vars(rule.scope['description'], node.scope)
             self._host.print_err('[%d/%d] %s' % (cur, total_nodes, desc))
 
     def clean(self, graph):

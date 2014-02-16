@@ -2,30 +2,21 @@
 import textwrap
 import unittest
 
-from pymeta.grammar import OMeta
-from pymeta.runtime import ParseError
-
-from host import Host
+from common import PynException, Scope
+from ninja_parser import parse, expand_vars
 
 
 class TestNinjaParser(unittest.TestCase):
     # 'too many public methods' pylint: disable=R0904
 
-    def setUp(self):  # 'invalid name' pylint: disable=C0103
-        host = Host()
-        d = host.dirname(host.path_to_module(__name__))
-        path = host.join(d, 'ninja.pymeta')
-        self.ninja_parser_cls = OMeta.makeGrammar(host.read(path), {})
-
     def check(self, text, ast):
         dedented_text = textwrap.dedent(text)
-        actual_ast = self.ninja_parser_cls.parse(dedented_text)
+        actual_ast = parse(dedented_text)
         self.assertEquals(actual_ast, ast)
 
     def err(self, text):
         dedented_text = textwrap.dedent(text)
-        self.assertRaises(ParseError, self.ninja_parser_cls.parse,
-                          dedented_text)
+        self.assertRaises(PynException, parse, dedented_text)
 
     def test_syntax_err(self):
         self.err('rule foo')
@@ -71,6 +62,49 @@ class TestNinjaParser(unittest.TestCase):
     def test_no_space_between_output_and_colon(self):
         self.check('build foo.o: cc foo.c\n',
                    [['build', ['foo.o'], 'cc', ['foo.c'], [], []]])
+
+
+class TestExpandVars(unittest.TestCase):
+
+    def setUp(self):  # 'invalid name' pylint: disable=C0103
+        self.scope = Scope('base', None)
+        self.scope['foo'] = 'a'
+        self.scope['bar'] = 'b'
+
+    def check(self, inp, out):
+        self.assertEquals(expand_vars(inp, self.scope), out)
+
+    def err(self, inp):
+        self.assertRaises(PynException, expand_vars, inp, self.scope)
+
+    def test_noop(self):
+        self.check('xyz', 'xyz')
+
+    def test_simple(self):
+        self.check('$foo', 'a')
+        self.check('$foo bar', 'a bar')
+        self.check('c$foo', 'ca')
+
+    def test_escapes(self):
+        self.check('$$', '$')
+        self.check('$ ', ' ')
+        self.check('$:', ':')
+
+    def test_curlies(self):
+        self.check('${foo}', 'a')
+        self.check('${foo}bar', 'abar')
+
+    def test_undefined_var_expands_to_nothing(self):
+        self.check('$baz', '')
+
+    def test_periods_terminate_variable_names(self):
+        self.check('$foo.bar', 'a.bar')
+
+    def test_errors(self):
+        self.err('${')
+        self.err('${baz')
+        self.err('$')
+        self.err('$123')
 
 
 if __name__ == '__main__':

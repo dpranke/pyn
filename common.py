@@ -1,9 +1,3 @@
-import textwrap
-
-from pymeta.grammar import OMeta
-from pymeta.runtime import ParseError
-
-
 class PynException(Exception):
     pass
 
@@ -119,17 +113,3 @@ class Scope(object):
         if self.parent:
             return self.parent[key]
         return ''
-
-
-def expand_vars(msg, scope):
-    try:
-        return OMeta.makeGrammar(textwrap.dedent("""
-            grammar = chunk*:cs end         -> ''.join(cs)
-            chunk   = ~'$' anything:c       -> c
-                    | '$' (' '|':'|'$'):c   -> c
-                    | '$' '{' varname:v '}' -> scope[v]
-                    | '$' varname:v         -> scope[v]
-            varname = (letter|'_')+:ls      -> ''.join(ls)
-            """), {'scope': scope}).parse(msg)
-    except ParseError as e:
-        raise PynException(e.message)
