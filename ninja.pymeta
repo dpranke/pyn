@@ -1,39 +1,36 @@
-grammar    = (ws|'\n')* decls:ds (ws|'\n')* end -> ds
+grammar  = ((ws|'\n')* decl)+:ds (ws|'\n')* end        -> ds
 
-decls      = decl:d (ws|'\n')* decls:ds -> [d] + ds
-           | decl:d                     -> [d]
+decl     = build | rule | var | subninja | include
+         | pool | default
 
-decl       = build | rule | var | subninja | include | pool | default
+build    = "build" ws paths:os ws? ':' ws name:rule 
+           ws paths:ins deps:ds eol (ws var)*:vs       -> ['build', os, rule,
+                                                           ins, ds, vs]
 
-build      = "build" ws paths:os ws? ":" ws ident:rule ws paths:ins deps:ds eol
-             indented_var*:vs -> ['build', os, rule, ins, ds, vs]
+rule     = "rule" ws name:n eol (ws var)*:vs           -> ['rule', n, vs]
 
-rule       = "rule" ws ident:n eol indented_var+:vs -> ['rule', n, vs]
+var      = name:n ws? '=' ws? value:v eol              -> ['var', n, v]
 
-var        = ident:n ws? "=" ws? (~eol (('$' '\n' ' '+ -> '')|anything))*:v eol
-           -> ['var', n, ''.join(v)]
+value    = (~eol (('$' '\n' ' '+ -> '')|anything))*:vs -> ''.join(vs)
 
-subninja   = "subninja" ws path:p    -> ['subninja', p]
+subninja = "subninja" ws path:p                        -> ['subninja', p]
 
-include    = "include" ws path:p     -> ['include', p]
+include  = "include" ws path:p                         -> ['include', p]
 
-pool       = "pool" ws ident:name eol indented_var+:vars -> ['pool', name, vars]
+pool     = "pool" ws name:n eol (ws var)*:vars         -> ['pool', n, vars]
 
-default    = "default" ws paths:ps eol -> ['default', ps]
+default  = "default" ws paths:ps eol                   -> ['default', ps]
 
-paths      = path:p ws paths:ps -> [p] + ps
-           | path:p             -> [p]
+paths    = path:hd (ws path)*:tl                       -> [hd] + tl
 
-path       = (~(' '|':'|'='|'|'|eol) anything)+:p  -> ''.join(p)
+path     = (~(' '|':'|'='|'|'|eol) anything)+:p        -> ''.join(p)
 
-ident      = (letter|'_'|'$'|'.'):hd (letter|'.'|'_')*:tl -> ''.join([hd] + tl)
+name     = (letter|'_')*:ls                            -> ''.join(ls)
 
-deps       = ws "|" ws paths:ps -> ps
-           |                    -> []
+deps     = ws? '|' ws? paths:ps                        -> ps
+         |                                             -> []
 
-eol        = '#' (~'\n' anything)* '\n'
-           | ' '* ~('$' '\n') '\n'
+eol      = '#' (~'\n' anything)* '\n'
+         | ' '* ~('$' '\n') '\n'
 
-ws         = (' '|('$' '\n'))+
-
-indented_var = ws var:v -> v
+ws       = (' '|('$' '\n'))+
