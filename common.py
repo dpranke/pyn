@@ -1,3 +1,9 @@
+import textwrap
+
+from pymeta.grammar import OMeta
+from pymeta.runtime import ParseError
+
+
 class PynException(Exception):
     pass
 
@@ -116,44 +122,14 @@ class Scope(object):
 
 
 def expand_vars(msg, scope):
-    """Expand the vars in the given string using the variables in scope.
-
-    Equivalent to the following grammar:
-
-      chunks = [chunk]*            -> ''.join(chunks)
-
-      chunk = ~'$' anything:a      -> a
-            | '$' (' '|':'|'$'):l  -> l
-            | '$' '{' ident:i '}'  -> scope[i]
-            | '$ ident:i           -> scope[i]
-    """
-    cur = 0
-    chunks = []
-    msg_len = len(msg)
-    while cur < msg_len:
-        if msg[cur] != '$':
-            chunks.append(msg[cur])
-            cur += 1
-        elif cur < msg_len - 1 and msg[cur + 1] in (' ', ':', '$'):
-            chunks.append(msg[cur+1])
-            cur += 2
-        elif cur < msg_len - 1 and msg[cur + 1] == '{':
-            end_curly = msg.find('}', cur + 2)
-            if end_curly == -1:
-                raise PynException("malformed command string '%s'" % msg)
-            var_name = msg[cur + 2: end_curly]
-            chunks.append(scope[var_name])
-            cur = end_curly + 1
-        else:
-            end_var = cur + 1
-            if end_var == msg_len or (not msg[end_var].isalpha() and
-                                      msg[end_var] != '_'):
-                raise PynException("malformed command string '%s'" % msg)
-            end_var += 1
-            while (end_var < msg_len and
-                   (msg[end_var].isalpha() or msg[end_var] == '_')):
-                end_var += 1
-            var_name = msg[cur + 1: end_var]
-            chunks.append(scope[var_name])
-            cur = end_var
-    return ''.join(chunks)
+    try:
+        return OMeta.makeGrammar(textwrap.dedent("""
+            grammar = chunk*:cs end         -> ''.join(cs)
+            chunk   = ~'$' anything:c       -> c
+                    | '$' (' '|':'|'$'):c   -> c
+                    | '$' '{' varname:v '}' -> scope[v]
+                    | '$' varname:v         -> scope[v]
+            varname = (letter|'_')+:ls      -> ''.join(ls)
+            """), {'scope': scope}).parse(msg)
+    except ParseError as e:
+        raise PynException(e.message)
