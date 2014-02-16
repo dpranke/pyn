@@ -10,7 +10,7 @@ build      = "build" ws paths:os ws? ":" ws ident:rule ws paths:ins deps:ds eol
 
 rule       = "rule" ws ident:n eol indented_var+:vs -> ['rule', n, vs]
 
-var        = ident:n ws? "=" (~eol (('$' '\n' ' '+ -> '')|anything))*:v eol
+var        = ident:n ws? "=" ws? (~eol (('$' '\n' ' '+ -> '')|anything))*:v eol
            -> ['var', n, ''.join(v)]
 
 subninja   = "subninja" ws path:p    -> ['subninja', p]

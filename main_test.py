@@ -52,7 +52,7 @@ class TestMain(unittest.TestCase):
             self.check_main(['--version'], main.VERSION + '\n', '')
             self.fail('should have raise PynExit()')
         except Exception as ex:
-            self.assertEqual(ex.message, '0.2')
+            self.assertEqual(ex.message, main.VERSION)
 
     def test_usage(self):
         self.check('--help', 0, 'usage:.+', '')
