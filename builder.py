@@ -45,7 +45,8 @@ class Builder(object):
         desc = expand_vars(rule.scope['description'], node.scope)
         if ret or out or err or self._args.verbose > 1:
             if ret or self._args.verbose > 1:
-                self._host.print_err('[%d/%d] %s' % (cur, total_nodes, command))
+                self._host.print_err('[%d/%d] %s' % (cur, total_nodes,
+                                                     command))
             else:
                 desc = expand_vars(rule.scope['description'], node.scope)
                 self._host.print_err('[%d/%d] %s' % (cur, total_nodes, desc))
