@@ -28,12 +28,13 @@ def main(host, argv=None):
         raise PynException("'%s' does not exist" % args.file)
 
     d = host.dirname(host.path_to_module(__name__))
+    path = host.join(d, 'ninja.pymeta')
 
-    NinjaParser = OMeta.makeGrammar(host.read('ninja.pymeta'), {})
+    ninja_parser_cls = OMeta.makeGrammar(host.read(path), {})
 
     def parse_file(path):
         try:
-            return NinjaParser.parse(host.read(path))
+            return ninja_parser_cls.parse(host.read(path))
         except ParseError as e:
             raise PynException(str(e))
 

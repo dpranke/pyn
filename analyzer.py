@@ -53,7 +53,7 @@ class NinjaAnalyzer(object):
             raise PynException("'%s' not found." % path)
 
         ast = self.parser.parse_file(path)
-        return self.analyzer(ast, filename=None, graph=graph, scope=scope)
+        return self.analyze(ast, filename=None, graph=graph, scope=scope)
 
     def _decl_pool(self, graph, _scope, decl):
         _, name, pool_vars = decl

@@ -1,9 +1,35 @@
+rule pycov
+    command = $
+      coverage erase && $
+      for i in $in ; $
+      do $
+        coverage run --append $$i > /dev/null 2>& 1 ; $
+      done && $
+      coverage --report --omit 'pymeta/*,/pymeta_generated*'
+    description = generating python coverage
+
 rule pylint 
-  command = pylint --rcfile pylintrc $in > $out.tmp; if [ -s $out.tmp ]; then cat $out.tmp 1>&2 ; rm -f $out.tmp; false ; else rm -f $out.tmp ; fi
+  command = $
+    pylint --rcfile pylintrc $in > $out.tmp; $
+    if [ -s $out.tmp ]; $
+    then $
+        cat $out.tmp 1>&2 ; $
+        rm -f $out.tmp; $
+        false ; $
+    else $
+        rm -f $out.tmp ; $
+    fi
   description = pylint $in
 
 rule pytest
-  command = python $in 2> $out.tmp; if grep FAILED $out.tmp; then cat $out.tmp 1>&2 ; rm $out.tmp; false; fi
+  command = $
+    python $in 2> $out.tmp; $
+    if grep FAILED $out.tmp; $
+    then $
+      cat $out.tmp 1>&2 ; $
+      rm $out.tmp; $
+      false; $
+    fi
   description = python $in
 
 rule pymeta
@@ -13,31 +39,30 @@ build all : phony ninja_parser.py
 
 build lint : phony $
   .pylint.analyzer.py $
+  .pylint.analyzer_test.py $
   .pylint.builder.py $
+  .pylint.builder_test.py $
   .pylint.common.py $
   .pylint.common_test.py $
   .pylint.host.py $
   .pylint.main.py $
-  .pylint.ninja_parser.py $
-  .pylint.ninja_parser_test.py $
-  .pylint.pymeta_helper.py
+  .pylint.main_test.py $
+  .pylint.ninja_parser_test.py
 
-build test : phony .pytest.ninja_parser_test.py .pytest.common_test.py
+build test : phony $
+  .pytest.analyzer_test.py $
+  .pytest.builder_test.py $
+  .pytest.common_test.py $
+  .pytest.main_test.py $
+  .pytest.ninja_parser_test.py
 
 build coverage : phony .pycoverage_report
 
-rule pycov
-    command = coverage erase && $
-      for i in $in ; $
-      do $
-        coverage run --append $$i > /dev/null 2>& 1 ; $
-      done && $
-      coverage --report --omit 'pymeta/*,/pymeta_generated*'
-    description = generating python coverage
-
-build .pycoverage_report : pycov analyzer_test.py builder_test.py common_test.py main_test.py ninja_parser_test.py
-
-build ninja_parser.py : pymeta ninja.pymeta | pymeta_helper.py
+build .pycoverage_report : pycov analyzer_test.py $
+                                 builder_test.py $
+                                 common_test.py $
+                                 main_test.py $
+                                 ninja_parser_test.py
 
 build .pylint.analyzer.py : pylint analyzer.py
 build .pylint.analyzer_test.py : pylint analyzer_test.py
@@ -48,12 +73,12 @@ build .pylint.common_test.py : pylint common_test.py
 build .pylint.host.py : pylint host.py
 build .pylint.main.py : pylint main.py
 build .pylint.main_test.py : pylint main_test.py
-build .pylint.ninja_parser.py : pylint ninja_parser.py
-build .pylint.ninja_parser_test.py : pylint ninja_parser_test.py | ninja_parser.py
-build .pylint.parsers.py : pylint parsers.py | ninja_parser.py
-build .pylint.pymeta_helper.py : pylint pymeta_helper.py
+build .pylint.ninja_parser_test.py : pylint ninja_parser_test.py
 
-build .pytest.ninja_parser_test.py : pytest ninja_parser_test.py
+build .pytest.analyzer_test.py : pytest analyzer_test.py
+build .pytest.builder_test.py : pytest builder_test.py
 build .pytest.common_test.py : pytest common_test.py
+build .pytest.main_test.py : pytest main_test.py
+build .pytest.ninja_parser_test.py : pytest ninja_parser_test.py
 
 default all

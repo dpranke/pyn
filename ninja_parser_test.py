@@ -8,24 +8,24 @@ from pymeta.runtime import ParseError
 from host import Host
 
 
-NinjaParser = OMeta.makeGrammar(open('ninja.pymeta').read(), {})
-
-
 class TestNinjaParser(unittest.TestCase):
     # 'too many public methods' pylint: disable=R0904
 
     def setUp(self):  # 'invalid name' pylint: disable=C0103
         host = Host()
         d = host.dirname(host.path_to_module(__name__))
+        path = host.join(d, 'ninja.pymeta')
+        self.ninja_parser_cls = OMeta.makeGrammar(host.read(path), {})
 
     def check(self, text, ast):
         dedented_text = textwrap.dedent(text)
-        actual_ast = NinjaParser.parse(dedented_text)
+        actual_ast = self.ninja_parser_cls.parse(dedented_text)
         self.assertEquals(actual_ast, ast)
 
     def err(self, text):
         dedented_text = textwrap.dedent(text)
-        self.assertRaises(ParseError, NinjaParser.parse, dedented_text)
+        self.assertRaises(ParseError, self.ninja_parser_cls.parse,
+                          dedented_text)
 
     def test_syntax_err(self):
         self.err('rule foo')
