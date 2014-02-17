@@ -35,7 +35,6 @@ the LICENSE file in the source repo.
   * basic support, including handling of the -j flag
   * support for the -k flag for load throttling
   * support for pools
-* deps support
 * restat and generator support
 * rspfiles
 * NINJA_STATUS parsing and options

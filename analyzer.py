@@ -3,10 +3,11 @@ from common import Graph, Node, PynException, Rule, Scope
 
 class NinjaAnalyzer(object):
     # "method could be a function" pylint: disable=R0201
-    def __init__(self, host, args, parse):
+    def __init__(self, host, args, parse, expand_vars):
         self.host = host
         self.args = args
         self.parse = parse
+        self.expand_vars = expand_vars
 
     def analyze(self, ast, filename=None, graph=None, scope=None):
         assert filename or (graph and scope)
@@ -16,7 +17,15 @@ class NinjaAnalyzer(object):
         for decl in ast:
             graph = getattr(self, '_decl_' + decl[0])(graph, scope, decl)
 
+        self._add_deps_in_depfiles(graph)
+
         return graph
+
+    def _add_deps_in_depfiles(self, graph):
+        for n in graph.nodes.values():
+            depfile_path = self.expand_vars(n.scope['depfile'], n.scope)
+            if self.host.exists(depfile_path):
+                n.deps.extend(self.host.read(depfile_path).split()[2:])
 
     def _decl_build(self, graph, scope, decl):
         _, outputs, rule_name, inputs, deps, build_vars = decl

@@ -26,7 +26,7 @@ def main(host, argv=None):
         raise PynException("'%s' does not exist" % args.file)
 
     ast = parse(host.read(args.file))
-    analyzer = NinjaAnalyzer(host, args, parse)
+    analyzer = NinjaAnalyzer(host, args, parse, expand_vars)
 
     graph = analyzer.analyze(ast, args.file)
 
