@@ -9,16 +9,31 @@ rule pycov
 
 rule pylint
   command = $
-    pylint --rcfile pylintrc $in > $out.tmp; $
-    pep8 $in >> $out.tmp ; $
-    pyflakes $in >> $out.tmp ; $
-    if [ -s $out.tmp ]; $
+    if pylint -h > /dev/null 2>&1 ; $
     then $
-        cat $out.tmp 1>&2 ; $
-        rm -f $out.tmp; $
-        false ; $
+      pylint --rcfile pylintrc $in > $out.tmp; $
+    fi ; $
+    if pep8 -h > /dev/null 2>&1 ; $
+    then $
+      pep8 $in >> $out.tmp ; $
+    fi ; $
+    if pyflakes > /dev/null 2>&1 ; $
+    then $
+      pyflakes $in >> $out.tmp ; $
+    fi ; $
+    if [ -e $out.tmp ]; $
+    then $
+        if [ -s $out.tmp ]; $
+        then $
+            cat $out.tmp 1>&2 ; $
+            rm -f $out.tmp; $
+            false ; $
+        else $
+            rm -f $out.tmp ; $
+        fi ; $
     else $
-        rm -f $out.tmp ; $
+        echo "install at least one of pylint, pep8, or pyflakes"; $
+        false; $
     fi
   description = pylint $in
 
