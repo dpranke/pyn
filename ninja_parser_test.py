@@ -63,6 +63,9 @@ class TestNinjaParser(unittest.TestCase):
         self.check('build foo.o: cc foo.c\n',
                    [['build', ['foo.o'], 'cc', ['foo.c'], [], []]])
 
+    def test_trailing_dollar_sign(self):
+        self.check('build foo.o: cc foo.c $\n\n',
+                   [['build', ['foo.o'], 'cc', ['foo.c'], [], []]])
 
 class TestExpandVars(unittest.TestCase):
     # 'too many public methods' pylint: disable=R0904

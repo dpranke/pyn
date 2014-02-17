@@ -39,8 +39,8 @@ name     = (letter|'_')*:ls                            -> ''.join(ls)
 deps     = ws? '|' ws? paths:ps                        -> ps
          |                                             -> []
 
-eol      = '#' (~'\n' anything)* '\n'
-         | ' '* ~('$' '\n') '\n'
+eol      = ws? '#' (~'\n' anything)* '\n'
+         | ws? '\n'
 
 ws       = (' '|('$' '\n'))+
 """, {})
