@@ -33,7 +33,7 @@ class NinjaAnalyzer(object):
         for _, name, val in build_vars:
             if name in build_scope.objs:
                 raise PynException("'var %s' declared more than once "
-                                " in build %s'" % (name, build_name))
+                                   " in build %s'" % (name, build_name))
             build_scope.objs[name] = val
 
         graph.nodes[build_name] = Node(build_name, build_scope, rule_name,

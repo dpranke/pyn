@@ -14,12 +14,13 @@ def main():
     sys.argv = sys.argv[1:]
     __import__(fname.replace('/', '.').replace('.py', ''))
 
+
 def write_deps(deps_file, source_file):
     deps = [source_file]
     for m in sys.modules.values():
         mf = getattr(m, '__file__', None)
-        if (mf and not mf.startswith('/System') and
-            not mf.startswith('/Library')):
+        if mf and (not mf.startswith('/System') and
+                   not mf.startswith('/Library')):
             deps.append(mf.replace('.pyc', '.py'))
 
     with open(deps_file, 'w') as df:
@@ -29,4 +30,3 @@ def write_deps(deps_file, source_file):
 
 if __name__ == '__main__':
     main()
-

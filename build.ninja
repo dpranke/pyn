@@ -1,28 +1,17 @@
-rule pycov
-  command = COVERAGE_FILE=$out coverage run $in 2> /dev/null
-  description = generating python coverage for $in
-
-rule shell
-  command = $shell_cmd
-  description = $shell_desc
-
-build python_coverage : shell $
-    .coverage.analyzer_test.py $
-    .coverage.builder_test.py $
-    .coverage.main_test.py $
-    .coverage.ninja_parser_test.py $
-    .coverage.common_test.py
-  shell_cmd = coverage combine $in && coverage --report --omit 'pymeta/*,/pymeta_generate*'
-  shell_desc = combining python coverage data
-
 rule pycomp 
   command = python pycomp.py -MMD -MF .$out.d $in
   depfile = .$out.d
   description = checking $in
 
-rule pylint 
+rule pycov
+  command = COVERAGE_FILE=$out coverage run $in 2> /dev/null
+  description = generating python coverage for $in
+
+rule pylint
   command = $
     pylint --rcfile pylintrc $in > $out.tmp; $
+    pep8 $in >> $out.tmp ; $
+    pyflakes $in >> $out.tmp ; $
     if [ -s $out.tmp ]; $
     then $
         cat $out.tmp 1>&2 ; $
@@ -41,9 +30,14 @@ rule pytest
       cat $out.tmp 1>&2 ; $
       rm $out.tmp; $
       false; $
+    else $
+      rm $out.tmp ; $
     fi
   description = python $in
 
+rule shell
+  command = $shell_cmd
+  description = $shell_desc
 
 build all : phony compile_python
 
@@ -79,13 +73,17 @@ build test : phony $
   .pytest.main_test.py $
   .pytest.ninja_parser_test.py
 
-build coverage : phony python_coverage
+build coverage : phony .coverage
 
-build pycoverage_report : pycov analyzer_test.py $
-                                builder_test.py $
-                                common_test.py $
-                                main_test.py $
-                                ninja_parser_test.py
+build .coverage : shell $
+    .coverage.analyzer_test.py $
+    .coverage.builder_test.py $
+    .coverage.main_test.py $
+    .coverage.ninja_parser_test.py $
+    .coverage.common_test.py
+  shell_cmd = coverage combine $in && $
+              coverage --report --omit 'pymeta/*,/pymeta_generate*'
+  shell_desc = generating python coverage report
 
 build .pylint.analyzer.py : pylint analyzer.py
 build .pylint.analyzer_test.py : pylint analyzer_test.py

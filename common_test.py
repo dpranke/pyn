@@ -67,7 +67,5 @@ class TestScope(unittest.TestCase):
         self.assertEquals(self.c['foo'], 'p-foo')
 
 
-
-
 if __name__ == '__main__':
     unittest.main()
