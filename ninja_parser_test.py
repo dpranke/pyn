@@ -65,6 +65,7 @@ class TestNinjaParser(unittest.TestCase):
 
 
 class TestExpandVars(unittest.TestCase):
+    # 'too many public methods' pylint: disable=R0904
 
     def setUp(self):  # 'invalid name' pylint: disable=C0103
         self.scope = Scope('base', None)

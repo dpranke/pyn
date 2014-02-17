@@ -1,5 +1,5 @@
 rule pycov
-  command = COVERAGE_FILE=.coverage.$out coverage run $in
+  command = COVERAGE_FILE=$out coverage run $in 2> /dev/null
   description = generating python coverage for $in
 
 rule shell
@@ -58,7 +58,7 @@ build compile_python : phony $
   main.pyc $
   main_test.pyc $
   ninja_parser.pyc $
-  ninja_parser_test.pyc $
+  ninja_parser_test.pyc
 
 build lint : phony $
   .pylint.analyzer.py $
@@ -79,7 +79,7 @@ build test : phony $
   .pytest.main_test.py $
   .pytest.ninja_parser_test.py
 
-build coverage : phony .pycoverage_report
+build coverage : phony python_coverage
 
 build pycoverage_report : pycov analyzer_test.py $
                                 builder_test.py $
@@ -116,5 +116,10 @@ build host.pyc : pycomp host.py
 build ninja_parser.pyc : pycomp ninja_parser.py
 build ninja_parser_test.pyc : pycomp ninja_parser_test.py
 
+build .coverage.analyzer_test.py : pycov analyzer_test.py
+build .coverage.builder_test.py : pycov builder_test.py
+build .coverage.common_test.py : pycov common_test.py
+build .coverage.main_test.py : pycov main_test.py
+build .coverage.ninja_parser_test.py : pycov ninja_parser_test.py
 
 default all

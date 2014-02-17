@@ -30,10 +30,10 @@ class NinjaAnalyzer(object):
         build_scope = Scope(build_name, scope)
         build_scope['out'] = ' '.join(outputs)
         build_scope['in'] = ' '.join(inputs)
-        for name, val in build_vars:
+        for _, name, val in build_vars:
             if name in build_scope.objs:
                 raise PynException("'var %s' declared more than once "
-                                   " in build %s'" % (name, build_name))
+                                " in build %s'" % (name, build_name))
             build_scope.objs[name] = val
 
         graph.nodes[build_name] = Node(build_name, build_scope, rule_name,
@@ -52,7 +52,7 @@ class NinjaAnalyzer(object):
         if not self.host.exists(path):
             raise PynException("'%s' not found." % path)
 
-        ast = self.parse(host.read(path))
+        ast = self.parse(self.host.read(path))
         return self.analyze(ast, filename=None, graph=graph, scope=scope)
 
     def _decl_pool(self, graph, _scope, decl):
@@ -97,7 +97,7 @@ class NinjaAnalyzer(object):
         _, path = decl
         if not self.host.exists(path):
             raise PynException("'%s' not found." % path)
-        ast = self.parse(host.read(path))
+        ast = self.parse(self.host.read(path))
         subgraph = self.analyze(ast, path)
         for s in subgraph.scopes:
             if s.name in graph.scopes:

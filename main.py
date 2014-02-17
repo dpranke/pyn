@@ -28,7 +28,7 @@ def main(host, argv=None):
     ast = parse(host.read(args.file))
     analyzer = NinjaAnalyzer(host, args, parse)
 
-    graph = analyzer.analyze(ast, args.file, parse)
+    graph = analyzer.analyze(ast, args.file)
 
     builder = Builder(host, args, expand_vars)
     if args.tool:
