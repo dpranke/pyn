@@ -35,7 +35,6 @@ class NinjaAnalyzer(object):
                                 "is not supported yet" % (' '.join(outputs)))
         build_name = outputs[0]
         if build_name in graph.nodes:
-            import pdb; pdb.set_trace()
             raise PynException("build %' declared more than once")
 
         build_scope = Scope(build_name, scope)
@@ -97,7 +96,7 @@ class NinjaAnalyzer(object):
 
         rule_scope = Scope(rule_name, scope.name)
         for _, var_name, val in rule_vars:
-            if var_name in rule_scope:
+            if var_name in rule_scope.objs:
                 raise PynException("'var %s' declared more than once "
                                    " in rule %s'" % (var_name, rule_name))
             rule_scope[var_name] = val
