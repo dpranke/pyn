@@ -33,7 +33,7 @@ default  = "default" ws paths:ps eol                   -> ['default', ps]
 
 paths    = path:hd (ws path)*:tl                       -> [hd] + tl
 
-path     = (~(' '|':'|'='|'|'|eol) anything)+:p        -> ''.join(p)
+path     = (('$' ' ')|(~(' '|':'|'='|'|'|eol) anything))+:p -> ''.join(p)
 
 name     = letter:hd (letter|digit|'_')*:tl            -> ''.join([hd] + tl)
 

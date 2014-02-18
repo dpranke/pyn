@@ -35,6 +35,7 @@ class NinjaAnalyzer(object):
                                 "is not supported yet" % (' '.join(outputs)))
         build_name = outputs[0]
         if build_name in graph.nodes:
+            import pdb; pdb.set_trace()
             raise PynException("build %' declared more than once")
 
         build_scope = Scope(build_name, scope)

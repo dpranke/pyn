@@ -23,6 +23,11 @@ class TestNinjaParser(unittest.TestCase):
         self.check('\n', [])
         self.check('\n\n', [])
 
+    def test_spaces_in_paths(self):
+        self.check('build foo$ bar : cc foo.c',
+                   [['build', ['foo bar'], 'cc', ['foo.c'],
+                              [], [], []]])
+
     def test_comments(self):
         self.check('# comment', [])
         self.check('\n# comment', [])
