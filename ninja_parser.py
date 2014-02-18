@@ -7,7 +7,7 @@ from common import PynException
 
 
 NinjaParser = OMeta.makeGrammar("""
-grammar  = ((ws|'\n')* decl)+:ds (ws|'\n')* end        -> ds
+grammar  = (empty_line* decl)*:ds empty_line* end      -> ds
 
 decl     = build | rule | var | subninja | include
          | pool | default
@@ -39,10 +39,13 @@ name     = (letter|'_')*:ls                            -> ''.join(ls)
 deps     = ws? '|' ws? paths:ps                        -> ps
          |                                             -> []
 
-eol      = ws? '#' (~'\n' anything)* '\n'
-         | ws? '\n'
+empty_line = eol
+
+eol      = ws? (comment | '\n')
 
 ws       = (' '|('$' '\n'))+
+
+comment  = '#' (~'\n' anything)* '\n'
 """, {})
 
 

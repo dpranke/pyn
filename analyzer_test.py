@@ -8,7 +8,7 @@ class TestAnalyzer(unittest.TestCase):
     # 'too many public methods' pylint: disable=R0904
 
     def test_basic(self):
-        NinjaAnalyzer(None, None, None)
+        NinjaAnalyzer(None, None, None, None)
         self.assertTrue(True)
 
 
