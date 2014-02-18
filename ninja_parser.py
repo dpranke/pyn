@@ -13,9 +13,9 @@ decl     = build | rule | var | subninja | include
          | pool | default
 
 build    = "build" ws paths:os ws? ':' ws name:rule
-            ws paths:ins implicit_deps:ids order_only_deps:ods eol
+            explicit_deps:eds implicit_deps:ids order_only_deps:ods eol
             (ws var)*:vs                               -> ['build', os, rule,
-                                                           ins, ids, ods, vs]
+                                                           eds, ids, ods, vs]
 
 rule     = "rule" ws name:n eol (ws var)*:vs           -> ['rule', n, vs]
 
@@ -36,6 +36,9 @@ paths    = path:hd (ws path)*:tl                       -> [hd] + tl
 path     = (('$' ' ')|(~(' '|':'|'='|'|'|eol) anything))+:p -> ''.join(p)
 
 name     = letter:hd (letter|digit|'_')*:tl            -> ''.join([hd] + tl)
+
+explicit_deps = ws? paths:ps                           -> ps
+         |                                             -> []
 
 implicit_deps = ws? '|' ws? paths:ps                   -> ps
          |                                             -> []

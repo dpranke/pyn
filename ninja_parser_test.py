@@ -78,6 +78,12 @@ class TestNinjaParser(unittest.TestCase):
                      [['var', 'command', 'gcc $cflags -c $in -o $out']]]])
 
     def test_build_with_deps(self):
+        self.check('build foo : cc',
+                   [['build', ['foo'], 'cc', [], [], [], []]])
+        self.check('build foo : cc | foo.h',
+                   [['build', ['foo'], 'cc', [], ['foo.h'], [], []]])
+        self.check('build foo : cc || foo.h',
+                   [['build', ['foo'], 'cc', [], [], ['foo.h'], []]])
         self.check('build foo.o : cc foo.c | foo.h\n',
                    [['build', ['foo.o'], 'cc', ['foo.c'],
                               ['foo.h'], [], []]])
