@@ -1,7 +1,7 @@
 import textwrap
 
 from pymeta.grammar import OMeta
-from pymeta.runtime import ParseError
+from pymeta.runtime import ParseError, _MaybeParseError
 
 from common import PynException
 
@@ -63,15 +63,20 @@ def parse(msg):
         raise PynException(str(e))
 
 
-def expand_vars(msg, scope):
-    try:
-        return OMeta.makeGrammar(textwrap.dedent("""
+VarParser = OMeta.makeGrammar(textwrap.dedent("""
             grammar = chunk*:cs end         -> ''.join(cs)
             chunk   = ~'$' anything:c       -> c
                     | '$' (' '|':'|'$'):c   -> c
                     | '$' '{' varname:v '}' -> scope[v]
                     | '$' varname:v         -> scope[v]
             varname = (letter|'_')+:ls      -> ''.join(ls)
-            """), {'scope': scope}).parse(msg)
-    except ParseError as e:
+            """), {'scope': None})
+
+
+def expand_vars(msg, scope):
+    try:
+        parser = VarParser(msg)
+        parser.globals['scope'] = scope
+        return parser.apply('grammar')[0]
+    except _MaybeParseError as e:
         raise PynException(e.message)
