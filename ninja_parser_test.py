@@ -44,11 +44,11 @@ class TestNinjaParser(unittest.TestCase):
                    [['var', 'cflags', '-Wall'],
                     ['rule', 'cc',
                      [['var', 'command', 'gcc $cflags -c $in -o $out']]],
-                    ['build', ['foo.o'], 'cc', ['foo.c'], [], []]])
+                    ['build', ['foo.o'], 'cc', ['foo.c'], [], [], []]])
 
     def test_simple_build(self):
         self.check('build foo.o : cc foo.c\n',
-                   [['build', ['foo.o'], 'cc', ['foo.c'], [], []]])
+                   [['build', ['foo.o'], 'cc', ['foo.c'], [], [], []]])
 
     def test_simple_cflags(self):
         self.check('cflags = -Wall -O1\n',
@@ -68,15 +68,22 @@ class TestNinjaParser(unittest.TestCase):
 
     def test_build_with_deps(self):
         self.check('build foo.o : cc foo.c | foo.h\n',
-                   [['build', ['foo.o'], 'cc', ['foo.c'], ['foo.h'], []]])
+                   [['build', ['foo.o'], 'cc', ['foo.c'],
+                              ['foo.h'], [], []]])
+        self.check('build foo.o : cc foo.c || foo.idl\n',
+                   [['build', ['foo.o'], 'cc', ['foo.c'],
+                              [], ['foo.idl'], []]])
+        self.check('build foo.o : cc foo.c | foo.h || foo.idl\n',
+                   [['build', ['foo.o'], 'cc', ['foo.c'],
+                              ['foo.h'], ['foo.idl'], []]])
 
     def test_no_space_between_output_and_colon(self):
         self.check('build foo.o: cc foo.c\n',
-                   [['build', ['foo.o'], 'cc', ['foo.c'], [], []]])
+                   [['build', ['foo.o'], 'cc', ['foo.c'], [], [], []]])
 
     def test_trailing_dollar_sign(self):
         self.check('build foo.o: cc foo.c $\n\n',
-                   [['build', ['foo.o'], 'cc', ['foo.c'], [], []]])
+                   [['build', ['foo.o'], 'cc', ['foo.c'], [], [], []]])
 
 class TestExpandVars(unittest.TestCase):
     # 'too many public methods' pylint: disable=R0904

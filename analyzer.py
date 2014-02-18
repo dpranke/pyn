@@ -28,10 +28,11 @@ class NinjaAnalyzer(object):
                 n.deps.extend(self.host.read(depfile_path).split()[2:])
 
     def _decl_build(self, graph, scope, decl):
-        _, outputs, rule_name, inputs, deps, build_vars = decl
+        _, outputs, rule_name, inputs, ideps, odeps, build_vars = decl
 
         if len(outputs) > 1:
-            raise PynException("More than one output is not supported yet")
+            self.host.print_err("Warning: more than one output (%s) "
+                                "is not supported yet" % (' '.join(outputs)))
         build_name = outputs[0]
         if build_name in graph.nodes:
             raise PynException("build %' declared more than once")
@@ -46,7 +47,7 @@ class NinjaAnalyzer(object):
             build_scope.objs[name] = val
 
         graph.nodes[build_name] = Node(build_name, build_scope, rule_name,
-                                       inputs + deps)
+                                       inputs + ideps + odeps)
         return graph
 
     def _decl_default(self, graph, _scope, decl):
@@ -73,14 +74,16 @@ class NinjaAnalyzer(object):
             raise PynException("pool '%s' has no depth variable" % name)
         if len(pool_vars) > 1:
             raise PynException("pool '%s' has too many variables" % name)
-        if pool_vars[0][0] != 'depth':
+
+        _, var_name, var_value = pool_vars[0]
+        if var_name != 'depth':
             raise PynException("pool '%s' has a variable named %s, not "
-                               "'depth'" % (name, pool_vars[0][0]))
+                               "'depth'" % (name, var_name))
         try:
-            depth = int(pool_vars[0][1])
+            depth = int(var_value)
         except ValueError:
             raise PynException("pool '%s'\'s depth value, '%s', is not an int"
-                               % (name, pool_vars[0][1]))
+                               % (name, var_value))
 
         graph.pools[name] = depth
         return graph
@@ -107,13 +110,14 @@ class NinjaAnalyzer(object):
         if not self.host.exists(path):
             raise PynException("'%s' not found." % path)
         ast = self.parse(self.host.read(path))
+        self.host.print_err('subninja %s' % path)
         subgraph = self.analyze(ast, path)
-        for s in subgraph.scopes:
+        for s in subgraph.scopes.values():
             if s.name in graph.scopes:
                 raise PynException("scope '%s' declared in multiple files " %
                                    s.name)
             graph.scopes[s.name] = s
-        for n in subgraph.nodes:
+        for n in subgraph.nodes.values():
             if n.name in graph.nodes:
                 raise PynException("build '%s' declared in multiple files " %
                                    n.name)
