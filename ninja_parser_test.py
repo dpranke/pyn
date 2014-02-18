@@ -18,8 +18,19 @@ class TestNinjaParser(unittest.TestCase):
         dedented_text = textwrap.dedent(text)
         self.assertRaises(PynException, parse, dedented_text)
 
+    def test_blanks(self):
+        self.check('', [])
+        self.check('\n', [])
+        self.check('\n\n', [])
+
+    def test_comments(self):
+        self.check('# comment', [])
+        self.check('\n# comment', [])
+        self.check('cflags = -Wall # comment',
+                   [['var', 'cflags', '-Wall']])
+
     def test_syntax_err(self):
-        self.err('rule foo')
+        self.err('syntaxerror')
 
     def test_sample(self):
         self.check('''

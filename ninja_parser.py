@@ -39,13 +39,13 @@ name     = (letter|'_')*:ls                            -> ''.join(ls)
 deps     = ws? '|' ws? paths:ps                        -> ps
          |                                             -> []
 
-empty_line = eol
+empty_line = ws? (comment | '\n')
 
-eol      = ws? (comment | '\n')
+eol      = ws? (comment | '\n' | end)
 
 ws       = (' '|('$' '\n'))+
 
-comment  = '#' (~'\n' anything)* '\n'
+comment  = '#' (~'\n' anything)* ('\n'|end)
 """, {})
 
 
