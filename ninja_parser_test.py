@@ -29,6 +29,12 @@ class TestNinjaParser(unittest.TestCase):
         self.check('cflags = -Wall # comment',
                    [['var', 'cflags', '-Wall']])
 
+    def test_names(self):
+        self.check('f = bar', [['var', 'f', 'bar']])
+        self.check('foo = bar', [['var', 'foo', 'bar']])
+        self.check('foo=bar', [['var', 'foo', 'bar']])
+        self.check('foo_123=bar', [['var', 'foo_123', 'bar']])
+
     def test_syntax_err(self):
         self.err('syntaxerror')
 
