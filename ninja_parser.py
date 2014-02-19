@@ -162,7 +162,17 @@ class NinjaParser(object):
 
     def default_(self, msg, start, end):
         """ "default" ws paths:ps eol  -> ['default', ps] """
-        return self.apply('default', msg, start, end)
+        if end - start < 7 or msg[start:start + 7] != 'default':
+            return None, start, "expecting 'default'"
+        p = start + 7
+        v, p, err = self.ws_(msg, p, end)
+        if err:
+            return None, p, err
+        v, p, err = self.apply('paths', msg, p, end)
+        if err:
+            return None, p, err
+        else:
+            return ['default', v], p, None
 
     def paths_(self, msg, start, end):
         """ path:hd (ws path)*:tl -> [hd] + tl """
