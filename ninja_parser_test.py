@@ -53,11 +53,13 @@ class TestNinjaParser(unittest.TestCase):
 
     def test_include(self):
         self.check('include foo.ninja', [['include', 'foo.ninja']])
+        self.check('include foo.ninja\n', [['include', 'foo.ninja']])
         self.err('include')
         self.err('include ')
 
     def test_subninja(self):
         self.check('subninja foo.ninja', [['subninja', 'foo.ninja']])
+        self.check('subninja foo.ninja\n', [['subninja', 'foo.ninja']])
         self.err('subninja')
         self.err('subninja ')
 
@@ -87,6 +89,8 @@ class TestNinjaParser(unittest.TestCase):
                    [['var', 'cflags', '-Wall -O1']])
 
     def test_default(self):
+        self.check('default foo bar\n',
+                   [['default', ['foo', 'bar']]])
         self.check('default foo bar\n',
                    [['default', ['foo', 'bar']]])
         self.err('default')

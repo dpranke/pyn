@@ -23,9 +23,9 @@ var      = name:n ws? '=' ws? value:v eol              -> ['var', n, v]
 
 value    = (~eol (('$' '\n' ' '+ -> '')|anything))*:vs -> ''.join(vs)
 
-subninja = "subninja" ws path:p                        -> ['subninja', p]
+subninja = "subninja" ws path:p eol                    -> ['subninja', p]
 
-include  = "include" ws path:p                         -> ['include', p]
+include  = "include" ws path:p eol                     -> ['include', p]
 
 pool     = "pool" ws name:n eol (ws var)*:vars         -> ['pool', n, vars]
 
@@ -129,7 +129,7 @@ class NinjaParser(object):
         return self.apply('value', msg, start, end)
 
     def subninja_(self, msg, start, end):
-        """ "subninja" ws path:p -> ['subninja', p] """
+        """ "subninja" ws path:p eol -> ['subninja', p] """
         if end - start < 8 or msg[start:start + 8] != 'subninja':
             return None, start, "expecting 'subninja'"
         p = start + 8
@@ -140,10 +140,11 @@ class NinjaParser(object):
         if err:
             return None, p, err
         else:
+            _, p, err = self.eol_(msg, p, end)
             return ['subninja', v], p, None
 
     def include_(self, msg, start, end):
-        """ "include" ws path:p -> ['include', p] """
+        """ "include" ws path:p eol -> ['include', p] """
         if end - start < 7 or msg[start:start + 7] != 'include':
             return None, start, "expecting 'include'"
         p = start + 7
@@ -154,6 +155,7 @@ class NinjaParser(object):
         if err:
             return None, p, err
         else:
+            _, p, err = self.eol_(msg, p, end)
             return ['include', v], p, None
 
     def pool_(self, msg, start, end):
@@ -172,6 +174,7 @@ class NinjaParser(object):
         if err:
             return None, p, err
         else:
+            _, p, err = self.eol_(msg, p, end)
             return ['default', v], p, None
 
     def paths_(self, msg, start, end):
@@ -211,6 +214,19 @@ class NinjaParser(object):
                 return v, p, err
         else:
             return None, p, "expecting a '\n' or a '#'"
+
+    def eol_(self, msg, start, end):
+        """ ws? (comment | '\n' | end) """
+        _, p, err = self.ws_(msg, start, end)
+        if p < end:
+            if msg[p] == '\n':
+                return '\n', p + 1, None
+            elif p == end:
+                return None, p, None
+            else:
+                return self.comment_(msg, p, end)
+        else:
+            return None, p, None
 
     def ws_(self, msg, start, end):
         """ (' '|('$' '\n'))+ """
