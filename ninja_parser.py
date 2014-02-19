@@ -14,10 +14,12 @@ decl     = build | rule | var | subninja | include
 
 build    = "build" ws paths:os ws? ':' ws name:rule
             explicit_deps:eds implicit_deps:ids order_only_deps:ods eol
-            (ws var)*:vs                               -> ['build', os, rule,
+            ws_vars:vs                                 -> ['build', os, rule,
                                                            eds, ids, ods, vs]
 
-rule     = "rule" ws name:n eol (ws var)*:vs           -> ['rule', n, vs]
+rule     = "rule" ws name:n eol ws_vars:vs             -> ['rule', n, vs]
+
+ws_vars  = (ws var)*:vs                                -> vs
 
 var      = name:n ws? '=' ws? value:v eol              -> ['var', n, v]
 
@@ -27,7 +29,7 @@ subninja = "subninja" ws path:p eol                    -> ['subninja', p]
 
 include  = "include" ws path:p eol                     -> ['include', p]
 
-pool     = "pool" ws name:n eol (ws var)*:vars         -> ['pool', n, vars]
+pool     = "pool" ws name:n eol ws_vars:vs             -> ['pool', n, vs]
 
 default  = "default" ws paths:ps eol                   -> ['default', ps]
 
@@ -50,6 +52,7 @@ empty_line = ws? (comment | '\n')
 
 eol      = ws? (comment | '\n' | end)
 
+
 ws       = (' '|('$' '\n'))+
 
 comment  = '#' (~'\n' anything)* ('\n'|end)
@@ -60,7 +63,10 @@ class NinjaParser(object):
     """Parse the contents of a .ninja file and return an AST."""
 
     def parse(self, msg):
-        v, p, err = self.grammar_(msg, 0, len(msg))
+        if False:
+            v, p, err = self.apply('grammar', msg, 0, len(msg))
+        else:
+            v, p, err = self.grammar_(msg, 0, len(msg))
         if err:
             raise PynException(err)
         else:
@@ -154,12 +160,42 @@ class NinjaParser(object):
             return None, p, "expecting ':'"
 
     def rule_(self, msg, start, end):
-        """ "rule" ws name:n eol (ws var)*:vs -> ['rule', n, vs] """
+        """ "rule" ws name:n eol ws_vars:vs -> ['rule', n, vs] """
         return self.apply('rule', msg, start, end)
 
+    def ws_vars_(self, msg, start, end):
+        p = start
+        vs = []
+        while p < end and not err:
+            _, p, err = self.ws_(msg, p, end)
+            if not err:
+                v, p, err = self.var_(msg, p, end)
+                if not err:
+                    vs.append(v)
+        return vs
+
     def var_(self, msg, start, end):
-        """ ws? '=' ws? value:v eol -> ['var', n, v] """
-        return self.apply('var', msg, start, end)
+        """ name:n ws? '=' ws? value:v eol -> ['var', n, v] """
+        n, p, err = self.name_(msg, start, end)
+        if err:
+            return None, p, err
+
+        _, p, _ = self.ws_(msg, p, end)
+
+        _, p, err = self.expect(msg, p, end, '=')
+        if err:
+            return None, p, err
+
+        _, p, _ = self.ws_(msg, p, end)
+
+        v, p, err = self.value_(msg, p, end)
+        if err:
+            return None, p, err
+
+        _, p, err = self.eol_(msg, p, end)
+        if err:
+            return None, p, err
+        return ['var', n, v], p, None
 
     def value_(self, msg, start, end):
         """ (~eol (('$' '\n' ' '+ -> '')|anything))*:vs -> ''.join(vs) """
