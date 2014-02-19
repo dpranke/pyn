@@ -9,17 +9,28 @@ from ninja_parser import parse, expand_vars
 class TestNinjaParser(unittest.TestCase):
     # 'too many public methods' pylint: disable=R0904
 
-    def check(self, text, ast):
-        dedented_text = textwrap.dedent(text)
-        actual_ast = parse(dedented_text)
+    def check(self, text, ast, dedent=True):
+        if dedent:
+            dedented_text = textwrap.dedent(text)
+            actual_ast = parse(dedented_text)
+        else:
+            actual_ast = parse(text)
         self.assertEquals(actual_ast, ast)
 
-    def err(self, text):
-        dedented_text = textwrap.dedent(text)
-        self.assertRaises(PynException, parse, dedented_text)
+    def err(self, text, dedent=True):
+        if dedent:
+            dedented_text = textwrap.dedent(text)
+            self.assertRaises(PynException, parse, dedented_text)
+        else:
+            self.assertRaises(PynException, parse, text)
 
     def test_blanks(self):
         self.check('', [])
+        self.check('  ', [], dedent=False)
+        self.check('  \n', [], dedent=False)
+        self.check('  $\n\n', [], dedent=False)
+        self.check('$\n\n', [], dedent=False)
+        self.check('  $\n  $\n\n', [], dedent=False)
         self.check('\n', [])
         self.check('\n\n', [])
 

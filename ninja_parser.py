@@ -67,6 +67,7 @@ class NinjaParser(object):
             return v
 
     def grammar_(self, msg, start, end):
+        """ (empty_line* decl)*:ds empty_line* end -> ds """
         ds = []
         err = None
         p = start
@@ -84,11 +85,51 @@ class NinjaParser(object):
         else:
             return None, p, err
 
-    def empty_line_(self, msg, start, end):
-        return self.apply('empty_line', msg, start, end)
-
     def decl_(self, msg, start, end):
         return self.apply('decl', msg, start, end)
+
+    def empty_line_(self, msg, start, end):
+        """ ws? (comment | '\n') """
+        _, p, err = self.ws_(msg, start, end)
+        if p < end and msg[p] == '\n':
+            return '\n', p + 1, None
+        elif p < end:
+            v, p, err = self.comment_(msg, p, end)
+            if err:
+                return None, p, err
+            else:
+                return v, p, err
+        else:
+            return None, p, "expecting a '\n' or a '#'"
+
+    def ws_(self, msg, start, end):
+        """ (' '|('$' '\n'))+ """
+        p = start
+        if msg[p] == ' ':
+            p += 1
+        elif p < end - 1 and msg[p:p + 2] == '$\n':
+            p += 2
+        else:
+            return None, p, "expecting either ' ' or '$\n'"
+
+        err = None
+        while not err and p < end:
+            if msg[p] == ' ':
+                p += 1
+            elif p < end - 1 and msg[p:p + 2] == '$\n':
+                p += 2
+            else:
+                err = "expecting either ' ' or '$\n'"
+        return None, p, None
+
+    def comment_(self, msg, start, end):
+        """ '#' (~'\n' anything)* ('\n'|end) """
+        if msg[start] != '#':
+            return None, start, "expecting a '#'"
+        p = start + 1
+        while p < end and p != '\n':
+            p += 1
+        return None, p, None
 
     def apply(self, rule, msg, start, end):
         ometa_parser = _OMetaNinjaParser(msg[start:end])
