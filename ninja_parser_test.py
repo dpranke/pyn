@@ -144,6 +144,7 @@ class TestExpandVars(unittest.TestCase):
         self.err('${baz')
         self.err('$')
         self.err('$123')
+        self.err('${baz foo')
 
 
 if __name__ == '__main__':

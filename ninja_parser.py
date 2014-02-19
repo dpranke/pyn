@@ -64,6 +64,10 @@ def parse(msg):
 
 
 def expand_vars(msg, scope):
+    return VarExpander(scope).parse(msg)
+
+
+class VarExpander(object):
     """Expand the variables in a string.
 
     grammar = chunk*:cs end         -> ''.join(cs)
@@ -73,44 +77,55 @@ def expand_vars(msg, scope):
             | '$' varname:v         -> scope[v]
     varname = (letter|'_')+:ls      -> ''.join(ls)
     """
-    def grammar(msg, start, end):
+
+    def __init__(self, scope):
+        self.scope = scope
+
+    def parse(self, msg):
+        v, p, err = self.grammar_(msg, 0, len(msg))
+        if err:
+            raise PynException("%s at %d" % (err, p))
+        else:
+            return v
+
+    def grammar_(self, msg, start, end):
         vs = []
-        v, p, err = chunk(msg, start, end)
+        v, p, err = self.chunk_(msg, start, end)
         while v:
             vs.append(v)
-            v, p, err = chunk(msg, p, end)
+            v, p, err = self.chunk_(msg, p, end)
         if err:
             return (None, p, err)
         return (''.join(vs), p, err)
 
-    def chunk(msg, start, end):
+    def chunk_(self, msg, start, end):
         if end - start > 0 and msg[start] == '$':
             if end - start == 1:
                 return (None, start + 1, "expecting a varname or a '{'")
             elif msg[start + 1] in (' ', ':', '$'):
                 return (msg[start + 1], start + 2, None)
             elif msg[start + 1] == '{':
-                v, p, err = varname(msg, start + 2, end)
+                v, p, err = self.varname_(msg, start + 2, end)
                 if err:
                     return (None, p, err)
                 elif p > end - 1:
                     return (None, p, "expecting a closing }")
                 elif msg[p] == '}':
-                    return (scope[v], p + 1, None)
+                    return (self.scope[v], p + 1, None)
                 else:
                     return (None, p, "expecting a closing }")
             else:
-                v, p, err = varname(msg, start + 1, end)
+                v, p, err = self.varname_(msg, start + 1, end)
                 if err:
                     return (None, p, err)
                 else:
-                    return (scope[v], p, None)
+                    return (self.scope[v], p, None)
         elif end - start > 0:
             return msg[start], start + 1, None
         else:
             return None, start, None
 
-    def varname(msg, start, end):
+    def varname_(self, msg, start, end):
         vs = []
         p = start
         while p < end and (msg[p].isalpha() or msg[p] == '_'):
@@ -120,8 +135,4 @@ def expand_vars(msg, scope):
             return ''.join(vs), p, None
         return None, start, "expecting a varname"
 
-    v, p, err = grammar(msg, 0, len(msg))
-    if err:
-        raise PynException("%s at %d" % (err, p))
-    else:
-        return v
+
