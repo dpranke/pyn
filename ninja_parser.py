@@ -111,45 +111,61 @@ class NinjaParser(object):
             return v, p, err
 
     def build_(self, msg, start, end):
+        """ "build" ws paths:os ws? ':' ws name:rule
+            explicit_deps:eds implicit_deps:ids order_only_deps:ods eol
+            (ws var)*:vs -> ['build', os, rule, eds, ids, ods, vs] """
         return self.apply('build', msg, start, end)
 
     def rule_(self, msg, start, end):
+        """ "rule" ws name:n eol (ws var)*:vs -> ['rule', n, vs] """
         return self.apply('rule', msg, start, end)
 
     def var_(self, msg, start, end):
+        """ ws? '=' ws? value:v eol -> ['var', n, v] """
         return self.apply('var', msg, start, end)
 
     def value_(self, msg, start, end):
+        """ (~eol (('$' '\n' ' '+ -> '')|anything))*:vs -> ''.join(vs) """
         return self.apply('value', msg, start, end)
 
     def subninja_(self, msg, start, end):
+        """ "subninja" ws path:p -> ['subninja', p] """
         return self.apply('subninja', msg, start, end)
 
     def include_(self, msg, start, end):
+        """ "include" ws path:p -> ['include', p] """
         return self.apply('include', msg, start, end)
 
     def pool_(self, msg, start, end):
+        """ "pool" ws name:n eol (ws var)*:vars -> ['pool', n, vars] """
         return self.apply('pool', msg, start, end)
 
     def default_(self, msg, start, end):
+        """ "default" ws paths:ps eol  -> ['default', ps] """
         return self.apply('default', msg, start, end)
 
     def paths_(self, msg, start, end):
+        """ path:hd (ws path)*:tl -> [hd] + tl """
         return self.apply('paths', msg, start, end)
 
     def path_(self, msg, start, end):
+        """ (('$' ' ')|(~(' '|':'|'='|'|'|eol) anything))+:p -> ''.join(p) """
         return self.apply('path', msg, start, end)
 
     def name_(self, msg, start, end):
+        """ letter:hd (letter|digit|'_')*:tl -> ''.join([hd] + tl) """
         return self.apply('name', msg, start, end)
 
     def explicit_deps_(self, msg, start, end):
+        """ ws? paths:ps -> ps | -> [] """
         return self.apply('explicit_deps', msg, start, end)
 
     def implicit_deps_(self, msg, start, end):
+        """ ws? '|' paths:ps -> ps | -> [] """
         return self.apply('implicit_deps_', msg, start, end)
 
     def order_only_deps_(self, msg, start, end):
+        """ ws? '|' '|' paths:ps -> ps | -> [] """
         return self.apply('order_only_deps', msg, start, end)
 
     def empty_line_(self, msg, start, end):

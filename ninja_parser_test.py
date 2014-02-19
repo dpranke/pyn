@@ -51,6 +51,12 @@ class TestNinjaParser(unittest.TestCase):
         self.check('foo=bar', [['var', 'foo', 'bar']])
         self.check('foo_123=bar', [['var', 'foo_123', 'bar']])
 
+    def test_include(self):
+        self.check('include foo.ninja', [['include', 'foo.ninja']])
+
+    def test_subninja(self):
+        self.check('subninja foo.ninja', [['subninja', 'foo.ninja']])
+
     def test_syntax_err(self):
         self.err('syntaxerror')
 
