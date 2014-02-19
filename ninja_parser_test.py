@@ -56,6 +56,8 @@ class TestNinjaParser(unittest.TestCase):
 
     def test_subninja(self):
         self.check('subninja foo.ninja', [['subninja', 'foo.ninja']])
+        self.err('subninja')
+        self.err('subninja ')
 
     def test_syntax_err(self):
         self.err('syntaxerror')

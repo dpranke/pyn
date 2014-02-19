@@ -130,7 +130,17 @@ class NinjaParser(object):
 
     def subninja_(self, msg, start, end):
         """ "subninja" ws path:p -> ['subninja', p] """
-        return self.apply('subninja', msg, start, end)
+        if end - start < 8 or msg[start:start + 8] != 'subninja':
+            return None, start, "expecting 'subninja'"
+        p = start + 8
+        v, p, err = self.ws_(msg, p, end)
+        if err:
+            return None, p, err
+        v, p, err = self.apply('path', msg, p, end)
+        if err:
+            return None, p, err
+        else:
+            return ['subninja', v], p, None
 
     def include_(self, msg, start, end):
         """ "include" ws path:p -> ['include', p] """
@@ -185,7 +195,7 @@ class NinjaParser(object):
     def ws_(self, msg, start, end):
         """ (' '|('$' '\n'))+ """
         p = start
-        if msg[p] == ' ':
+        if p < end and msg[p] == ' ':
             p += 1
         elif p < end - 1 and msg[p:p + 2] == '$\n':
             p += 2
