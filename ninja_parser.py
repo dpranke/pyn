@@ -74,6 +74,54 @@ VarParser = OMeta.makeGrammar(textwrap.dedent("""
 
 
 def expand_vars(msg, scope):
+    def chunk(msg):
+        if msg and msg[0] == '$':
+            if len(msg) == 1:
+                return (None, 1, "expecting a varname or a '{'")
+            elif msg[1] in (' ', ':', '$'):
+                return (msg[1], 2, None)
+            elif msg[1] == '{':
+                v, p, err = varname(msg[2:])
+                if err:
+                    return (None, p, err)
+                elif len(msg) < p + 3:
+                    return (None, p + 1, "expecting a closing }")
+                elif msg[p + 2] == '}':
+                    return (scope[v], p + 3, None)
+                else:
+                    return (None, p + 2, "expecting a closing }")
+            else:
+                v, p, err = varname(msg[1:])
+                if err:
+                    return (None, p, err)
+                else:
+                    return (scope[v], p + 1, None)
+        else:
+            if msg:
+                return msg[0], 1, None
+            else:
+                return None, 0, None
+
+    def varname(msg):
+        p = 0
+        while p < len(msg) and (msg[p].isalpha() or msg[p] == '_'):
+            p += 1
+        if p:
+            return msg[0:p], p, None
+        return None, 0, "expecting a varname"
+
+    vs = []
+    v, p, err = chunk(msg)
+    while v:
+        vs.append(v)
+        msg = msg[p:]
+        v, p, err = chunk(msg)
+    if err:
+        raise PynException("%s at %d" % (err, p))
+    else:
+        return ''.join(vs)
+
+
     try:
         parser = VarParser(msg)
         parser.globals['scope'] = scope
