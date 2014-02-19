@@ -73,6 +73,16 @@ def expand_vars(msg, scope):
             | '$' varname:v         -> scope[v]
     varname = (letter|'_')+:ls      -> ''.join(ls)
     """
+    def grammar(msg, start, end):
+        vs = []
+        v, p, err = chunk(msg, start, end)
+        while v:
+            vs.append(v)
+            v, p, err = chunk(msg, p, end)
+        if err:
+            return (None, p, err)
+        return (''.join(vs), p, err)
+
     def chunk(msg, start, end):
         if end - start > 0 and msg[start] == '$':
             if end - start == 1:
@@ -109,16 +119,6 @@ def expand_vars(msg, scope):
         if p > start:
             return ''.join(vs), p, None
         return None, start, "expecting a varname"
-
-    def grammar(msg, start, end):
-        vs = []
-        v, p, err = chunk(msg, start, end)
-        while v:
-            vs.append(v)
-            v, p, err = chunk(msg, p, end)
-        if err:
-            return (None, p, err)
-        return (''.join(vs), p, err)
 
     v, p, err = grammar(msg, 0, len(msg))
     if err:
