@@ -75,18 +75,82 @@ class NinjaParser(object):
             while not err and p < end:
                 _, p, err = self.empty_line_(msg, p, end)
             orig_p = p
-            v, p, err = self.decl_(msg, orig_p, end)
-            if not err:
-                ds.append(v)
-            elif p == orig_p:
+            if p < end:
+                v, p, err = self.decl_(msg, orig_p, end)
+                if not err:
+                    ds.append(v)
+            else:
                 err = None
-        if not err or p == start:
+        if not err:
             return ds, p, err
         else:
             return None, p, err
 
     def decl_(self, msg, start, end):
-        return self.apply('decl', msg, start, end)
+        """ build | rule | var | subninja | include | pool | default """
+        v, p, err = self.build_(msg, start, end)
+        if not err:
+            return v, p, err
+        v, p, err = self.rule_(msg, start, end)
+        if not err:
+            return v, p, err
+        v, p, err = self.var_(msg, start, end)
+        if not err:
+            return v, p, err
+        v, p, err = self.subninja_(msg, start, end)
+        if not err:
+            return v, p, err
+        v, p, err = self.include_(msg, start, end)
+        if not err:
+            return v, p, err
+        v, p, err = self.pool_(msg, start, end)
+        if not err:
+            return v, p, err
+        return self.default_(msg, start, end)
+        if not err:
+            return v, p, err
+
+    def build_(self, msg, start, end):
+        return self.apply('build', msg, start, end)
+
+    def rule_(self, msg, start, end):
+        return self.apply('rule', msg, start, end)
+
+    def var_(self, msg, start, end):
+        return self.apply('var', msg, start, end)
+
+    def value_(self, msg, start, end):
+        return self.apply('value', msg, start, end)
+
+    def subninja_(self, msg, start, end):
+        return self.apply('subninja', msg, start, end)
+
+    def include_(self, msg, start, end):
+        return self.apply('include', msg, start, end)
+
+    def pool_(self, msg, start, end):
+        return self.apply('pool', msg, start, end)
+
+    def default_(self, msg, start, end):
+        return self.apply('default', msg, start, end)
+
+    def paths_(self, msg, start, end):
+        return self.apply('paths', msg, start, end)
+
+    def path_(self, msg, start, end):
+        return self.apply('path', msg, start, end)
+
+    def name_(self, msg, start, end):
+        return self.apply('name', msg, start, end)
+
+    def explicit_deps_(self, msg, start, end):
+        return self.apply('explicit_deps', msg, start, end)
+
+    def implicit_deps_(self, msg, start, end):
+        return self.apply('implicit_deps_', msg, start, end)
+
+    def order_only_deps_(self, msg, start, end):
+        return self.apply('order_only_deps', msg, start, end)
 
     def empty_line_(self, msg, start, end):
         """ ws? (comment | '\n') """
@@ -138,6 +202,7 @@ class NinjaParser(object):
             return (v, start + ometa_parser.input.position, None)
         except _MaybeParseError as ex:
             return (None, start + ex.position, PynException(ex.error))
+
 
 def parse(msg):
     return NinjaParser().parse(msg)
@@ -214,5 +279,3 @@ class VarExpander(object):
         if p > start:
             return ''.join(vs), p, None
         return None, start, "expecting a varname"
-
-
