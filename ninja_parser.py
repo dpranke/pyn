@@ -79,7 +79,7 @@ def expand_vars(msg, scope):
                 return (None, start + 1, "expecting a varname or a '{'")
             elif msg[start + 1] in (' ', ':', '$'):
                 return (msg[start + 1], start + 2, None)
-            elif msg[1] == '{':
+            elif msg[start + 1] == '{':
                 v, p, err = varname(msg, start + 2, end)
                 if err:
                     return (None, p, err)
@@ -101,20 +101,27 @@ def expand_vars(msg, scope):
             return None, start, None
 
     def varname(msg, start, end):
+        vs = []
         p = start
         while p < end and (msg[p].isalpha() or msg[p] == '_'):
+            vs.append(msg[p])
             p += 1
         if p > start:
-            return msg[start:p], p, None
+            return ''.join(vs), p, None
         return None, start, "expecting a varname"
 
-    vs = []
-    end = len(msg)
-    v, p, err = chunk(msg, 0, end)
-    while v:
-        vs.append(v)
-        v, p, err = chunk(msg, p, end)
+    def grammar(msg, start, end):
+        vs = []
+        v, p, err = chunk(msg, start, end)
+        while v:
+            vs.append(v)
+            v, p, err = chunk(msg, p, end)
+        if err:
+            return (None, p, err)
+        return (''.join(vs), p, err)
+
+    v, p, err = grammar(msg, 0, len(msg))
     if err:
         raise PynException("%s at %d" % (err, p))
     else:
-        return ''.join(vs)
+        return v
