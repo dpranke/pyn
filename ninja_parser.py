@@ -170,31 +170,34 @@ class NinjaParser(object):
         v, p, err = self.expect(msg, start, end, 'subninja')
         if err:
             return v, p, err
-        p = start + 8
+
         v, p, err = self.ws_(msg, p, end)
         if err:
             return None, p, err
+
         v, p, err = self.path_(msg, p, end)
         if err:
             return None, p, err
-        else:
-            _, p, err = self.eol_(msg, p, end)
-            return ['subninja', v], p, None
+
+        _, p, err = self.eol_(msg, p, end)
+        return ['subninja', v], p, None
 
     def include_(self, msg, start, end):
         """ "include" ws path:p eol -> ['include', p] """
-        if end - start < 7 or msg[start:start + 7] != 'include':
-            return None, start, "expecting 'include'"
-        p = start + 7
+        v, p, err = self.expect(msg, start, end, 'include')
+        if err:
+            return v, p, err
+
         v, p, err = self.ws_(msg, p, end)
         if err:
             return None, p, err
-        v, p, err = self.apply('path', msg, p, end)
+
+        v, p, err = self.path_(msg, p, end)
         if err:
             return None, p, err
-        else:
-            _, p, err = self.eol_(msg, p, end)
-            return ['include', v], p, None
+
+        _, p, err = self.eol_(msg, p, end)
+        return ['include', v], p, None
 
     def pool_(self, msg, start, end):
         """ "pool" ws name:n eol (ws var)*:vars -> ['pool', n, vars] """
@@ -202,33 +205,35 @@ class NinjaParser(object):
 
     def default_(self, msg, start, end):
         """ "default" ws paths:ps eol  -> ['default', ps] """
-        if end - start < 7 or msg[start:start + 7] != 'default':
-            return None, start, "expecting 'default'"
-        p = start + 7
+        v, p, err = self.expect(msg, start, end, 'default')
+        if err:
+            return v, p, err
+
         v, p, err = self.ws_(msg, p, end)
         if err:
             return None, p, err
+
         v, p, err = self.paths_(msg, p, end)
         if err:
             return None, p, err
-        else:
-            _, p, err = self.eol_(msg, p, end)
-            return ['default', v], p, None
+
+        _, p, err = self.eol_(msg, p, end)
+        return ['default', v], p, None
 
     def paths_(self, msg, start, end):
         """ path:hd (ws path)*:tl -> [hd] + tl """
         hd, p, err = self.path_(msg, start, end)
         tl = []
-        if not err:
-            while p < end and not err:
-                v, p, err = self.ws_(msg, p, end)
-                if not err:
-                    v, p, err = self.path_(msg, p, end)
-                    if not err:
-                        tl.append(v)
-            return [hd] + tl, p, None
-        else:
+        if err:
             return None, p, err
+
+        while p < end and not err:
+            v, p, err = self.ws_(msg, p, end)
+            if not err:
+                v, p, err = self.path_(msg, p, end)
+                if not err:
+                    tl.append(v)
+        return [hd] + tl, p, None
 
     def path_(self, msg, start, end):
         """ (('$' ' ')|(~(' '|':'|'='|'|'|eol) anything))+:vs -> ''.join(vs) """
