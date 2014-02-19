@@ -133,7 +133,7 @@ class NinjaParser(object):
     def build_(self, msg, start, end):
         """ "build" ws paths:os ws? ':' ws name:rule
             explicit_deps:eds implicit_deps:ids order_only_deps:ods eol
-            (ws var)*:vs -> ['build', os, rule, eds, ids, ods, vs] """
+            ws_vars:vs -> ['build', os, rule, eds, ids, ods, vs] """
         return self.apply('build', msg, start, end)
         p = start
         v, p, err = self.expect(msg, p, end, 'build')
@@ -161,18 +161,41 @@ class NinjaParser(object):
 
     def rule_(self, msg, start, end):
         """ "rule" ws name:n eol ws_vars:vs -> ['rule', n, vs] """
-        return self.apply('rule', msg, start, end)
+        p = start
+
+        _, p, err = self.expect(msg, p, end, 'rule')
+        if err:
+            return None, p, err
+
+        _, p, err = self.ws_(msg, p, end)
+        if err:
+            return None, p, err
+
+        n, p, err = self.name_(msg, p, end)
+        if err:
+            return None, p, err
+
+        _, p, err = self.eol_(msg, p, end)
+        if err:
+            return None, p, err
+
+        vs, p, err = self.ws_vars_(msg, p, end)
+        if err:
+            return None, p, err
+
+        return ['rule', n, vs], p, None
 
     def ws_vars_(self, msg, start, end):
         p = start
         vs = []
+        err = None
         while p < end and not err:
             _, p, err = self.ws_(msg, p, end)
             if not err:
                 v, p, err = self.var_(msg, p, end)
                 if not err:
                     vs.append(v)
-        return vs
+        return vs, p, None
 
     def var_(self, msg, start, end):
         """ name:n ws? '=' ws? value:v eol -> ['var', n, v] """
@@ -379,7 +402,6 @@ class NinjaParser(object):
             return '\n', p, None
         else:
             return None, p, None
-
 
 
 def parse(msg):
