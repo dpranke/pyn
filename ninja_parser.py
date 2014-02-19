@@ -6,7 +6,7 @@ from pymeta.runtime import ParseError, _MaybeParseError
 from common import PynException
 
 
-NinjaParser = OMeta.makeGrammar("""
+_OMetaNinjaParser = OMeta.makeGrammar("""
 grammar  = (empty_line* decl)*:ds empty_line* end      -> ds
 
 decl     = build | rule | var | subninja | include
@@ -56,11 +56,31 @@ comment  = '#' (~'\n' anything)* ('\n'|end)
 """, {})
 
 
+class NinjaParser(object):
+    """Parse the contents of a .ninja file and return an AST."""
+    def __init__(self):
+        self._ometa = None
+
+    def parse(self, msg):
+        self._ometa = _OMetaNinjaParser(msg)
+        v, p, err = self.apply('grammar')
+        if err:
+            raise PynException(err)
+        else:
+            return v
+
+    def apply(self, rule):
+        try:
+            return (self._ometa.apply('grammar')[0],
+                    self._ometa.input.position,
+                    None)
+        except _MaybeParseError as ex:
+            return (None,
+                    self._ometa.input.position,
+                    PynException(str(ex)))
+
 def parse(msg):
-    try:
-        return NinjaParser.parse(msg)
-    except ParseError as e:
-        raise PynException(str(e))
+    return NinjaParser().parse(msg)
 
 
 def expand_vars(msg, scope):
