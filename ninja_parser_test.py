@@ -38,9 +38,12 @@ class TestNinjaParser(unittest.TestCase):
         self.check('build foo$ bar : cc foo.c',
                    [['build', ['foo bar'], 'cc', ['foo.c'],
                               [], [], []]])
+        self.check('subninja foo$ bar',
+                   [['subninja', 'foo bar']])
 
     def test_comments(self):
         self.check('# comment', [])
+        self.check('# comment\n', [])
         self.check('\n# comment', [])
         self.check('cflags = -Wall # comment',
                    [['var', 'cflags', '-Wall']])

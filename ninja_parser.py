@@ -136,7 +136,7 @@ class NinjaParser(object):
         v, p, err = self.ws_(msg, p, end)
         if err:
             return None, p, err
-        v, p, err = self.apply('path', msg, p, end)
+        v, p, err = self.path_(msg, p, end)
         if err:
             return None, p, err
         else:
@@ -170,7 +170,7 @@ class NinjaParser(object):
         v, p, err = self.ws_(msg, p, end)
         if err:
             return None, p, err
-        v, p, err = self.apply('paths', msg, p, end)
+        v, p, err = self.paths_(msg, p, end)
         if err:
             return None, p, err
         else:
@@ -179,11 +179,40 @@ class NinjaParser(object):
 
     def paths_(self, msg, start, end):
         """ path:hd (ws path)*:tl -> [hd] + tl """
-        return self.apply('paths', msg, start, end)
+        hd, p, err = self.path_(msg, start, end)
+        tl = []
+        if not err:
+            while p < end and not err:
+                v, p, err = self.ws_(msg, p, end)
+                if not err:
+                    v, p, err = self.path_(msg, p, end)
+                    if not err:
+                        tl.append(v)
+            return [hd] + tl, p, None
+        else:
+            return None, p, err
 
     def path_(self, msg, start, end):
-        """ (('$' ' ')|(~(' '|':'|'='|'|'|eol) anything))+:p -> ''.join(p) """
-        return self.apply('path', msg, start, end)
+        """ (('$' ' ')|(~(' '|':'|'='|'|'|eol) anything))+:vs -> ''.join(vs) """
+        vs = []
+        p = start
+        while p < end:
+            if p < (end - 1) and msg[p:p + 2] == '$ ':
+                vs.append(' ')
+                p += 2
+            elif msg[p] in (' ', ':', '=', '|'):
+                break
+            else:
+                v, p, err = self.eol_(msg, p, end)
+                if v or not err:
+                    break
+                else:
+                    vs.append(msg[p])
+                    p += 1
+        if len(vs) == 0:
+            return None, start, 'expecting a path'
+        else:
+            return ''.join(vs), p, None
 
     def name_(self, msg, start, end):
         """ letter:hd (letter|digit|'_')*:tl -> ''.join([hd] + tl) """
@@ -253,9 +282,12 @@ class NinjaParser(object):
         if msg[start] != '#':
             return None, start, "expecting a '#'"
         p = start + 1
-        while p < end and p != '\n':
+        while p < end and msg[p] != '\n':
             p += 1
-        return None, p, None
+        if p < end:
+            return '\n', p, None
+        else:
+            return None, p, None
 
     def apply(self, rule, msg, start, end):
         ometa_parser = _OMetaNinjaParser(msg[start:end])
