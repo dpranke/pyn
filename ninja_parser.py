@@ -58,26 +58,23 @@ comment  = '#' (~'\n' anything)* ('\n'|end)
 
 class NinjaParser(object):
     """Parse the contents of a .ninja file and return an AST."""
-    def __init__(self):
-        self._ometa = None
 
     def parse(self, msg):
-        self._ometa = _OMetaNinjaParser(msg)
-        v, p, err = self.apply('grammar')
+        v, p, err = self.apply('grammar', msg, 0, len(msg))
         if err:
             raise PynException(err)
         else:
             return v
 
-    def apply(self, rule):
+    def grammar_(self, msg, start, end):
+        pass
+
+    def apply(self, rule, msg, start, end):
+        p = _OMetaNinjaParser(msg[start:end])
         try:
-            return (self._ometa.apply('grammar')[0],
-                    self._ometa.input.position,
-                    None)
+            return (p.apply(rule)[0], p.input.position, None)
         except _MaybeParseError as ex:
-            return (None,
-                    self._ometa.input.position,
-                    PynException(str(ex)))
+            return (None, p.input.position, PynException(str(ex)))
 
 def parse(msg):
     return NinjaParser().parse(msg)
