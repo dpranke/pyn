@@ -8,7 +8,7 @@ class Builder(object):
         self.expand_vars = expand_vars
         self._mtimes = {}
 
-    def build(self, graph):
+    def build(self, graph, question=False):
         requested_targets = self._args.targets or graph.defaults
         nodes_to_build = find_nodes_to_build(graph, requested_targets)
         sorted_nodes = tsort(graph, nodes_to_build)
@@ -22,6 +22,8 @@ class Builder(object):
             my_mtime = self._stat(name)
             do_build = any(self._stat(d) >= my_mtime for d in node.deps)
             if do_build:
+                if question:
+                    raise PynException('build is not up to date.')
                 num_builds += 1
                 self._build_node(graph, node, num_builds, total_nodes)
                 self._restat(name)

@@ -27,7 +27,6 @@ def main(host, argv=None):
 
     ast = parse(host.read(args.file))
     analyzer = NinjaAnalyzer(host, args, parse, expand_vars)
-
     graph = analyzer.analyze(ast, args.file)
 
     builder = Builder(host, args, expand_vars)
@@ -37,6 +36,8 @@ def main(host, argv=None):
                           "  clean  clean built files")
         elif args.tool == 'clean':
             builder.clean(graph)
+        elif args.tool == 'question':
+            builder.build(graph, question=True)
         else:
             raise PynException("Unsupported tool '%s'" % args.tool)
     else:
@@ -84,7 +85,7 @@ if __name__ == '__main__':
     try:
         main(h)
     except PynExit as e:
-        h.print_out(e)
+        h.print_out(e.message)
     except PynException as e:
         h.print_err('Error: ' + str(e))
         code = 1
