@@ -60,21 +60,43 @@ class NinjaParser(object):
     """Parse the contents of a .ninja file and return an AST."""
 
     def parse(self, msg):
-        v, p, err = self.apply('grammar', msg, 0, len(msg))
+        v, p, err = self.grammar_(msg, 0, len(msg))
         if err:
             raise PynException(err)
         else:
             return v
 
     def grammar_(self, msg, start, end):
-        pass
+        ds = []
+        err = None
+        p = start
+        while not err and p < end:
+            while not err and p < end:
+                _, p, err = self.empty_line_(msg, p, end)
+            orig_p = p
+            v, p, err = self.decl_(msg, orig_p, end)
+            if not err:
+                ds.append(v)
+            elif p == orig_p:
+                err = None
+        if not err or p == start:
+            return ds, p, err
+        else:
+            return None, p, err
+
+    def empty_line_(self, msg, start, end):
+        return self.apply('empty_line', msg, start, end)
+
+    def decl_(self, msg, start, end):
+        return self.apply('decl', msg, start, end)
 
     def apply(self, rule, msg, start, end):
-        p = _OMetaNinjaParser(msg[start:end])
+        ometa_parser = _OMetaNinjaParser(msg[start:end])
         try:
-            return (p.apply(rule)[0], p.input.position, None)
+            v = ometa_parser.apply(rule)[0]
+            return (v, start + ometa_parser.input.position, None)
         except _MaybeParseError as ex:
-            return (None, p.input.position, PynException(str(ex)))
+            return (None, start + ex.position, PynException(ex.error))
 
 def parse(msg):
     return NinjaParser().parse(msg)
