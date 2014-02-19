@@ -66,6 +66,20 @@ class NinjaParser(object):
         else:
             return v
 
+    def expect(self, msg, start, end, substr):
+        l = len(substr)
+        if (end - start) < l or msg[start:start + l] != substr:
+            return None, start, 'expecting "%s"' % substr
+        return substr, start + l, None
+
+    def apply(self, rule, msg, start, end):
+        ometa_parser = _OMetaNinjaParser(msg[start:end])
+        try:
+            v = ometa_parser.apply(rule)[0]
+            return (v, start + ometa_parser.input.position, None)
+        except _MaybeParseError as ex:
+            return (None, start + ex.position, PynException(ex.error))
+
     def grammar_(self, msg, start, end):
         """ (empty_line* decl)*:ds empty_line* end -> ds """
         ds = []
@@ -115,6 +129,29 @@ class NinjaParser(object):
             explicit_deps:eds implicit_deps:ids order_only_deps:ods eol
             (ws var)*:vs -> ['build', os, rule, eds, ids, ods, vs] """
         return self.apply('build', msg, start, end)
+        p = start
+        v, p, err = self.expect(msg, p, end, 'build')
+        if err:
+            return v, p, err
+
+        _, p, err = self.ws(msg, p, end)
+        if err:
+            return None, p, err
+
+        os, p, err = self.paths(msg, p, start)
+        if err:
+            return None, p, err
+
+        _, p, _ = self.ws(msg, p, end)
+        if err:
+            return None, p, err
+
+        v, p, err = self.expect(msg, p, end, ':')
+        if err:
+            return v, p, err
+
+        if p >= end or msg[p] != ':':
+            return None, p, "expecting ':'"
 
     def rule_(self, msg, start, end):
         """ "rule" ws name:n eol (ws var)*:vs -> ['rule', n, vs] """
@@ -130,8 +167,9 @@ class NinjaParser(object):
 
     def subninja_(self, msg, start, end):
         """ "subninja" ws path:p eol -> ['subninja', p] """
-        if end - start < 8 or msg[start:start + 8] != 'subninja':
-            return None, start, "expecting 'subninja'"
+        v, p, err = self.expect(msg, start, end, 'subninja')
+        if err:
+            return v, p, err
         p = start + 8
         v, p, err = self.ws_(msg, p, end)
         if err:
@@ -289,13 +327,6 @@ class NinjaParser(object):
         else:
             return None, p, None
 
-    def apply(self, rule, msg, start, end):
-        ometa_parser = _OMetaNinjaParser(msg[start:end])
-        try:
-            v = ometa_parser.apply(rule)[0]
-            return (v, start + ometa_parser.input.position, None)
-        except _MaybeParseError as ex:
-            return (None, start + ex.position, PynException(ex.error))
 
 
 def parse(msg):
