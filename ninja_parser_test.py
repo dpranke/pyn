@@ -53,6 +53,8 @@ class TestNinjaParser(unittest.TestCase):
 
     def test_include(self):
         self.check('include foo.ninja', [['include', 'foo.ninja']])
+        self.err('include')
+        self.err('include ')
 
     def test_subninja(self):
         self.check('subninja foo.ninja', [['subninja', 'foo.ninja']])

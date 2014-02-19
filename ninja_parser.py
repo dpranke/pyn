@@ -144,7 +144,17 @@ class NinjaParser(object):
 
     def include_(self, msg, start, end):
         """ "include" ws path:p -> ['include', p] """
-        return self.apply('include', msg, start, end)
+        if end - start < 7 or msg[start:start + 7] != 'include':
+            return None, start, "expecting 'include'"
+        p = start + 7
+        v, p, err = self.ws_(msg, p, end)
+        if err:
+            return None, p, err
+        v, p, err = self.apply('path', msg, p, end)
+        if err:
+            return None, p, err
+        else:
+            return ['include', v], p, None
 
     def pool_(self, msg, start, end):
         """ "pool" ws name:n eol (ws var)*:vars -> ['pool', n, vars] """
