@@ -63,68 +63,58 @@ def parse(msg):
         raise PynException(str(e))
 
 
-VarParser = OMeta.makeGrammar(textwrap.dedent("""
-            grammar = chunk*:cs end         -> ''.join(cs)
-            chunk   = ~'$' anything:c       -> c
-                    | '$' (' '|':'|'$'):c   -> c
-                    | '$' '{' varname:v '}' -> scope[v]
-                    | '$' varname:v         -> scope[v]
-            varname = (letter|'_')+:ls      -> ''.join(ls)
-            """), {'scope': None})
-
-
 def expand_vars(msg, scope):
-    def chunk(msg):
-        if msg and msg[0] == '$':
-            if len(msg) == 1:
-                return (None, 1, "expecting a varname or a '{'")
-            elif msg[1] in (' ', ':', '$'):
-                return (msg[1], 2, None)
-            elif msg[1] == '{':
-                v, p, err = varname(msg[2:])
-                if err:
-                    return (None, p, err)
-                elif len(msg) < p + 3:
-                    return (None, p + 1, "expecting a closing }")
-                elif msg[p + 2] == '}':
-                    return (scope[v], p + 3, None)
-                else:
-                    return (None, p + 2, "expecting a closing }")
-            else:
-                v, p, err = varname(msg[1:])
-                if err:
-                    return (None, p, err)
-                else:
-                    return (scope[v], p + 1, None)
-        else:
-            if msg:
-                return msg[0], 1, None
-            else:
-                return None, 0, None
+    """Expand the variables in a string.
 
-    def varname(msg):
-        p = 0
-        while p < len(msg) and (msg[p].isalpha() or msg[p] == '_'):
+    grammar = chunk*:cs end         -> ''.join(cs)
+    chunk   = ~'$' anything:c       -> c
+            | '$' (' '|':'|'$'):c   -> c
+            | '$' '{' varname:v '}' -> scope[v]
+            | '$' varname:v         -> scope[v]
+    varname = (letter|'_')+:ls      -> ''.join(ls)
+    """
+    def chunk(msg, start, end):
+        if end - start > 0 and msg[start] == '$':
+            if end - start == 1:
+                return (None, start + 1, "expecting a varname or a '{'")
+            elif msg[start + 1] in (' ', ':', '$'):
+                return (msg[start + 1], start + 2, None)
+            elif msg[1] == '{':
+                v, p, err = varname(msg, start + 2, end)
+                if err:
+                    return (None, p, err)
+                elif p > end - 1:
+                    return (None, p, "expecting a closing }")
+                elif msg[p] == '}':
+                    return (scope[v], p + 1, None)
+                else:
+                    return (None, p, "expecting a closing }")
+            else:
+                v, p, err = varname(msg, start + 1, end)
+                if err:
+                    return (None, p, err)
+                else:
+                    return (scope[v], p, None)
+        elif end - start > 0:
+            return msg[start], start + 1, None
+        else:
+            return None, start, None
+
+    def varname(msg, start, end):
+        p = start
+        while p < end and (msg[p].isalpha() or msg[p] == '_'):
             p += 1
-        if p:
-            return msg[0:p], p, None
-        return None, 0, "expecting a varname"
+        if p > start:
+            return msg[start:p], p, None
+        return None, start, "expecting a varname"
 
     vs = []
-    v, p, err = chunk(msg)
+    end = len(msg)
+    v, p, err = chunk(msg, 0, end)
     while v:
         vs.append(v)
-        msg = msg[p:]
-        v, p, err = chunk(msg)
+        v, p, err = chunk(msg, p, end)
     if err:
         raise PynException("%s at %d" % (err, p))
     else:
         return ''.join(vs)
-
-
-    try:
-        parser = VarParser(msg)
-        parser.globals['scope'] = scope
-        return parser.apply('grammar')[0]
-    except _MaybeParseError as e:
-        raise PynException(e.message)
