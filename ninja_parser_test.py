@@ -17,12 +17,9 @@ class TestNinjaParser(unittest.TestCase):
             actual_ast = parse(text)
         self.assertEquals(actual_ast, ast)
 
-    def err(self, text, dedent=True):
-        if dedent:
-            dedented_text = textwrap.dedent(text)
-            self.assertRaises(PynException, parse, dedented_text)
-        else:
-            self.assertRaises(PynException, parse, text)
+    def err(self, text):
+        dedented_text = textwrap.dedent(text)
+        self.assertRaises(PynException, parse, dedented_text)
 
     def test_blanks(self):
         self.check('', [])
@@ -62,6 +59,11 @@ class TestNinjaParser(unittest.TestCase):
         self.check('include foo.ninja\n', [['include', 'foo.ninja']])
         self.err('include')
         self.err('include ')
+
+    def test_rule_errs(self):
+        self.err('rulefoo')
+        self.err('rule 1234')
+        self.err('rule foo 1234')
 
     def test_subninja(self):
         self.check('subninja foo.ninja', [['subninja', 'foo.ninja']])
@@ -138,6 +140,14 @@ class TestNinjaParser(unittest.TestCase):
                    [['build', ['foo.o'], 'cc', ['foo.c'],
                               ['foo.h'], ['foo.idl'], []]])
 
+    def test_build_errs(self):
+        self.err('buildfoo')
+        self.err('build ')
+        self.err('build :')
+        self.err('build foo.o|')
+        self.err('build foo.o:')
+        self.err('build foo.o:|||')
+
     def test_no_space_between_output_and_colon(self):
         self.check('build foo.o: cc foo.c\n',
                    [['build', ['foo.o'], 'cc', ['foo.c'], [], [], []]])
@@ -145,6 +155,9 @@ class TestNinjaParser(unittest.TestCase):
     def test_trailing_dollar_sign(self):
         self.check('build foo.o: cc foo.c $\n\n',
                    [['build', ['foo.o'], 'cc', ['foo.c'], [], [], []]])
+
+    def test_var_errs(self):
+        self.err('foo ')
 
 class TestExpandVars(unittest.TestCase):
     # 'too many public methods' pylint: disable=R0904

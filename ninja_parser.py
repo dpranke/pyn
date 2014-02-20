@@ -44,25 +44,35 @@ class NinjaParser(object):
         """ build | rule | var | subninja | include | pool | default """
         v, p, err = self.build_(msg, start, end)
         if not err:
-            return v, p, err
+            return v, p, None
+
         v, p, err = self.rule_(msg, start, end)
         if not err:
-            return v, p, err
+            return v, p, None
+
         v, p, err = self.var_(msg, start, end)
         if not err:
-            return v, p, err
+            return v, p, None
+
         v, p, err = self.subninja_(msg, start, end)
         if not err:
-            return v, p, err
+            return v, p, None
+
         v, p, err = self.include_(msg, start, end)
         if not err:
-            return v, p, err
+            return v, p, None
+
         v, p, err = self.pool_(msg, start, end)
         if not err:
-            return v, p, err
-        return self.default_(msg, start, end)
-        if not err:
-            return v, p, err
+            return v, p, None
+
+        v, p, err = self.default_(msg, start, end)
+        if err:
+            return None, p, ("expecting one of 'build', 'rule', "
+                             "a variable name', 'subninja', 'include', ",
+                             "'pool', or 'default'")
+        else:
+            return v, p, None
 
     def build_(self, msg, start, end):
         """ "build" ws paths:os ws? ':' ws name:rule
@@ -95,25 +105,18 @@ class NinjaParser(object):
         if err:
             return None, p, err
 
-        eds, p, err = self.explicit_deps_(msg, p, end)
-        if err:
-            return None, p, err
+        eds, p, _ = self.explicit_deps_(msg, p, end)
 
-        ids, p, err = self.implicit_deps_(msg, p, end)
-        if err:
-            return None, p, err
+        ids, p, _ = self.implicit_deps_(msg, p, end)
 
-        ods, p, err = self.order_only_deps_(msg, p, end)
-        if err:
-            return None, p, err
+        ods, p, _ = self.order_only_deps_(msg, p, end)
 
         _, p, err = self.eol_(msg, p, end)
         if err:
             return None, p, err
 
-        vs, p, err = self.ws_vars_(msg, p, end)
-        if err:
-            return None, p, err
+        vs, p, _ = self.ws_vars_(msg, p, end)
+
         return ['build', os, rule, eds, ids, ods, vs], p, None
 
     def rule_(self, msg, start, end):
@@ -136,9 +139,7 @@ class NinjaParser(object):
         if err:
             return None, p, err
 
-        vs, p, err = self.ws_vars_(msg, p, end)
-        if err:
-            return None, p, err
+        vs, p, _ = self.ws_vars_(msg, p, end)
 
         return ['rule', n, vs], p, None
 
