@@ -134,30 +134,53 @@ class NinjaParser(object):
         """ "build" ws paths:os ws? ':' ws name:rule
             explicit_deps:eds implicit_deps:ids order_only_deps:ods eol
             ws_vars:vs -> ['build', os, rule, eds, ids, ods, vs] """
-        return self.apply('build', msg, start, end)
         p = start
         v, p, err = self.expect(msg, p, end, 'build')
         if err:
             return v, p, err
 
-        _, p, err = self.ws(msg, p, end)
+        _, p, err = self.ws_(msg, p, end)
         if err:
             return None, p, err
 
-        os, p, err = self.paths(msg, p, start)
+        os, p, err = self.paths_(msg, p, end)
         if err:
             return None, p, err
 
-        _, p, _ = self.ws(msg, p, end)
+        _, p, _ = self.ws_(msg, p, end)
         if err:
             return None, p, err
 
         v, p, err = self.expect(msg, p, end, ':')
         if err:
-            return v, p, err
+            return None, p, err
 
-        if p >= end or msg[p] != ':':
-            return None, p, "expecting ':'"
+        _, p, _ = self.ws_(msg, p, end)
+
+        rule, p, err = self.name_(msg, p, end)
+        if err:
+            return None, p, err
+
+        eds, p, err = self.explicit_deps_(msg, p, end)
+        if err:
+            return None, p, err
+
+        ids, p, err = self.implicit_deps_(msg, p, end)
+        if err:
+            return None, p, err
+
+        ods, p, err = self.order_only_deps_(msg, p, end)
+        if err:
+            return None, p, err
+
+        _, p, err = self.eol_(msg, p, end)
+        if err:
+            return None, p, err
+
+        vs, p, err = self.ws_vars_(msg, p, end)
+        if err:
+            return None, p, err
+        return ['build', os, rule, eds, ids, ods, vs], p, None
 
     def rule_(self, msg, start, end):
         """ "rule" ws name:n eol ws_vars:vs -> ['rule', n, vs] """
@@ -186,6 +209,7 @@ class NinjaParser(object):
         return ['rule', n, vs], p, None
 
     def ws_vars_(self, msg, start, end):
+        """ (ws var)*:vs -> vs """
         p = start
         vs = []
         err = None
@@ -360,15 +384,51 @@ class NinjaParser(object):
 
     def explicit_deps_(self, msg, start, end):
         """ ws? paths:ps -> ps | -> [] """
-        return self.apply('explicit_deps', msg, start, end)
+        if start == end:
+            return [], start, None
+
+        _, p, _ = self.ws_(msg, start, end)
+
+        ps, p, err = self.paths_(msg, p, end)
+        if err:
+            return [], start, None
+        return ps, p, None
 
     def implicit_deps_(self, msg, start, end):
-        """ ws? '|' paths:ps -> ps | -> [] """
-        return self.apply('implicit_deps_', msg, start, end)
+        """ ws? '|' ws? paths:ps -> ps | -> [] """
+        if start == end:
+            return [], start, None
+
+        _, p, _ = self.ws_(msg, start, end)
+
+        _, p, err = self.expect(msg, p, end, '|')
+        if err:
+            return [], start, None
+
+        _, p, _ = self.ws_(msg, p, end)
+
+        ps, p, err = self.paths_(msg, p, end)
+        if err:
+            return [], start, None
+        return ps, p, None
 
     def order_only_deps_(self, msg, start, end):
-        """ ws? '|' '|' paths:ps -> ps | -> [] """
-        return self.apply('order_only_deps', msg, start, end)
+        """ ws? '|' '|' ws? paths:ps -> ps | -> [] """
+        if start == end:
+            return [], start, None
+
+        _, p, _ = self.ws_(msg, start, end)
+
+        _, p, err = self.expect(msg, p, end, '||')
+        if err:
+            return [], start, None
+
+        _, p, _ = self.ws_(msg, p, end)
+
+        ps, p, err = self.paths_(msg, p, end)
+        if err:
+            return None, p, err
+        return ps, p, None
 
     def empty_line_(self, msg, start, end):
         """ ws? (comment | '\n') """
