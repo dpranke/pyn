@@ -1,4 +1,4 @@
-import textwrap
+import re
 
 from common import PynException
 
@@ -287,10 +287,18 @@ class NinjaParser(object):
         vs = []
         p = start
         while p < end:
-            if p < (end - 1) and msg[p:p + 2] == '$ ':
+            c = msg[p]
+            if c.isalpha():
+                vs.append(c)
+                p += 1
+            elif c == ' ':
+                break
+            elif c == '\n':
+                break
+            elif c == '$' and (p < end - 1) and msg[p+1] == ' ':
                 vs.append(' ')
                 p += 2
-            elif msg[p] in (' ', ':', '=', '|'):
+            elif c in (':', '=', '|'):
                 break
             else:
                 orig_p = p
@@ -299,7 +307,7 @@ class NinjaParser(object):
                     p = orig_p
                     break
                 else:
-                    vs.append(msg[p])
+                    vs.append(c)
                     p += 1
         if len(vs) == 0:
             return None, start, 'expecting a path'
@@ -386,36 +394,37 @@ class NinjaParser(object):
 
     def eol_(self, msg, start, end):
         """ ws? (comment | '\n' | end) """
-        _, p, err = self.ws_(msg, start, end)
+        if start < end and (msg[start] == ' ' or msg[start] == '$'):
+            _, p, err = self.ws_(msg, start, end)
+        else:
+            p = start
         if p < end:
             if msg[p] == '\n':
                 return '\n', p + 1, None
             elif p == end:
                 return None, p, None
-            else:
+            elif msg[p] == '#':
                 return self.comment_(msg, p, end)
+            else:
+                return None, p, "expecting a newline, comment, or EOF"
         else:
             return None, p, None
 
     def ws_(self, msg, start, end):
         """ (' '|('$' '\n'))+ """
         p = start
-        if p < end and msg[p] == ' ':
-            p += 1
-        elif p < end - 1 and msg[p:p + 2] == '$\n':
-            p += 2
-        else:
-            return None, p, "expecting either ' ' or '$\n'"
-
         err = None
         while not err and p < end:
             if msg[p] == ' ':
                 p += 1
-            elif p < end - 1 and msg[p:p + 2] == '$\n':
+            elif msg[p] == '$' and p < end - 1 and msg[p+1] == '\n':
                 p += 2
             else:
                 err = "expecting either ' ' or '$\n'"
-        return None, p, None
+        if p == start:
+            return None, p, err
+        else:
+            return None, p, None
 
     def comment_(self, msg, start, end):
         """ '#' (~'\n' anything)* ('\n'|end) """
