@@ -28,7 +28,6 @@ def main(host, argv=None):
     ast = parse(host.read(args.file))
     analyzer = NinjaAnalyzer(host, args, parse, expand_vars)
     graph = analyzer.analyze(ast, args.file)
-
     builder = Builder(host, args, expand_vars)
     if args.tool:
         if args.tool == 'list':
@@ -78,8 +77,7 @@ def parse_args(host, argv):
     return ap.parse_args(args=argv)
 
 
-if __name__ == '__main__':
-    # pylint: disable=C0103
+def _real_main():
     h = Host()
     code = 0
     try:
@@ -89,4 +87,6 @@ if __name__ == '__main__':
     except PynException as e:
         h.print_err('Error: ' + str(e))
         code = 1
-    sys.exit(code)
+
+if __name__ == '__main__':
+    sys.exit(_real_main())
