@@ -30,7 +30,7 @@ def main(host, argv=None):
     analyzer = NinjaAnalyzer(host, args, parse, expand_vars)
     graph = analyzer.analyze(ast, args.file)
     if args.tool == 'check':
-        return
+        raise PynExit("pyn: syntax is correct")
     builder = Builder(host, args, expand_vars)
     if args.tool:
         if args.tool == 'list':
