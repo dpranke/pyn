@@ -234,7 +234,6 @@ class NinjaParser(object):
                 p += 1
             _, _, err = self.eol_(msg, p, end)
         return ''.join(vs), p, None
-        return self.apply('value', msg, start, end)
 
     def subninja_(self, msg, start, end):
         """ "subninja" ws path:p eol -> ['subninja', p] """
@@ -272,7 +271,22 @@ class NinjaParser(object):
 
     def pool_(self, msg, start, end):
         """ "pool" ws name:n eol (ws var)*:vars -> ['pool', n, vars] """
-        return self.apply('pool', msg, start, end)
+        _, p, err = self.expect(msg, start, end, 'pool')
+        if err:
+            return None, p, err
+        _, p, err = self.ws_(msg, p, end)
+        if err:
+            return None, p, err
+        n, p, err = self.name_(msg, p, end)
+        if err:
+            return None, p, err
+        _, p, err = self.eol_(msg, p, end)
+        if err:
+            return None, p, err
+        vs, p, err = self.ws_vars(msg, p, end)
+        if err:
+            return None, p, err
+        return ['pool', n, vs], p, None
 
     def default_(self, msg, start, end):
         """ "default" ws paths:ps eol  -> ['default', ps] """
