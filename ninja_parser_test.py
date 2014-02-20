@@ -48,11 +48,14 @@ class TestNinjaParser(unittest.TestCase):
         self.check('cflags = -Wall # comment',
                    [['var', 'cflags', '-Wall']])
 
-    def test_names(self):
+    def test_vars(self):
         self.check('f = bar', [['var', 'f', 'bar']])
         self.check('foo = bar', [['var', 'foo', 'bar']])
         self.check('foo=bar', [['var', 'foo', 'bar']])
         self.check('foo_123=bar', [['var', 'foo_123', 'bar']])
+        self.check('foo = ba$ r', [['var', 'foo', 'ba r']])
+        self.check('foo = ba$\n  r', [['var', 'foo', 'bar']])
+        self.check('foo = ba $\n  r', [['var', 'foo', 'ba r']])
 
     def test_include(self):
         self.check('include foo.ninja', [['include', 'foo.ninja']])
@@ -66,6 +69,12 @@ class TestNinjaParser(unittest.TestCase):
         self.err('subninja')
         self.err('subninja ')
 
+    def test_pool(self):
+        self.check('''pool foo
+                        depth = 1
+                   ''', [['pool', 'foo',
+                          [['var', 'depth', '1']]]])
+
     def test_syntax_err(self):
         self.err('syntaxerror')
 
@@ -74,13 +83,18 @@ class TestNinjaParser(unittest.TestCase):
                    cflags = -Wall
 
                    rule cc
-                       command = gcc $cflags -c $in -o $out
+                       command = gcc $cflags -c $in $
+                                 -o $out
+                       deps = gcc
+                       depsfile = $out.d
 
                    build foo.o : cc foo.c
                    ''',
                    [['var', 'cflags', '-Wall'],
                     ['rule', 'cc',
-                     [['var', 'command', 'gcc $cflags -c $in -o $out']]],
+                     [['var', 'command', 'gcc $cflags -c $in -o $out'],
+                      ['var', 'deps', 'gcc'],
+                      ['var', 'depsfile', '$out.d']]],
                     ['build', ['foo.o'], 'cc', ['foo.c'], [], [], []]])
 
     def test_simple_build(self):

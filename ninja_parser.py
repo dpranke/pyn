@@ -1,72 +1,14 @@
 import textwrap
 
-from pymeta.grammar import OMeta
-from pymeta.runtime import ParseError, _MaybeParseError
-
 from common import PynException
 
-
-_OMetaNinjaParser = OMeta.makeGrammar("""
-grammar  = (empty_line* decl)*:ds empty_line* end      -> ds
-
-decl     = build | rule | var | subninja | include
-         | pool | default
-
-build    = "build" ws paths:os ws? ':' ws name:rule
-            explicit_deps:eds implicit_deps:ids order_only_deps:ods eol
-            ws_vars:vs                                 -> ['build', os, rule,
-                                                           eds, ids, ods, vs]
-
-rule     = "rule" ws name:n eol ws_vars:vs             -> ['rule', n, vs]
-
-ws_vars  = (ws var)*:vs                                -> vs
-
-var      = name:n ws? '=' ws? value:v eol              -> ['var', n, v]
-
-value    = (~eol (('$' '\n' ' '+ -> '')|anything))*:vs -> ''.join(vs)
-
-subninja = "subninja" ws path:p eol                    -> ['subninja', p]
-
-include  = "include" ws path:p eol                     -> ['include', p]
-
-pool     = "pool" ws name:n eol ws_vars:vs             -> ['pool', n, vs]
-
-default  = "default" ws paths:ps eol                   -> ['default', ps]
-
-paths    = path:hd (ws path)*:tl                       -> [hd] + tl
-
-path     = (('$' ' ')|(~(' '|':'|'='|'|'|eol) anything))+:p -> ''.join(p)
-
-name     = letter:hd (letter|digit|'_')*:tl            -> ''.join([hd] + tl)
-
-explicit_deps = ws? paths:ps                           -> ps
-         |                                             -> []
-
-implicit_deps = ws? '|' ws? paths:ps                   -> ps
-         |                                             -> []
-
-order_only_deps = ws? "||" ws? paths:ps                -> ps
-         |                                             -> []
-
-empty_line = ws? (comment | '\n')
-
-eol      = ws? (comment | '\n' | end)
-
-
-ws       = (' '|('$' '\n'))+
-
-comment  = '#' (~'\n' anything)* ('\n'|end)
-""", {})
 
 
 class NinjaParser(object):
     """Parse the contents of a .ninja file and return an AST."""
 
     def parse(self, msg):
-        if False:
-            v, p, err = self.apply('grammar', msg, 0, len(msg))
-        else:
-            v, p, err = self.grammar_(msg, 0, len(msg))
+        v, p, err = self.grammar_(msg, 0, len(msg))
         if err:
             raise PynException(err)
         else:
@@ -75,16 +17,8 @@ class NinjaParser(object):
     def expect(self, msg, start, end, substr):
         l = len(substr)
         if (end - start) < l or msg[start:start + l] != substr:
-            return None, start, 'expecting "%s"' % substr
+            return None, start, 'expecting "%s" at %d' % (substr, start)
         return substr, start + l, None
-
-    def apply(self, rule, msg, start, end):
-        ometa_parser = _OMetaNinjaParser(msg[start:end])
-        try:
-            v = ometa_parser.apply(rule)[0]
-            return (v, start + ometa_parser.input.position, None)
-        except _MaybeParseError as ex:
-            return (None, start + ex.position, PynException(ex.error))
 
     def grammar_(self, msg, start, end):
         """ (empty_line* decl)*:ds empty_line* end -> ds """
@@ -253,7 +187,10 @@ class NinjaParser(object):
             if p < (end - 1) and msg[p:p + 2] == '$ ':
                 vs.append(' ')
                 p += 2
-            elif p < end:
+            elif p < (end - 1) and msg[p:p + 2] == '$\n':
+                p += 2
+                _, p, _ = self.ws_(msg, p, end)
+            else:
                 vs.append(msg[p])
                 p += 1
             _, _, err = self.eol_(msg, p, end)
@@ -307,7 +244,7 @@ class NinjaParser(object):
         _, p, err = self.eol_(msg, p, end)
         if err:
             return None, p, err
-        vs, p, err = self.ws_vars(msg, p, end)
+        vs, p, err = self.ws_vars_(msg, p, end)
         if err:
             return None, p, err
         return ['pool', n, vs], p, None
@@ -355,8 +292,10 @@ class NinjaParser(object):
             elif msg[p] in (' ', ':', '=', '|'):
                 break
             else:
+                orig_p = p
                 v, p, err = self.eol_(msg, p, end)
                 if v or not err:
+                    p = orig_p
                     break
                 else:
                     vs.append(msg[p])
