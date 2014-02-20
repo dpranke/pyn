@@ -1,5 +1,3 @@
 #!/bin/bash
-pushd $(dirname $0) > /dev/null
-SCRIPTDIR=$(pwd -P)
-popd > /dev/null
+SCRIPTDIR=$(dirname $(readlink $0))
 python $SCRIPTDIR/main.py $@
