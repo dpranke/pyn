@@ -30,13 +30,7 @@ class NinjaAnalyzer(object):
     def _decl_build(self, graph, scope, decl):
         _, outputs, rule_name, inputs, ideps, odeps, build_vars = decl
 
-        if len(outputs) > 1:
-            self.host.print_err("Warning: more than one output (%s) "
-                                "is not supported yet" % (' '.join(outputs)))
-        build_name = outputs[0]
-        if build_name in graph.nodes:
-            raise PynException("build %' declared more than once")
-
+        build_name = ' '.join(outputs)
         build_scope = Scope(build_name, scope)
         build_scope['out'] = ' '.join(outputs)
         build_scope['in'] = ' '.join(inputs)
@@ -46,8 +40,12 @@ class NinjaAnalyzer(object):
                                    " in build %s'" % (name, build_name))
             build_scope.objs[name] = val
 
-        graph.nodes[build_name] = Node(build_name, build_scope, rule_name,
-                                       inputs + ideps + odeps)
+        n = Node(build_name, build_scope, rule_name, inputs + ideps + odeps)
+        for output_name in outputs:
+            if output_name in graph.nodes:
+                raise PynException("build %s' declared more than once" %
+                                   output_name)
+            graph.nodes[output_name] = n
         return graph
 
     def _decl_default(self, graph, _scope, decl):
@@ -116,11 +114,13 @@ class NinjaAnalyzer(object):
                 raise PynException("scope '%s' declared in multiple files " %
                                    s.name)
             graph.scopes[s.name] = s
+        inserted_nodes = set()
         for n in subgraph.nodes.values():
-            if n.name in graph.nodes:
+            if n.name in graph.nodes and n.name not in inserted_nodes:
                 raise PynException("build '%s' declared in multiple files " %
                                    n.name)
             graph.nodes[n.name] = n
+            inserted_nodes.add(n.name)
         return graph
 
     def _decl_var(self, graph, scope, decl):
