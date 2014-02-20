@@ -6,6 +6,7 @@
 .ninja_deps
 .ninja_log
 .coverage
+.profiler_data
 .pylint.*
 .pytest.*
 hello/hello.o
