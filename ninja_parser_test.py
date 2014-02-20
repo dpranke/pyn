@@ -159,6 +159,7 @@ class TestNinjaParser(unittest.TestCase):
     def test_var_errs(self):
         self.err('foo ')
 
+
 class TestExpandVars(unittest.TestCase):
     # 'too many public methods' pylint: disable=R0904
 

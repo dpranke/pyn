@@ -38,9 +38,10 @@ the LICENSE file in the source repo.
 * restat and generator support
 * rspfiles
 * NINJA_STATUS parsing and options
-* support for rules with multiple outputs.
+* finish support for rules with multiple outputs.
 * detecting when the command needed for a build has changed and the
   outputs should be rebuilt.
+* delete deps files on clean and/or when they are integrated into a database
 
 ### Also:
 
@@ -52,6 +53,3 @@ the LICENSE file in the source repo.
 * hash-based build tracking in addition to mtime-based tracking?
 * more tests
   * test comments
-* additional linting support for pyflakes, pep8 as well as pylint.
-* better cross-python module dependency checking into the build.ninja file
-  (python deps support?)

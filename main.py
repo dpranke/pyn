@@ -94,6 +94,7 @@ def _real_main():
     except PynException as e:
         h.print_err('Error: ' + str(e))
         code = 1
+    return code
 
 if __name__ == '__main__':
     sys.exit(_real_main())

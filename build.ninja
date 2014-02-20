@@ -17,7 +17,7 @@ rule pylint
     then $
       pep8 $in >> $out.tmp ; $
     fi ; $
-    if pyflakes > /dev/null 2>&1 ; $
+    if pyflakes -h > /dev/null 2>&1 ; $
     then $
       pyflakes $in >> $out.tmp ; $
     fi ; $
