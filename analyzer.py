@@ -110,7 +110,6 @@ class NinjaAnalyzer(object):
         if not self.host.exists(path):
             raise PynException("'%s' not found." % path)
         ast = self.parse(self.host.read(path))
-        self.host.print_err('subninja %s' % path)
         subgraph = self.analyze(ast, path)
         for s in subgraph.scopes.values():
             if s.name in graph.scopes:
