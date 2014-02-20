@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import sys
+import textwrap
 
 from analyzer import NinjaAnalyzer
 from builder import Builder
@@ -28,11 +29,17 @@ def main(host, argv=None):
     ast = parse(host.read(args.file))
     analyzer = NinjaAnalyzer(host, args, parse, expand_vars)
     graph = analyzer.analyze(ast, args.file)
+    if args.tool == 'check':
+        return
     builder = Builder(host, args, expand_vars)
     if args.tool:
         if args.tool == 'list':
-            raise PynExit("pyn subtools:\n"
-                          "  clean  clean built files")
+            raise PynExit(textwrap.dedent('''\
+                pyn subtools:
+                  clean     clean built files
+                  check     check the syntax and semantics of
+                            the build file (and all included files)
+                  question  check to see if the build is up-to-date'''))
         elif args.tool == 'clean':
             builder.clean(graph)
         elif args.tool == 'question':
