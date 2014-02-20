@@ -344,7 +344,19 @@ class NinjaParser(object):
 
     def name_(self, msg, start, end):
         """ letter:hd (letter|digit|'_')*:tl -> ''.join([hd] + tl) """
-        return self.apply('name', msg, start, end)
+        p = start
+        if p == end:
+            return None, p, 'expecting a name'
+        hd = msg[p]
+        if not hd.isalpha():
+            return None, p, 'expecting a letter to start a name'
+        p += 1
+        tl = []
+        while p < end and (msg[p].isalpha() or msg[p].isdigit() or
+                           msg[p] == '_'):
+            tl.append(msg[p])
+            p += 1
+        return hd + ''.join(tl), p, None
 
     def explicit_deps_(self, msg, start, end):
         """ ws? paths:ps -> ps | -> [] """
