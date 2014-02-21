@@ -25,53 +25,53 @@ class IntegrationTestMain(TestMain):
 
 class IntegrationTestNinjaParser(TestNinjaParser):
     @staticmethod
-    def _call(text):
+    def _call(text, files):
         host = Host()
-        fname = host.write_tempfile_and_return_name(text)
 
-        path_to_main = host.join(host.dirname(host.path_to_module(__name__)),
-                                 'main.py')
+        host_module_path = host.path_to_module(host.__module__)
+        path_to_main = host.join(host.dirname(host_module_path), 'main.py')
         if SHOULD_RUN_COVERAGE:
             cmd_prefix = ['coverage', 'run', '--append', path_to_main]
         else:
             cmd_prefix = [host.python_interpreter, path_to_main]
+
+        orig_wd = host.getcwd()
         try:
-            cmd = cmd_prefix + ['-f', fname, '-t', 'check']
+            tmpdir = str(host.mkdtemp())
+            host.chdir(tmpdir)
+            host.write('build.ninja', text)
+            for path, contents in files.items():
+                dirname = host.dirname(path)
+                if dirname:
+                    host.maybe_mkdir(dirname)
+                host.write(path, contents)
+
+            cmd = cmd_prefix + ['-t', 'check']
             return host.call(' '.join(cmd))
         finally:
-            host.remove(fname)
+            host.rmtree(tmpdir)
+            host.chdir(orig_wd)
 
-    def check(self, text, _ast, dedent=True):
+    def check(self, text, _ast, dedent=True, files=None):
+        files = files or {}
         if dedent:
             dedented_text = textwrap.dedent(text)
-            returncode, _, _ = self._call(dedented_text)
+            returncode, _, _ = self._call(dedented_text, files)
         else:
-            returncode, _, _ = self._call(text)
+            returncode, _, _ = self._call(text, files)
 
         # Note that we ignore what the AST is.
         self.assertEqual(returncode, 0)
 
-    def err(self, text, dedent=True):
+    def err(self, text, dedent=True, files=None):
+        files = files or {}
         if dedent:
             dedented_text = textwrap.dedent(text)
-            returncode, _, _ = self._call(dedented_text)
+            returncode, _, _ = self._call(dedented_text, files)
         else:
-            returncode, _, _ = self._call(text)
+            returncode, _, _ = self._call(text, files)
 
         self.assertNotEquals(returncode, 0)
-
-    # The tests below will fail w/o real files
-    def test_default(self):
-        pass
-
-    def test_include(self):
-        pass
-
-    def test_spaces_in_paths(self):
-        pass
-
-    def test_subninja(self):
-        pass
 
 if __name__ == '__main__':
     if '-c' in sys.argv:

@@ -6,7 +6,8 @@ from ninja_parser import parse, expand_vars
 
 
 class TestNinjaParser(unittest.TestCase):
-    def check(self, text, ast, dedent=True):
+    def check(self, text, ast, dedent=True, files=None):
+        _ = files
         if dedent:
             dedented_text = textwrap.dedent(text)
             actual_ast = parse(dedented_text)
@@ -14,7 +15,8 @@ class TestNinjaParser(unittest.TestCase):
             actual_ast = parse(text)
         self.assertEquals(actual_ast, ast)
 
-    def err(self, text, dedent=True):
+    def err(self, text, dedent=True, files=None):
+        _ = files
         if dedent:
             dedented_text = textwrap.dedent(text)
             self.assertRaises(PynException, parse, dedented_text)
@@ -38,7 +40,8 @@ class TestNinjaParser(unittest.TestCase):
                    [['build', ['foo bar'], 'cc', ['foo.c'],
                               [], [], []]])
         self.check('subninja foo$ bar',
-                   [['subninja', 'foo bar']])
+                   [['subninja', 'foo bar']],
+                   files={'foo bar': ''})
 
     def test_comments(self):
         self.check('# comment', [])
@@ -57,8 +60,10 @@ class TestNinjaParser(unittest.TestCase):
         self.check('foo = ba $\n  r', [['var', 'foo', 'ba r']])
 
     def test_include(self):
-        self.check('include foo.ninja', [['include', 'foo.ninja']])
-        self.check('include foo.ninja\n', [['include', 'foo.ninja']])
+        self.check('include foo.ninja', [['include', 'foo.ninja']],
+                   files={'foo.ninja': ''})
+        self.check('include foo.ninja\n', [['include', 'foo.ninja']],
+                   files={'foo.ninja': ''})
         self.err('include')
         self.err('include ')
 
@@ -68,8 +73,10 @@ class TestNinjaParser(unittest.TestCase):
         self.err('rule foo 1234')
 
     def test_subninja(self):
-        self.check('subninja foo.ninja', [['subninja', 'foo.ninja']])
-        self.check('subninja foo.ninja\n', [['subninja', 'foo.ninja']])
+        self.check('subninja foo.ninja', [['subninja', 'foo.ninja']],
+                   files={'foo.ninja': ''})
+        self.check('subninja foo.ninja\n', [['subninja', 'foo.ninja']],
+                   files={'foo.ninja': ''})
         self.err('subninja')
         self.err('subninja ')
 
