@@ -1,5 +1,6 @@
 import multiprocessing
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -29,6 +30,9 @@ class Host(object):
     def exists(self, *comps):
         return os.path.exists(self.join(*comps))
 
+    def getcwd(self):
+        return os.getcwd()
+
     def join(self, *comps):
         return os.path.join(*comps)
 
@@ -36,6 +40,39 @@ class Host(object):
         path = self.join(*comps)
         if not self.exists(path):
             os.mkdir(path)
+
+    def mkdtemp(self, **kwargs):
+        """Create and return a uniquely named directory.
+
+        This is like tempfile.mkdtemp, but if used in a with statement
+        the directory will self-delete at the end of the block (if the
+        directory is empty; non-empty directories raise errors). The
+        directory can be safely deleted inside the block as well, if so
+        desired.
+
+        Note that the object returned is not a string and does not
+        support all of the string methods. If you need a string, coerce the
+        object to a string and go from there.
+        """
+        class TemporaryDirectory(object):
+            def __init__(self, **kwargs):
+                self._kwargs = kwargs
+                self._directory_path = tempfile.mkdtemp(**self._kwargs)
+
+            def __str__(self):
+                return self._directory_path
+
+            def __enter__(self):
+                return self._directory_path
+
+            def __exit__(self, type, value, traceback):
+                # Only self-delete if necessary.
+
+                # FIXME: Should we delete non-empty directories?
+                if os.path.exists(self._directory_path):
+                    os.rmdir(self._directory_path)
+
+        return TemporaryDirectory(**kwargs)
 
     def mtime(self, *comps):
         return os.stat(self.join(*comps)).st_mtime
@@ -58,8 +95,9 @@ class Host(object):
     def remove(self, *comps):
         os.remove(self.join(*comps))
 
-    def write_tempfile_and_return_name(self, contents):
-        f = tempfile.NamedTemporaryFile(delete=False)
-        f.write(contents)
-        f.close()
-        return f.name
+    def rmtree(self, path):
+        shutil.rmtree(path, ignore_errors=True)
+
+    def write(self, path, contents):
+        with open(path, 'w') as f:
+            f.write(contents)
