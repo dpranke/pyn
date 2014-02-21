@@ -90,8 +90,6 @@ class NinjaParser(object):
             return None, p, err
 
         _, p, _ = self.ws_(msg, p, end)
-        if err:
-            return None, p, err
 
         v, p, err = self.expect(msg, p, end, ':')
         if err:
@@ -105,9 +103,13 @@ class NinjaParser(object):
 
         eds, p, _ = self.explicit_deps_(msg, p, end)
 
-        ids, p, _ = self.implicit_deps_(msg, p, end)
+        ids, p, err = self.implicit_deps_(msg, p, end)
+        if err:
+            return None, p, err
 
-        ods, p, _ = self.order_only_deps_(msg, p, end)
+        ods, p, err = self.order_only_deps_(msg, p, end)
+        if err:
+            return None, p, err
 
         _, p, err = self.eol_(msg, p, end)
         if err:
@@ -168,13 +170,9 @@ class NinjaParser(object):
 
         _, p, _ = self.ws_(msg, p, end)
 
-        v, p, err = self.value_(msg, p, end)
-        if err:
-            return None, p, err
+        v, p, _ = self.value_(msg, p, end)
 
-        _, p, err = self.eol_(msg, p, end)
-        if err:
-            return None, p, err
+        _, p, _ = self.eol_(msg, p, end)
         return ['var', n, v], p, None
 
     def value_(self, msg, start, end):
@@ -244,9 +242,7 @@ class NinjaParser(object):
         _, p, err = self.eol_(msg, p, end)
         if err:
             return None, p, err
-        vs, p, err = self.ws_vars_(msg, p, end)
-        if err:
-            return None, p, err
+        vs, p, _ = self.ws_vars_(msg, p, end)
         return ['pool', n, vs], p, None
 
     def default_(self, msg, start, end):
@@ -342,11 +338,14 @@ class NinjaParser(object):
         return ps, p, None
 
     def implicit_deps_(self, msg, start, end):
-        """ ws? '|' ws? paths:ps -> ps | -> [] """
+        """ ws? (~'|' '|') '|' ws? paths:ps -> ps | -> [] """
         if start == end:
             return [], start, None
 
         _, p, _ = self.ws_(msg, start, end)
+
+        if (p < end - 1) and msg[p] == '|' and msg[p + 1] == '|':
+            return [], start, None
 
         _, p, err = self.expect(msg, p, end, '|')
         if err:
@@ -356,7 +355,7 @@ class NinjaParser(object):
 
         ps, p, err = self.paths_(msg, p, end)
         if err:
-            return [], start, None
+            return None, p, err
         return ps, p, None
 
     def order_only_deps_(self, msg, start, end):
@@ -400,8 +399,6 @@ class NinjaParser(object):
         if p < end:
             if msg[p] == '\n':
                 return '\n', p + 1, None
-            elif p == end:
-                return None, p, None
             elif msg[p] == '#':
                 return self.comment_(msg, p, end)
             else:
