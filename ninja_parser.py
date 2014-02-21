@@ -21,7 +21,7 @@ class NinjaParser(object):
         return substr, start + l, None
 
     def grammar_(self, msg, start, end):
-        """ (empty_line* decl)*:ds empty_line* end -> ds """
+        """ ((empty_line* decl)*:ds empty_line*) end -> ds """
         ds = []
         err = None
         p = start
@@ -33,8 +33,6 @@ class NinjaParser(object):
                 v, p, err = self.decl_(msg, orig_p, end)
                 if not err:
                     ds.append(v)
-            else:
-                err = None
         if not err:
             return ds, p, err
         else:
@@ -180,7 +178,8 @@ class NinjaParser(object):
         return ['var', n, v], p, None
 
     def value_(self, msg, start, end):
-        """ (~eol (('$' '\n' ' '+ -> '')|anything))*:vs -> ''.join(vs) """
+        """ (~eol (('$' ' ' -> ' ')|('$' '\n' ' '+ -> '')|anything))*:vs
+            -> ''.join(vs) """
         p = start
         vs = []
         _, _, err = self.eol_(msg, p, end)
@@ -232,7 +231,7 @@ class NinjaParser(object):
         return ['include', v], p, None
 
     def pool_(self, msg, start, end):
-        """ "pool" ws name:n eol (ws var)*:vars -> ['pool', n, vars] """
+        """ "pool" ws name:n eol ws_vars:vs -> ['pool', n, vs] """
         _, p, err = self.expect(msg, start, end, 'pool')
         if err:
             return None, p, err
