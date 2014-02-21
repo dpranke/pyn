@@ -50,6 +50,7 @@ def main(host, argv=None):
         graph = analyzer.analyze(ast, args.file)
         if args.tool == 'check':
             host.print_out('pyn: syntax is correct')
+            return 0
 
         builder = Builder(host, args, expand_vars)
 
