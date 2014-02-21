@@ -17,12 +17,13 @@ The primary intent is to be clear, not fast (use Ninja itself if you want to be
 fast); however, it is also intended to be a reference to compare how much
 slower a (theoretically) well-written Python program really is to a
 well-written C++ program that has been tuned for speed. Eventually there may be
-multiple implementations of pyn designed for different goals in mind. 
+multiple implementations of pyn designed for different goals in mind.
 
 pyn is also designed to be more easily reusable and extensible, for uses
 where you might want to parse and repurpose ninja files.
 
-It uses [PyMeta 2](https://bitbucket.org/wkornewald/pymeta/src),
+One version of pyn (the ometa_parser branch) uses
+[PyMeta 2](https://bitbucket.org/wkornewald/pymeta/src),
 as a parser generator. PyMeta 2 is an implementation of
 [OMeta](https://github.com/alexwarth/ometa-js) in Python.
 

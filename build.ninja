@@ -97,7 +97,7 @@ build .coverage : shell $
     .coverage.ninja_parser_test.py $
     .coverage.common_test.py
   shell_cmd = coverage combine $in && $
-              coverage --report --omit 'pymeta/*,/pymeta_generate*'
+              coverage --report
   shell_desc = generating python coverage report
 
 build .pylint.analyzer.py : pylint analyzer.py
