@@ -56,10 +56,11 @@ def tsort(graph, nodes_to_build):
             raise PynException("'%s' is part of a cycle" % node)
 
         visited_nodes.add(node)
-        for m in graph.nodes[node].deps:
-            if m in graph.nodes and m not in sorted_nodes:
-                visit(m, visited_nodes, sorted_nodes, unvisited_nodes)
-        unvisited_nodes.remove(node)
+        for d in graph.nodes[node].deps:
+            if d in graph.nodes and d not in sorted_nodes:
+                visit(d, visited_nodes, sorted_nodes, unvisited_nodes)
+        if node in unvisited_nodes:
+            unvisited_nodes.remove(node)
         sorted_nodes.append(node)
 
     visited_nodes = set()

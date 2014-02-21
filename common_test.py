@@ -1,6 +1,7 @@
 import unittest
 
-from common import Graph, Node, Rule, Scope
+from common import Graph, Node, Rule, Scope, PynException, \
+    find_nodes_to_build, tsort
 
 
 # 'too many public methods' pylint: disable=R0904
@@ -64,6 +65,41 @@ class TestScope(unittest.TestCase):
         del self.c['foo']
         self.assertEquals(self.p['foo'], 'p-foo')
         self.assertEquals(self.c['foo'], 'p-foo')
+
+
+class TestTsort(unittest.TestCase):
+    def test_cycle(self):
+        g = Graph()
+        n1 = Node(name='foo.so', scope='build.ninja', rule_name='shlib',
+                  deps=['bar.so'])
+        n2 = Node(name='bar.so', scope='build.ninja', rule_name='shlib',
+                  deps=['foo.so'])
+        g.nodes[n1.name] = n1
+        g.nodes[n2.name] = n2
+        self.assertRaises(PynException, tsort, g, ['foo.so'])
+
+    def test_simple(self):
+        g = Graph()
+        n1 = Node(name='foo.so', scope='build.ninja', rule_name='shlib',
+                  deps=['foo.o'])
+        n2 = Node(name='foo.o', scope='build.ninja', rule_name='cc',
+                  deps=['foo.c'])
+        g.nodes[n1.name] = n1
+        g.nodes[n2.name] = n2
+        self.assertEqual(tsort(g, [n1.name]), [n2.name, n1.name])
+
+
+class TestFindNodesToBuild(unittest.TestCase):
+    def test_simple(self):
+        g = Graph()
+        n1 = Node(name='foo.so', scope='build.ninja', rule_name='shlib',
+                  deps=['foo.o'])
+        n2 = Node(name='foo.o', scope='build.ninja', rule_name='cc',
+                  deps=['foo.c'])
+        g.nodes[n1.name] = n1
+        g.nodes[n2.name] = n2
+        self.assertEqual(find_nodes_to_build(g, [n1.name]),
+                         set([n1.name, n2.name]))
 
 
 if __name__ == '__main__':

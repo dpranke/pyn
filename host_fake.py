@@ -22,9 +22,6 @@ class FakeHost(object):
     def cpu_count(self):
         return 2
 
-    def dirname(self, path):
-        return path.split('/')[:-1].join('/')
-
     def exists(self, *comps):
         path = self.join(self.cwd, *comps)
         return path in self.files
@@ -40,17 +37,11 @@ class FakeHost(object):
     def mtime(self, *comps):
         return self.mtimes[self.join(*comps)]
 
-    def path_to_module(self, module_name):
-        # __file__ is always an absolute path.
-        return '/src/pyn/' + module_name
+    def print_err(self, msg):
+        self.stderr.write(msg + '\n')
 
-    def print_err(self, *args, **kwargs):
-        assert 'file' not in kwargs
-        self.stderr.write(args[0] % args[1:] + '\n')
-
-    def print_out(self, *args, **kwargs):
-        assert 'file' not in kwargs
-        self.stdout.write(args[0] % args[1:] + '\n')
+    def print_out(self, msg):
+        self.stdout.write(msg + '\n')
 
     def read(self, *comps):
         return self.files[self.join(self.cwd, *comps)]

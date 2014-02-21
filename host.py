@@ -22,9 +22,6 @@ class Host(object):
     def cpu_count(self):
         return multiprocessing.cpu_count()
 
-    def dirname(self, path):
-        return os.path.dirname(path)
-
     def exists(self, *comps):
         return os.path.exists(self.join(*comps))
 
@@ -39,23 +36,11 @@ class Host(object):
     def mtime(self, *comps):
         return os.stat(self.join(*comps)).st_mtime
 
-    def path_to_module(self, module_name):
-        # __file__ is always an absolute path.
-        return sys.modules[module_name].__file__
+    def print_err(self, msg):
+        self.stderr.write(msg + '\n')
 
-    def print_err(self, *args, **kwargs):
-        assert 'file' not in kwargs
-        if len(args) > 1:
-            self.stderr.write((args[0] % args[1:]) + '\n')
-        else:
-            self.stderr.write(args[0] + '\n')
-
-    def print_out(self, *args, **kwargs):
-        assert 'file' not in kwargs
-        if len(args) > 1:
-            self.stdout.write((args[0] % args[1:]) + '\n')
-        else:
-            self.stdout.write(args[0] + '\n')
+    def print_out(self, msg):
+        self.stdout.write(msg + '\n')
 
     def read(self, *comps):
         path = self.join(*comps)
