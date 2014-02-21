@@ -80,6 +80,8 @@ class TestNinjaParser(unittest.TestCase):
                         depth = 1
                    ''', [['pool', 'foo',
                           [['var', 'depth', '1']]]])
+        self.err('pool')
+        self.err('pool:')
         self.err('pool 123')
         self.err('pool foo bar')
 
@@ -150,6 +152,8 @@ class TestNinjaParser(unittest.TestCase):
         self.err('buildfoo')
         self.err('build ')
         self.err('build :')
+        self.err('build foo.# foo')
+        self.err('build foo.o : cc foo.c :')
         self.err('build foo.o|')
         self.err('build foo.o:|')
         self.err('build foo.o: cc foo.c |')

@@ -409,6 +409,8 @@ class NinjaParser(object):
     def ws_(self, msg, start, end):
         """ (' '|('$' '\n'))+ """
         p = start
+        if start == end:
+            return None, p, "expecting either ' ' or '$\n'"
         err = None
         while not err and p < end:
             if msg[p] == ' ':
