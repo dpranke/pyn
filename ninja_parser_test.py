@@ -17,19 +17,24 @@ class TestNinjaParser(unittest.TestCase):
             actual_ast = parse(text)
         self.assertEquals(actual_ast, ast)
 
-    def err(self, text):
-        dedented_text = textwrap.dedent(text)
-        self.assertRaises(PynException, parse, dedented_text)
+    def err(self, text, dedent=True):
+        if dedent:
+            dedented_text = textwrap.dedent(text)
+            self.assertRaises(PynException, parse, dedented_text)
+        else:
+            self.assertRaises(PynException, parse, text)
 
     def test_blanks(self):
         self.check('', [])
-        self.check('  ', [], dedent=False)
         self.check('  \n', [], dedent=False)
         self.check('  $\n\n', [], dedent=False)
         self.check('$\n\n', [], dedent=False)
         self.check('  $\n  $\n\n', [], dedent=False)
         self.check('\n', [])
         self.check('\n\n', [])
+
+        # A file w/ spaces but no newline should fail.
+        self.err('  ', dedent=False)
 
     def test_spaces_in_paths(self):
         self.check('build foo$ bar : cc foo.c',
