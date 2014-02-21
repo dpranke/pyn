@@ -1,15 +1,10 @@
-#!/usr/bin/env python
-
-from __future__ import print_function
-
 import re
 import unittest
 
 from StringIO import StringIO
 
 from host import Host
-
-import main
+from main import main, VERSION
 
 
 class TestMain(unittest.TestCase):
@@ -19,9 +14,10 @@ class TestMain(unittest.TestCase):
         host = Host()
         host.stdout = StringIO()
         host.stderr = StringIO()
-        main.main(host, argv)
+        actual_returncode = main(host, argv)
         out = host.stdout.getvalue()
         err = host.stderr.getvalue()
+        self.assertEqual(actual_returncode, returncode)
         self.assertTrue(re.match(out_regex, out, re.MULTILINE),
                         '%s does not match %s' % (out_regex, out))
         self.assertTrue(re.match(err_regex, err, re.MULTILINE),
@@ -54,7 +50,7 @@ class TestMain(unittest.TestCase):
         self.check(['-h'], 0, 'usage:.+', '')
 
     def test_version(self):
-        self.check(['--version'], 0, main.VERSION + '\n', '')
+        self.check(['--version'], 0, VERSION + '\n', '')
 
 
 if __name__ == '__main__':

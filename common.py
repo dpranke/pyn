@@ -2,10 +2,6 @@ class PynException(Exception):
     pass
 
 
-class PynExit(Exception):
-    pass
-
-
 class Graph(object):
     def __init__(self):
         self.defaults = []

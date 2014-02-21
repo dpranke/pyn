@@ -1,11 +1,10 @@
-#!/usr/bin/env python
 import argparse
 import sys
 import textwrap
 
 from analyzer import NinjaAnalyzer
 from builder import Builder
-from common import PynException, PynExit
+from common import PynException
 from host import Host
 from ninja_parser import parse, expand_vars
 
@@ -72,8 +71,9 @@ def parse_args(host, argv):
     class ReturningArgParser(argparse.ArgumentParser):
         returncode = None
 
+        # 'Redefining built-in "file" pylint: disable=W0622
         def print_help(self, file=None):
-            super(ReturningArgParser, self).print_help(file=file or host.stdout)
+            super(ReturningArgParser, self).print_help(file or host.stdout)
 
         def error(self, message):
             self.exit(2, message)

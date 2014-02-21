@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-
-from __future__ import print_function
-
 import multiprocessing
 import os
 import subprocess
@@ -49,11 +45,17 @@ class Host(object):
 
     def print_err(self, *args, **kwargs):
         assert 'file' not in kwargs
-        print(*args, file=self.stderr, **kwargs)
+        if len(args) > 1:
+            self.stderr.write((args[0] % args[1:]) + '\n')
+        else:
+            self.stderr.write(args[0] + '\n')
 
     def print_out(self, *args, **kwargs):
         assert 'file' not in kwargs
-        print(*args, file=self.stdout, **kwargs)
+        if len(args) > 1:
+            self.stdout.write((args[0] % args[1:]) + '\n')
+        else:
+            self.stdout.write(args[0] + '\n')
 
     def read(self, *comps):
         path = self.join(*comps)
