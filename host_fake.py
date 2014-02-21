@@ -101,7 +101,7 @@ class FakeHost(object):
     def remove(self, *comps):
         del self.files[self.join(*comps)]
 
-    def rmtree(self, *comps)
+    def rmtree(self, *comps):
         path = self.join(*comps)
         for f in self.files:
             if f.startswith(path):
