@@ -14,44 +14,76 @@ VERSION = '0.4a'
 
 
 def main(host, argv=None):
-    args = parse_args(host, argv)
+    returncode, args = parse_args(host, argv)
+    if returncode is not None:
+        return returncode
     if args.version:
-        raise PynExit(VERSION)
+        host.print_out(VERSION)
+        return 0
     if args.debug:
-        raise PynException('-d is not supported yet')
+        host.print_err('-d is not supported yet')
+        return 2
+    if args.tool and args.tool not in ('check', 'clean', 'list', 'question'):
+        host.print_err('unsupported tool "%s"' % args.tool)
+        return 2
+    if args.tool == 'list':
+        host.print_out(textwrap.dedent('''\
+            pyn subtools:
+            clean     clean built files
+            check     check the syntax and semantics of the build file
+                      (and all included files)
+            question  check to see if the build is up-to-date
+            '''))
+        return 0
     if args.dir:
         if not host.exists(args.dir):
-            raise PynException("'%s' does not exist" % args.dir)
+            host.print_err('"%s" not found' % args.dir)
+            return 2
         host.chdir(args.dir)
     if not host.exists(args.file):
-        raise PynException("'%s' does not exist" % args.file)
+        host.print_err('"%s" not found' % args.file)
+        return 2
 
-    ast = parse(host.read(args.file))
-    analyzer = NinjaAnalyzer(host, args, parse, expand_vars)
-    graph = analyzer.analyze(ast, args.file)
-    if args.tool == 'check':
-        raise PynExit("pyn: syntax is correct")
-    builder = Builder(host, args, expand_vars)
-    if args.tool:
-        if args.tool == 'list':
-            raise PynExit(textwrap.dedent('''\
-                pyn subtools:
-                  clean     clean built files
-                  check     check the syntax and semantics of
-                            the build file (and all included files)
-                  question  check to see if the build is up-to-date'''))
-        elif args.tool == 'clean':
+    try:
+        ast = parse(host.read(args.file))
+
+        analyzer = NinjaAnalyzer(host, args, parse, expand_vars)
+        graph = analyzer.analyze(ast, args.file)
+        if args.tool == 'check':
+            host.print_out('pyn: syntax is correct')
+
+        builder = Builder(host, args, expand_vars)
+
+        if args.tool == 'clean':
             builder.clean(graph)
         elif args.tool == 'question':
             builder.build(graph, question=True)
         else:
-            raise PynException("Unsupported tool '%s'" % args.tool)
-    else:
-        builder.build(graph)
+            builder.build(graph)
+        return 0
+
+    except PynException as e:
+        host.print_err(str(e))
+        return 1
 
 
 def parse_args(host, argv):
-    ap = argparse.ArgumentParser(prog='pyn')
+
+    class ReturningArgParser(argparse.ArgumentParser):
+        returncode = None
+
+        def print_help(self, file=None):
+            super(ReturningArgParser, self).print_help(file=file or host.stdout)
+
+        def error(self, message):
+            self.exit(2, message)
+
+        def exit(self, status=0, message=None):
+            self.returncode = status
+            if message:
+                host.print_err(message)
+
+    ap = ReturningArgParser(prog='pyn')
     ap.usage = '%(prog)s [options] [targets...]'
     ap.description = ("if targets are unspecified, builds the 'default' "
                       "targets (see manual).")
@@ -81,20 +113,9 @@ def parse_args(host, argv):
                     help='run a subtool (use -t list to list subtools)')
     ap.add_argument('targets', nargs='*', default=[],
                     help=argparse.SUPPRESS)
-    return ap.parse_args(args=argv)
+    args = ap.parse_args(args=argv)
+    return ap.returncode, args
 
-
-def _real_main():
-    h = Host()
-    code = 0
-    try:
-        main(h)
-    except PynExit as e:
-        h.print_out(e.message)
-    except PynException as e:
-        h.print_err('Error: ' + str(e))
-        code = 1
-    return code
 
 if __name__ == '__main__':
-    sys.exit(_real_main())
+    sys.exit(main(Host()))

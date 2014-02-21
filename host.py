@@ -53,7 +53,7 @@ class Host(object):
 
     def print_out(self, *args, **kwargs):
         assert 'file' not in kwargs
-        print(*args, **kwargs)
+        print(*args, file=self.stdout, **kwargs)
 
     def read(self, *comps):
         path = self.join(*comps)
