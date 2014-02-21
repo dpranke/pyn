@@ -31,7 +31,7 @@ class TestAnalyzer(unittest.TestCase):
     def test_build(self):
         self.check([['build', ['foo.o'], 'cc', ['foo.c'], [], [], []]])
         self.err([['build', ['foo.o'], 'cc', ['foo.c'], [], [], []],
-                    ['build', ['foo.o'], 'cc', ['foo.c'], [], [], []]])
+                  ['build', ['foo.o'], 'cc', ['foo.c'], [], [], []]])
         self.err([['build', ['foo.o'], 'cc', ['foo.c'], [], [],
                    [['var', 'foo', 'bar'],
                     ['var', 'foo', 'bar']]]])

@@ -21,12 +21,6 @@ class NinjaAnalyzer(object):
 
         return graph
 
-    def _add_deps_in_depfiles(self, graph):
-        for n in graph.nodes.values():
-            depfile_path = self.expand_vars(n.scope['depfile'], n.scope)
-            if self.host.exists(depfile_path):
-                n.deps.extend(self.host.read(depfile_path).split()[2:])
-
     def _decl_build(self, graph, scope, decl):
         _, outputs, rule_name, inputs, ideps, odeps, build_vars = decl
 
@@ -34,18 +28,10 @@ class NinjaAnalyzer(object):
         build_scope = Scope(build_name, scope)
         build_scope['out'] = ' '.join(outputs)
         build_scope['in'] = ' '.join(inputs)
-        for _, name, val in build_vars:
-            if name in build_scope.objs:
-                raise PynException("'var %s' declared more than once "
-                                   " in build %s'" % (name, build_name))
-            build_scope.objs[name] = val
+        self._add_vars_to_scope(build_vars, build_scope)
 
         n = Node(build_name, build_scope, rule_name, inputs + ideps + odeps)
-        for output_name in outputs:
-            if output_name in graph.nodes:
-                raise PynException("build %s' declared more than once" %
-                                   output_name)
-            graph.nodes[output_name] = n
+        self._add_outputs_to_graph(outputs, n, graph)
         return graph
 
     def _decl_default(self, graph, _scope, decl):
@@ -93,12 +79,7 @@ class NinjaAnalyzer(object):
             raise PynException("'rule %s' declared more than once" % rule_name)
 
         rule_scope = Scope(rule_name, scope.name)
-        for _, var_name, val in rule_vars:
-            if var_name in rule_scope.objs:
-                raise PynException("'var %s' declared more than once "
-                                   " in rule %s'" % (var_name, rule_name))
-            rule_scope[var_name] = val
-
+        self._add_vars_to_scope(rule_vars, rule_scope)
         rule = Rule(rule_name, rule_scope)
         graph.rules[rule_name] = rule
         return graph
@@ -114,21 +95,31 @@ class NinjaAnalyzer(object):
                 raise PynException("scope '%s' declared in multiple files " %
                                    s.name)
             graph.scopes[s.name] = s
-        inserted_nodes = set()
+
         for n in subgraph.nodes.values():
-            if n.name in graph.nodes and n.name not in inserted_nodes:
-                raise PynException("build '%s' declared in multiple files " %
-                                   n.name)
-            graph.nodes[n.name] = n
-            inserted_nodes.add(n.name)
+            self._add_outputs_to_graph(n.outputs, n, graph)
         return graph
 
     def _decl_var(self, graph, scope, decl):
-        _, var_name, value = decl
-
-        if var_name in scope:
-            raise PynException("'var %s' is declared more than once "
-                               "in the same scope" % var_name)
-
-        scope[var_name] = value
+        self._add_vars_to_scope([decl], scope)
         return graph
+
+    def _add_vars_to_scope(self, var_decls, scope):
+        for _, name, val in var_decls:
+            if name in scope.objs:
+                raise PynException("'var %s' declared more than once "
+                                   " in %s'" % (name, scope.name))
+            scope.objs[name] = val
+
+    def _add_outputs_to_graph(self, outputs, node, graph):
+        for output_name in outputs:
+            if output_name in graph.nodes:
+                raise PynException("build output '%s' declared more than "
+                                   "once " % output_name)
+            graph.nodes[output_name] = node
+
+    def _add_deps_in_depfiles(self, graph):
+        for n in graph.nodes.values():
+            depfile_path = self.expand_vars(n.scope['depfile'], n.scope)
+            if self.host.exists(depfile_path):
+                n.deps.extend(self.host.read(depfile_path).split()[2:])
