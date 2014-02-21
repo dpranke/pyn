@@ -6,8 +6,6 @@ from ninja_parser import parse, expand_vars
 
 
 class TestNinjaParser(unittest.TestCase):
-    # 'too many public methods' pylint: disable=R0904
-
     def check(self, text, ast, dedent=True):
         if dedent:
             dedented_text = textwrap.dedent(text)

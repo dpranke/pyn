@@ -64,6 +64,8 @@ build compile_python : phony $
   common.pyc $
   common_test.pyc $
   host.pyc $
+  host_fake.pyc $
+  integration_test.pyc $
   main.pyc $
   main_test.pyc $
   ninja_parser.pyc $
@@ -77,6 +79,8 @@ build lint : phony $
   .pylint.common.py $
   .pylint.common_test.py $
   .pylint.host.py $
+  .pylint.host_fake.py $
+  .pylint.integration_test.py $
   .pylint.main.py $
   .pylint.main_test.py $
   .pylint.ninja_parser_test.py
@@ -107,6 +111,8 @@ build .pylint.builder_test.py : pylint builder_test.py
 build .pylint.common.py : pylint common.py
 build .pylint.common_test.py : pylint common_test.py
 build .pylint.host.py : pylint host.py
+build .pylint.host_fake.py : pylint host_fake.py
+build .pylint.integration_test.py : pylint integration_test.py
 build .pylint.main.py : pylint main.py
 build .pylint.main_test.py : pylint main_test.py
 build .pylint.ninja_parser_test.py : pylint ninja_parser_test.py
@@ -126,6 +132,8 @@ build common_test.pyc : pycomp common_test.py
 build main.pyc : pycomp main.py
 build main_test.pyc : pycomp main_test.py
 build host.pyc : pycomp host.py
+build host_fake.pyc : pycomp host_fake.py
+build integration_test.pyc : pycomp integration_test.py
 build ninja_parser.pyc : pycomp ninja_parser.py
 build ninja_parser_test.pyc : pycomp ninja_parser_test.py
 

@@ -2,6 +2,8 @@ from StringIO import StringIO
 
 
 class FakeHost(object):
+    # "method could be a function" pylint: disable=R0201
+
     python_interpreter = 'python'
 
     def __init__(self, files=None, mtimes=None):
@@ -22,6 +24,9 @@ class FakeHost(object):
     def cpu_count(self):
         return 2
 
+    def dirname(self, path):
+        return path.split('/')[:-1].join('/')
+
     def exists(self, *comps):
         path = self.join(self.cwd, *comps)
         return path in self.files
@@ -37,6 +42,10 @@ class FakeHost(object):
     def mtime(self, *comps):
         return self.mtimes[self.join(*comps)]
 
+    def path_to_module(self, module_name):
+        # __file__ is always an absolute path.
+        return '/src/pyn/' + module_name
+
     def print_err(self, msg):
         self.stderr.write(msg + '\n')
 
@@ -48,3 +57,6 @@ class FakeHost(object):
 
     def remove(self, *comps):
         del self.files[self.join(*comps)]
+
+    def write_tempfile_and_return_name(self, _contents):
+        assert False

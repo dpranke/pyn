@@ -2,6 +2,7 @@ import multiprocessing
 import os
 import subprocess
 import sys
+import tempfile
 
 
 class Host(object):
@@ -22,6 +23,9 @@ class Host(object):
     def cpu_count(self):
         return multiprocessing.cpu_count()
 
+    def dirname(self, *comps):
+        return os.path.dirname(self.join(*comps))
+
     def exists(self, *comps):
         return os.path.exists(self.join(*comps))
 
@@ -36,6 +40,10 @@ class Host(object):
     def mtime(self, *comps):
         return os.stat(self.join(*comps)).st_mtime
 
+    def path_to_module(self, module_name):
+        # _file__ is always an absolute path.
+        return sys.modules[module_name].__file__
+
     def print_err(self, msg):
         self.stderr.write(msg + '\n')
 
@@ -49,3 +57,9 @@ class Host(object):
 
     def remove(self, *comps):
         os.remove(self.join(*comps))
+
+    def write_tempfile_and_return_name(self, contents):
+        f = tempfile.NamedTemporaryFile(delete=False)
+        f.write(contents)
+        f.close()
+        return f.name

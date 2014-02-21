@@ -8,16 +8,20 @@ from main import main, VERSION
 
 
 class TestMain(unittest.TestCase):
-    # 'too many public methods' pylint: disable=R0904
-
-    def check(self, argv, returncode, out_regex, err_regex):
+    @staticmethod
+    def call(argv):
         host = Host()
         host.stdout = StringIO()
         host.stderr = StringIO()
         actual_returncode = main(host, argv)
         out = host.stdout.getvalue()
         err = host.stderr.getvalue()
-        self.assertEqual(actual_returncode, returncode)
+        return actual_returncode, out, err
+
+    def check(self, argv, returncode, out_regex, err_regex):
+        actual_returncode, out, err = self.call(argv)
+        if returncode is not None:
+            self.assertEqual(actual_returncode, returncode)
         self.assertTrue(re.match(out_regex, out, re.MULTILINE),
                         '%s does not match %s' % (out_regex, out))
         self.assertTrue(re.match(err_regex, err, re.MULTILINE),
@@ -38,6 +42,19 @@ class TestMain(unittest.TestCase):
 
     def test_list(self):
         self.check(['-t', 'list'], 0, '.+', '')
+
+    def test_chdir(self):
+        self.check(['-n', '-C', '.'], 0, '', '.*')
+
+    def test_check(self):
+        self.check(['-t', 'check'], 0, '', '.*')
+
+    def test_clean(self):
+        self.check(['-n', '-t', 'clean'], 0, '', '.*')
+
+    def test_question(self):
+        # pass returncode=None here because the result may vary.
+        self.check(['-t', 'question'], None, '', '.*')
 
     def test_debug(self):
         self.check(['-d', 'foo'], 2, '', '-d is not supported yet\n')
