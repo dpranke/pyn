@@ -81,6 +81,8 @@ class TestNinjaParser(unittest.TestCase):
                         depth = 1
                    ''', [['pool', 'foo',
                           [['var', 'depth', '1']]]])
+        self.err('pool 123')
+        self.err('pool foo bar')
 
     def test_syntax_err(self):
         self.err('syntaxerror')
@@ -150,6 +152,9 @@ class TestNinjaParser(unittest.TestCase):
         self.err('build ')
         self.err('build :')
         self.err('build foo.o|')
+        self.err('build foo.o:|')
+        self.err('build foo.o: cc foo.c |')
+        self.err('build foo.o: cc foo.c ||')
         self.err('build foo.o:')
         self.err('build foo.o:|||')
 
@@ -162,6 +167,10 @@ class TestNinjaParser(unittest.TestCase):
                    [['build', ['foo.o'], 'cc', ['foo.c'], [], [], []]])
 
     def test_var_errs(self):
+        # not a legal var name
+        self.err('123')
+
+        # no equals sign
         self.err('foo ')
 
 
