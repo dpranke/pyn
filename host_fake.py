@@ -3,12 +3,15 @@ from StringIO import StringIO
 
 class FakeHost(object):
     # "method could be a function" pylint: disable=R0201
+    # "too many instance attributes" pylint: disable=R0902
+    # "redefining built-in" pylint: disable=W0622
 
     python_interpreter = 'python'
 
     def __init__(self, dirs=None, files=None, mtimes=None, cwd='/tmp'):
         self.stdout = StringIO()
         self.stderr = StringIO()
+        self.sep = '/'
         self.dirs = set(dirs or [])
         self.files = files or {}
         self.written_files = {}
@@ -44,6 +47,7 @@ class FakeHost(object):
         return self.cwd
 
     def getenv(self, key, default=None):
+        assert key
         return default
 
     def join(self, *comps):
@@ -54,7 +58,7 @@ class FakeHost(object):
         if not path in self.dirs:
             self.dirs.add(path)
 
-    def _mktemp(self, suffix='', prefix='tmp', dir=None, **kwargs):
+    def _mktemp(self, suffix='', prefix='tmp', dir=None, **_kwargs):
         if dir is None:
             dir = self.sep + '__im_tmp'
         curno = self.current_tmpno
@@ -63,6 +67,9 @@ class FakeHost(object):
         return self.last_tmpdir
 
     def mkdtemp(self, **kwargs):
+        # pylint: disable=W0212
+        # pylint: disable=C0103
+
         class TemporaryDirectory(object):
             def __init__(self, fs, **kwargs):
                 self._kwargs = kwargs
@@ -108,9 +115,9 @@ class FakeHost(object):
         path = self.join(*comps)
         for f in self.files:
             if f.startswith(path):
-                f[files] = None
-                f.written_files.add(f)
+                f.files[f] = None
+                f.written_files[f] = None
 
-    def write(self, _contents):
+    def write(self, path, contents):
         self.files[path] = contents
-        self.written_files.add(path)
+        self.written_files[path] = contents

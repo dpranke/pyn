@@ -5,6 +5,8 @@ import subprocess
 import sys
 import tempfile
 
+from multiprocessing.pool import ThreadPool
+
 
 class Host(object):
     # pylint: disable=R0201
@@ -68,6 +70,7 @@ class Host(object):
             def __enter__(self):
                 return self._directory_path
 
+            # "Redefining built-in 'type': pylint:disable=W0622
             def __exit__(self, type, value, traceback):
                 # Only self-delete if necessary.
 
@@ -79,6 +82,9 @@ class Host(object):
 
     def mtime(self, *comps):
         return os.stat(self.join(*comps)).st_mtime
+
+    def mp_pool(self, processes=None):
+        return ThreadPool(processes)
 
     def path_to_module(self, module_name):
         # _file__ is always an absolute path.

@@ -32,15 +32,14 @@ the LICENSE file in the source repo.
 
 ## Things that still need to be implemented:
 
-* parallel job execution
-  * basic support, including handling of the -j flag
-  * support for the -k flag for load throttling
-  * support for pools
+* support for the -k flag for load throttling
+* support for pools
 * restat and generator support
 * rspfiles
 * detecting when the command needed for a build has changed and the
   outputs should be rebuilt.
-* delete deps files on clean and/or when they are integrated into a database
+* proper deps files handling
+  * delete on clean and/or when generated and added to database
 * NINJA_STATUS option %c 
 
 ### Also:
@@ -48,8 +47,7 @@ the LICENSE file in the source repo.
 * various debug modes (-d stats, explain, keeprsp)
 * various tools (-t browse, commands, deps, graph, query, targets, compdb,
   recompact)
-  * also -t clean for targets
+  * also '-t clean targets' to only clean specific targets
 * a database (like .ninja_log) for faster startup
 * hash-based build tracking in addition to mtime-based tracking?
 * more tests
-  * test comments

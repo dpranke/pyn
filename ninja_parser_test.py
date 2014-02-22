@@ -6,8 +6,8 @@ from ninja_parser import parse, expand_vars
 
 
 class TestNinjaParser(unittest.TestCase):
+    # unused argument 'files'  pylint:disable=W0613
     def check(self, text, ast, dedent=True, files=None):
-        _ = files
         if dedent:
             dedented_text = textwrap.dedent(text)
             actual_ast = parse(dedented_text)
@@ -16,12 +16,13 @@ class TestNinjaParser(unittest.TestCase):
         self.assertEquals(actual_ast, ast)
 
     def err(self, text, dedent=True, files=None):
-        _ = files
         if dedent:
             dedented_text = textwrap.dedent(text)
             self.assertRaises(PynException, parse, dedented_text)
         else:
             self.assertRaises(PynException, parse, text)
+
+    # pylint:enable=W0613
 
     def test_blanks(self):
         self.check('', [])

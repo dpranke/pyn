@@ -22,6 +22,7 @@ class Node(object):
         self.scope = scope
         self.rule_name = rule_name
         self.deps = deps
+        self.running = False
 
     def __repr__(self):
         return 'Node(name=%s, scope=%s, rule_name=%s, deps=%s)' % (

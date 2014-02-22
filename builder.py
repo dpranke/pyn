@@ -9,7 +9,6 @@ class Stats(object):
         self.finished = 0
         self.started = 0
         self.total = 0
-        self.running = 0
         self.started_time = None
 
     def format(self):
@@ -43,7 +42,7 @@ class Stats(object):
                     out += '%'
                 else:
                     out += cn
-                p +=2
+                p += 2
             else:
                 out += c
                 p += 1
@@ -59,6 +58,7 @@ class Builder(object):
         self._mtimes = {}
         self._last_line = ''
         self._should_overwrite = args.overwrite_status
+        self._pool = self.host.mp_pool(args.jobs)
 
     def build(self, graph, question=False):
         requested_targets = self.args.targets or graph.defaults
@@ -83,13 +83,44 @@ class Builder(object):
 
         self.stats.total = len(nodes_to_build)
         self.stats.started = 0
-        self.stats.start_time = time.time()
+        self.stats.started_time = time.time()
 
+        running_jobs = []
         while nodes_to_build:
-            node = nodes_to_build.pop(0)
-            self._build_node(graph, node)
-        if self._last_line:
-            self.host.print_err('')
+            while self.stats.started - self.stats.finished < self.args.jobs:
+                n = self._find_next_available_node(graph, nodes_to_build)
+                if n:
+                    p = self._build_node(graph, n)
+                    running_jobs.append((n, p))
+                else:
+                    break
+            self._process_completed_jobs(running_jobs)
+            time.sleep(0.03)
+
+        while running_jobs:
+            self._process_completed_jobs(running_jobs)
+            time.sleep(0.03)
+
+        self.host.print_err('')
+
+    @staticmethod
+    def _find_next_available_node(graph, nodes_to_build):
+        next_node = None
+        for n in nodes_to_build:
+            if not any(d in graph.nodes and graph.nodes[d].running
+                       for d in n.deps):
+                next_node = n
+                break
+
+        if next_node:
+            nodes_to_build.remove(next_node)
+        return next_node
+
+    def _process_completed_jobs(self, running_jobs):
+        completed_jobs = [(n, p) for n, p in running_jobs if p.ready()]
+        for n, p in completed_jobs:
+            running_jobs.remove((n, p))
+            self._build_done(p.get(timeout=0))
 
     def _build_node(self, graph, node):
         if node.rule_name == 'phony':
@@ -100,20 +131,24 @@ class Builder(object):
         desc = self.expand_vars(rule.scope['description'], node.scope)
         command = self.expand_vars(rule.scope['command'], node.scope)
         if self.args.verbose > 1:
-            self._start(node.name, command, elide=False)
+            self._start(command, elide=False)
         else:
-            self._start(node.name, desc)
+            self._start(desc)
 
         if self.args.dry_run:
-            ret, out, err = 0, '', ''
+            return _FakeAsyncResult((node, desc, command, 0, '', ''))
         else:
-            ret, out, err = self.host.call(command)
+            return self._pool.apply_async(_call,
+                                          (self.host, node, desc, command))
 
+    def _build_done(self, result):
+        node, desc, command, ret, out, err = result
+        node.running = False
         if ret or out or err or self.args.verbose > 1:
             if ret or self.args.verbose > 1:
-                self._finish(node.name, command, elide=False)
+                self._finish(command, elide=False)
             else:
-                self._finish(node.name, desc, elide=False)
+                self._finish(desc, elide=False)
 
             if out:
                 self.host.print_out(out)
@@ -122,22 +157,27 @@ class Builder(object):
             if ret:
                 raise PynException('build failed')
         else:
-            self._finish(node.name, desc)
+            self._finish(desc)
 
-    def _start(self, node_name, msg, elide=True):
+    def _start(self, msg, elide=True):
         self.stats.started += 1
+        if elide:
+            msg = msg[:78]
         self._update(self.stats.format() + msg)
 
-    def _finish(self, node_name, msg, elide=True):
+    def _finish(self, msg, elide=True):
         self.stats.finished += 1
+        if elide:
+            msg = msg[:78]
         self._update(self.stats.format() + msg)
 
     def _update(self, msg):
         if msg == self._last_line:
             return
         if self._should_overwrite:
-            self.host.print_err('\r' + ' '* len(self._last_line) + '\r', end='')
-        else:
+            self.host.print_err('\r' + ' ' * len(self._last_line) + '\r',
+                                end='')
+        elif self._last_line:
             self.host.print_err('')
         self.host.print_err(msg, end='')
         last_nl = msg.rfind('\n')
@@ -164,3 +204,30 @@ class Builder(object):
             self._mtimes[name] = self.host.mtime(name)
         else:
             self._mtimes[name] = -1
+
+
+def _call(host, node, desc, command):
+    ret, out, err = host.call(command)
+    return (node, desc, command, ret, out, err)
+
+
+class _FakeAsyncResult(object):
+    def __init__(self, value):
+        self._value = value
+
+    def get(self, timeout=None):
+        if timeout and not self.ready():
+            time.sleep(timeout)
+        return self._value
+
+    @staticmethod
+    def wait():
+        return
+
+    @staticmethod
+    def ready():
+        return True
+
+    @staticmethod
+    def successful():
+        return True
