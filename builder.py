@@ -37,22 +37,27 @@ class Builder(object):
         self.stats.started_time = self.host.time()
 
         running_jobs = []
-        while nodes_to_build and self._failures < self.args.errors:
-            while self.stats.started - self.stats.finished < self.args.jobs:
-                n = self._find_next_available_node(graph, nodes_to_build)
-                if n:
-                    p = self._build_node(graph, n)
-                    running_jobs.append((n, p))
-                else:
-                    break
-            self._process_completed_jobs(running_jobs)
-            if nodes_to_build and self._failures < self.args.errors:
-                self.host.sleep(0.03)
+        try:
+            while nodes_to_build and self._failures < self.args.errors:
+                while self.stats.started - self.stats.finished < self.args.jobs:
+                    n = self._find_next_available_node(graph, nodes_to_build)
+                    if n:
+                        p = self._build_node(graph, n)
+                        running_jobs.append((n, p))
+                    else:
+                        break
+                self._process_completed_jobs(running_jobs)
+                if nodes_to_build and self._failures < self.args.errors:
+                    self.host.sleep(0.03)
 
-        while running_jobs:
-            self._process_completed_jobs(running_jobs)
-            if running_jobs:
-                self.host.sleep(0.03)
+            self._pool.close()
+            while running_jobs:
+                self._process_completed_jobs(running_jobs)
+                if running_jobs:
+                    self.host.sleep(0.03)
+        finally:
+            self._pool.terminate()
+            self._pool.join()
 
         self._printer.flush()
         return 1 if self._failures else 0
@@ -77,14 +82,8 @@ class Builder(object):
 
         self._build_node_started(node, desc, command)
 
-        def call(command):
-            if node.rule_name == 'phony' or self.args.dry_run:
-                ret, out, err = 0, '', ''
-            else:
-                ret, out, err = self.host.call(command)
-            return (node, desc, command, ret, out, err)
-
-        return self._pool.apply_async(call, (command,))
+        return self._pool.apply_async(_call, (node, desc, command,
+                                              self.args.dry_run, self.host))
 
     def _process_completed_jobs(self, running_jobs):
         completed_jobs = [(n, p) for n, p in running_jobs if p.ready()]
@@ -135,3 +134,11 @@ class Builder(object):
             self._mtimes[name] = self.host.mtime(name)
         else:
             self._mtimes[name] = 0
+
+
+def _call(node, desc, command, dry_run, host):
+    if node.rule_name == 'phony' or dry_run:
+        ret, out, err = 0, '', ''
+    else:
+        ret, out, err = host.call(command)
+    return (node, desc, command, ret, out, err)

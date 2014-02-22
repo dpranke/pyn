@@ -6,7 +6,6 @@ import sys
 import tempfile
 import time
 
-from multiprocessing.pool import ThreadPool
 
 
 class Host(object):
@@ -84,6 +83,9 @@ class Host(object):
         return os.stat(self.join(*comps)).st_mtime
 
     def mp_pool(self, processes=None):
+        # FIXME: process seem to hang, so use threads for now.
+        # return multiprocessing.Pool(processes)
+        from multiprocessing.pool import ThreadPool
         return ThreadPool(processes)
 
     def path_to_module(self, module_name):
