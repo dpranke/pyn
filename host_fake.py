@@ -43,6 +43,9 @@ class FakeHost(object):
     def getcwd(self):
         return self.cwd
 
+    def getenv(self, key, default=None):
+        return default
+
     def join(self, *comps):
         return '/'.join(comps)
 

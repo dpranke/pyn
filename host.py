@@ -33,6 +33,9 @@ class Host(object):
     def getcwd(self):
         return os.getcwd()
 
+    def getenv(self, key, default=None):
+        return os.getenv(key, default=default)
+
     def join(self, *comps):
         return os.path.join(*comps)
 

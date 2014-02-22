@@ -38,11 +38,10 @@ the LICENSE file in the source repo.
   * support for pools
 * restat and generator support
 * rspfiles
-* NINJA_STATUS parsing and options
-* finish support for rules with multiple outputs.
 * detecting when the command needed for a build has changed and the
   outputs should be rebuilt.
 * delete deps files on clean and/or when they are integrated into a database
+* NINJA_STATUS option %c 
 
 ### Also:
 

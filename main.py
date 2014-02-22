@@ -84,6 +84,8 @@ def parse_args(host, argv):
             if message:
                 host.print_err(message)
 
+    overwrite_by_default = host.stderr.isatty()
+
     ap = ReturningArgParser(prog='pyn')
     ap.usage = '%(prog)s [options] [targets...]'
     ap.description = ("if targets are unspecified, builds the 'default' "
@@ -112,6 +114,14 @@ def parse_args(host, argv):
                     help='enable debugging (use -d list to list modes)')
     ap.add_argument('-t', metavar='TOOL', dest='tool',
                     help='run a subtool (use -t list to list subtools)')
+    ap.add_argument('--overwrite-status', action='store_true',
+                    default=overwrite_by_default,
+                    help=('status updates will overwrite each other%s' %
+                          ' (on by default)' if overwrite_by_default else ''))
+    ap.add_argument('--no-overwrite-status', action='store_false',
+                    dest='overwrite_status',
+                    help=('status updates will not overwrite each other%s' %
+                          '' if overwrite_by_default else ' (off by default)'))
     ap.add_argument('targets', nargs='*', default=[],
                     help=argparse.SUPPRESS)
     args = ap.parse_args(args=argv)
