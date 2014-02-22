@@ -118,6 +118,12 @@ class FakeHost(object):
                 f.files[f] = None
                 f.written_files[f] = None
 
+    def sleep(self, time_secs):
+        pass
+
+    def time(self):
+        return 0
+
     def write(self, path, contents):
         self.files[path] = contents
         self.written_files[path] = contents

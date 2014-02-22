@@ -4,6 +4,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 from multiprocessing.pool import ThreadPool
 
@@ -106,6 +107,12 @@ class Host(object):
 
     def rmtree(self, path):
         shutil.rmtree(path, ignore_errors=True)
+
+    def sleep(self, time_secs):
+        return time.sleep(time_secs)
+
+    def time(self):
+        return time.time()
 
     def write(self, path, contents):
         with open(path, 'w') as f:
