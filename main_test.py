@@ -63,7 +63,7 @@ class TestMain(unittest.TestCase):
         self.check(['-d', 'foo'], 2, '', '-d is not supported yet\n')
 
     def test_dry_run(self):
-        self.check(['-n'], 0, '', '.+')
+        self.check(['-n'], 0, '.+', '')
 
     def test_usage(self):
         self.check(['--help'], 0, 'usage:.+', '')

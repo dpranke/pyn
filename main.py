@@ -52,19 +52,40 @@ def main(host, argv=None):
             host.print_out('pyn: syntax is correct')
             return 0
 
-        builder = Builder(host, args, expand_vars)
-
         if args.tool == 'clean':
-            builder.clean(graph)
-        elif args.tool == 'question':
-            builder.build(graph, question=True)
-        else:
-            builder.build(graph)
-        return 0
+            return clean(host, args, graph)
+
+        builder = Builder(host, args, expand_vars)
+        nodes_to_build = builder.find_nodes_to_build(graph)
+        if not nodes_to_build:
+            host.print_out('pyn: no work to do')
+            return 0
+
+        if args.tool == 'question':
+            host.print_err('build is not up to date.')
+            return 1
+
+        return builder.build(graph, nodes_to_build)
 
     except PynException as e:
         host.print_err(str(e))
         return 1
+
+
+def clean(host, args, graph):
+    outputs = [n.name for n in list(graph.nodes.values())
+               if n.rule_name != 'phony' and host.exists(n.name)]
+    if args.verbose:
+        host.print_err('Cleaning...')
+    else:
+        host.print_err('Cleaning... ', end='')
+    for o in outputs:
+        if args.verbose:
+            host.print_err('Remove %s' % o)
+        if not args.dry_run:
+            host.remove(o)
+    host.print_err('%d files.' % len(outputs))
+    return 0
 
 
 def parse_args(host, argv):

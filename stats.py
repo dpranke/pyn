@@ -16,7 +16,7 @@ class Stats(object):
             if c == '%' and p < end - 1:
                 cn = self.fmt[p + 1]
                 if cn == 'e':
-                    out += int(time.time() - self.started_time)
+                    out += '%-5.3f' % (self._time() - self.started_time)
                 elif cn == 'f':
                     out += str(self.finished)
                 elif cn == 'o':

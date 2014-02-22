@@ -7,4 +7,4 @@ else
     SCRIPTDIR=$(pwd -P)
     popd > /dev/null
 fi
-python $SCRIPTDIR/main.py $@
+python -B $SCRIPTDIR/main.py $@

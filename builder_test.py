@@ -13,6 +13,7 @@ class TestBuilder(unittest.TestCase):
         args = argparse.Namespace()
         args.overwrite_status = True
         args.jobs = 1
+        args.verbose = 0
         Builder(Host(), args, expand_vars)
         self.assertTrue(True)
 

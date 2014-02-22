@@ -96,6 +96,7 @@ class Host(object):
 
     def print_out(self, msg, end='\n'):
         self.stdout.write(msg + end)
+        self.stdout.flush()
 
     def read(self, *comps):
         path = self.join(*comps)

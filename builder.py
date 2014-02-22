@@ -1,21 +1,22 @@
-from common import find_nodes_to_build, tsort, PynException
+from common import find_nodes_to_build, tsort
 from stats import Stats
+from printer import Printer
 
 
 class Builder(object):
     def __init__(self, host, args, expand_vars):
         self.host = host
         self.args = args
+        self._should_overwrite = args.overwrite_status and not args.verbose
         self.expand_vars = expand_vars
         self.stats = Stats(host.getenv('NINJA_STATUS', '[%s/%t] '),
                            host.time)
+        self._printer = Printer(host.print_out, self._should_overwrite)
         self._mtimes = {}
         self._failures = 0
-        self._last_line = ''
-        self._should_overwrite = args.overwrite_status and not args.verbose
         self._pool = self.host.mp_pool(args.jobs)
 
-    def build(self, graph, question=False):
+    def find_nodes_to_build(self, graph):
         requested_targets = self.args.targets or graph.defaults
         nodes_to_build = find_nodes_to_build(graph, requested_targets)
         sorted_nodes = tsort(graph, nodes_to_build)
@@ -28,14 +29,9 @@ class Builder(object):
             my_mtime = self._stat(name)
             if any(self._stat(d) >= my_mtime for d in node.deps):
                 nodes_to_build.append(node)
+        return nodes_to_build
 
-        if not nodes_to_build:
-            self.host.print_out('pyn: no work to do')
-            return
-
-        if question:
-            raise PynException('build is not up to date.')
-
+    def build(self, graph, nodes_to_build):
         self.stats.total = len(nodes_to_build)
         self.stats.started = 0
         self.stats.started_time = self.host.time()
@@ -58,7 +54,8 @@ class Builder(object):
             if running_jobs:
                 self.host.sleep(0.03)
 
-        self.host.print_err('')
+        self.host.print_out('')
+        return 1 if self._failures else 0
 
     @staticmethod
     def _find_next_available_node(graph, nodes_to_build):
@@ -73,22 +70,12 @@ class Builder(object):
             nodes_to_build.remove(next_node)
         return next_node
 
-    def _process_completed_jobs(self, running_jobs):
-        completed_jobs = [(n, p) for n, p in running_jobs if p.ready()]
-        for n, p in completed_jobs:
-            running_jobs.remove((n, p))
-            self._build_done(p.get(timeout=0))
-
     def _build_node(self, graph, node):
         rule = graph.rules[node.rule_name]
         desc = self.expand_vars(rule.scope['description'], node.scope)
         command = self.expand_vars(rule.scope['command'], node.scope)
 
-        self.stats.started += 1
-        if self.args.verbose > 1:
-            self._start(command, elide=False)
-        else:
-            self._start(desc)
+        self._build_node_started(node, desc, command)
 
         def call(command):
             if node.rule_name == 'phony' or self.args.dry_run:
@@ -99,57 +86,42 @@ class Builder(object):
 
         return self._pool.apply_async(call, (command,))
 
-    def _build_done(self, result):
+    def _process_completed_jobs(self, running_jobs):
+        completed_jobs = [(n, p) for n, p in running_jobs if p.ready()]
+        for n, p in completed_jobs:
+            running_jobs.remove((n, p))
+            self._build_node_done(p.get(timeout=0))
+
+    def _build_node_started(self, node, desc, command):
+        node.running = True
+        self.stats.started += 1
+        if self.args.verbose > 1:
+            self._update(command, elide=False)
+        else:
+            self._update(desc)
+
+    def _build_node_done(self, result):
         node, desc, command, ret, out, err = result
         node.running = False
         self.stats.finished += 1
+
         if ret:
             self._failures += 1
-            self._update('FAILED: ' + command)
+            self._update(command, prefix='FAILED: ', elide=False)
         elif self.args.verbose > 1:
-            self._finish(command, elide=False)
+            self._update(command, elide=False)
         elif self.args.verbose:
-            self._finish(desc, elide=False)
-        else:
-            self._finish(desc)
+            self._update(desc, elide=False)
+        elif self._should_overwrite:
+            self._update(desc)
         if out:
             self.host.print_out(out)
         if err:
             self.host.print_err(err)
 
-    def _start(self, msg, elide=True):
-        if elide:
-            msg = msg[:78]
-        self._update(self.stats.format() + msg)
-
-    def _finish(self, msg, elide=True):
-        if elide:
-            msg = msg[:78]
-        if self._should_overwrite:
-            self._update(self.stats.format() + msg)
-
-    def _update(self, msg):
-        if msg == self._last_line:
-            return
-        if self._should_overwrite:
-            self.host.print_err('\r' + ' ' * len(self._last_line) + '\r',
-                                end='')
-        elif self._last_line:
-            self.host.print_err('')
-        self.host.print_err(msg, end='')
-        last_nl = msg.rfind('\n')
-        self._last_line = msg[last_nl + 1:]
-
-    def clean(self, graph):
-        outputs = [n.name for n in list(graph.nodes.values())
-                   if n.rule_name != 'phony' and self.host.exists(n.name)]
-        self.host.print_err('Cleaning...')
-        for o in outputs:
-            if self.args.verbose:
-                self.host.print_err('Remove %s' % o)
-            if not self.args.dry_run:
-                self.host.remove(o)
-        self.host.print_err('%d files' % len(outputs))
+    def _update(self, msg, prefix=None, elide=False):
+        prefix = prefix or self.stats.format()
+        self._printer.update(prefix + msg, elide=elide)
 
     def _stat(self, name):
         if not name in self._mtimes:

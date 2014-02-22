@@ -54,8 +54,6 @@ rule shell
   command = $shell_cmd
   description = $shell_desc
 
-build all : phony compile_python
-
 build compile_python : phony $
   builder.pyc $
   builder_test.pyc $
@@ -69,59 +67,9 @@ build compile_python : phony $
   main.pyc $
   main_test.pyc $
   ninja_parser.pyc $
-  ninja_parser_test.pyc
-
-build lint : phony $
-  .pylint.analyzer.py $
-  .pylint.analyzer_test.py $
-  .pylint.builder.py $
-  .pylint.builder_test.py $
-  .pylint.common.py $
-  .pylint.common_test.py $
-  .pylint.host.py $
-  .pylint.host_fake.py $
-  .pylint.integration_test.py $
-  .pylint.main.py $
-  .pylint.main_test.py $
-  .pylint.ninja_parser_test.py
-
-build test : phony $
-  .pytest.analyzer_test.py $
-  .pytest.builder_test.py $
-  .pytest.common_test.py $
-  .pytest.main_test.py $
-  .pytest.ninja_parser_test.py
-
-build coverage : phony .coverage
-
-build .coverage : shell $
-    .coverage.analyzer_test.py $
-    .coverage.builder_test.py $
-    .coverage.main_test.py $
-    .coverage.ninja_parser_test.py $
-    .coverage.common_test.py
-  shell_cmd = coverage combine $in && $
-              coverage --report
-  shell_desc = generating python coverage report
-
-build .pylint.analyzer.py : pylint analyzer.py
-build .pylint.analyzer_test.py : pylint analyzer_test.py
-build .pylint.builder.py : pylint builder.py
-build .pylint.builder_test.py : pylint builder_test.py
-build .pylint.common.py : pylint common.py
-build .pylint.common_test.py : pylint common_test.py
-build .pylint.host.py : pylint host.py
-build .pylint.host_fake.py : pylint host_fake.py
-build .pylint.integration_test.py : pylint integration_test.py
-build .pylint.main.py : pylint main.py
-build .pylint.main_test.py : pylint main_test.py
-build .pylint.ninja_parser_test.py : pylint ninja_parser_test.py
-
-build .pytest.analyzer_test.py : pytest analyzer_test.py
-build .pytest.builder_test.py : pytest builder_test.py
-build .pytest.common_test.py : pytest common_test.py
-build .pytest.main_test.py : pytest main_test.py
-build .pytest.ninja_parser_test.py : pytest ninja_parser_test.py
+  ninja_parser_test.pyc $
+  printer.pyc $
+  stats.pyc
 
 build analyzer.pyc : pycomp analyzer.py
 build analyzer_test.pyc : pycomp analyzer_test.py
@@ -136,11 +84,71 @@ build host_fake.pyc : pycomp host_fake.py
 build integration_test.pyc : pycomp integration_test.py
 build ninja_parser.pyc : pycomp ninja_parser.py
 build ninja_parser_test.pyc : pycomp ninja_parser_test.py
+build printer.pyc : pycomp printer.py
+build stats.pyc : pycomp stats.py
+
+build lint : phony $
+  .pylint.analyzer.py $
+  .pylint.analyzer_test.py $
+  .pylint.builder.py $
+  .pylint.builder_test.py $
+  .pylint.common.py $
+  .pylint.common_test.py $
+  .pylint.host.py $
+  .pylint.host_fake.py $
+  .pylint.integration_test.py $
+  .pylint.main.py $
+  .pylint.main_test.py $
+  .pylint.ninja_parser_test.py $
+  .pylint.printer.py $
+  .pylint.stats.py
+
+build .pylint.analyzer.py : pylint analyzer.py
+build .pylint.analyzer_test.py : pylint analyzer_test.py
+build .pylint.builder.py : pylint builder.py
+build .pylint.builder_test.py : pylint builder_test.py
+build .pylint.common.py : pylint common.py
+build .pylint.common_test.py : pylint common_test.py
+build .pylint.host.py : pylint host.py
+build .pylint.host_fake.py : pylint host_fake.py
+build .pylint.integration_test.py : pylint integration_test.py
+build .pylint.main.py : pylint main.py
+build .pylint.main_test.py : pylint main_test.py
+build .pylint.ninja_parser_test.py : pylint ninja_parser_test.py
+build .pylint.printer.py : pylint printer.py
+build .pylint.stats.py : pylint stats.py
+
+build test : phony $
+  .pytest.analyzer_test.py $
+  .pytest.builder_test.py $
+  .pytest.common_test.py $
+  .pytest.main_test.py $
+  .pytest.ninja_parser_test.py
+
+build .pytest.analyzer_test.py : pytest analyzer_test.py
+build .pytest.builder_test.py : pytest builder_test.py
+build .pytest.common_test.py : pytest common_test.py
+build .pytest.main_test.py : pytest main_test.py
+build .pytest.ninja_parser_test.py : pytest ninja_parser_test.py
+
+build coverage : phony .coverage
+
+build .coverage : shell $
+    .coverage.analyzer_test.py $
+    .coverage.builder_test.py $
+    .coverage.main_test.py $
+    .coverage.ninja_parser_test.py $
+    .coverage.common_test.py
+  shell_cmd = coverage combine $in && $
+              coverage --report
+  shell_desc = generating python coverage report
 
 build .coverage.analyzer_test.py : pycov analyzer_test.py
 build .coverage.builder_test.py : pycov builder_test.py
 build .coverage.common_test.py : pycov common_test.py
 build .coverage.main_test.py : pycov main_test.py
 build .coverage.ninja_parser_test.py : pycov ninja_parser_test.py
+
+build all : phony compile_python
 
 default all
