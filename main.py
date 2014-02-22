@@ -9,7 +9,7 @@ from host import Host
 from ninja_parser import parse, expand_vars
 
 
-VERSION = '0.4a'
+VERSION = '0.4'
 
 
 def main(host, argv=None):
