@@ -10,22 +10,22 @@ from common import Graph, Node, Rule, Scope, PynException, \
 class TestGraph(unittest.TestCase):
     def test_repr(self):
         self.assertEqual(repr(Graph()),
-                          ('Graph(defaults=[], nodes={}, pools={},'
-                           ' rules={}, scopes={})'))
+                         ('Graph(defaults=[], nodes={}, pools={},'
+                          ' rules={}, scopes={})'))
 
 
 class TestNode(unittest.TestCase):
     def test_repr(self):
         self.assertEqual(repr(Node('foo.o', Scope('build.ninja', None),
-                                    'cc', [])),
-                          'Node(name=foo.o, scope=build.ninja,'
-                          ' rule_name=cc, deps=[])')
+                                   'cc', [])),
+                         'Node(name=foo.o, scope=build.ninja,'
+                         ' rule_name=cc, deps=[])')
 
 
 class TestRule(unittest.TestCase):
     def test_repr(self):
         self.assertEqual(repr(Rule('cc', Scope('build.ninja', None))),
-                          'Rule(name=cc, scope=build.ninja)')
+                         'Rule(name=cc, scope=build.ninja)')
 
 
 class TestScope(unittest.TestCase):
@@ -39,11 +39,11 @@ class TestScope(unittest.TestCase):
 
     def test_repr(self):
         self.assertEqual(repr(self.p),
-                          "Scope(name=build.ninja, parent=None, "
-                          "objs={'bar': 'p-bar', 'foo': 'p-foo'})")
+                         "Scope(name=build.ninja, parent=None, "
+                         "objs={'bar': 'p-bar', 'foo': 'p-foo'})")
         self.assertEqual(repr(self.c),
-                          "Scope(name=foo.subninja, parent=build.ninja, "
-                          "objs={'foo': 'c-foo'})")
+                         "Scope(name=foo.subninja, parent=build.ninja, "
+                         "objs={'foo': 'c-foo'})")
 
     def test_basic(self):
         self.assertEqual(self.p['foo'], 'p-foo')

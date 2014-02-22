@@ -10,8 +10,9 @@ class Builder(object):
         self.stats = Stats(host.getenv('NINJA_STATUS', '[%s/%t] '),
                            host.time)
         self._mtimes = {}
+        self._failures = 0
         self._last_line = ''
-        self._should_overwrite = args.overwrite_status
+        self._should_overwrite = args.overwrite_status and not args.verbose
         self._pool = self.host.mp_pool(args.jobs)
 
     def build(self, graph, question=False):
@@ -40,7 +41,7 @@ class Builder(object):
         self.stats.started_time = self.host.time()
 
         running_jobs = []
-        while nodes_to_build:
+        while nodes_to_build and self._failures < self.args.errors:
             while self.stats.started - self.stats.finished < self.args.jobs:
                 n = self._find_next_available_node(graph, nodes_to_build)
                 if n:
@@ -49,11 +50,13 @@ class Builder(object):
                 else:
                     break
             self._process_completed_jobs(running_jobs)
-            self.host.sleep(0.03)
+            if nodes_to_build and self._failures < self.args.errors:
+                self.host.sleep(0.03)
 
         while running_jobs:
             self._process_completed_jobs(running_jobs)
-            self.host.sleep(0.03)
+            if running_jobs:
+                self.host.sleep(0.03)
 
         self.host.print_err('')
 
@@ -100,20 +103,21 @@ class Builder(object):
     def _build_done(self, result):
         node, desc, command, ret, out, err = result
         node.running = False
-        if ret or out or err or self.args.verbose > 1:
-            if ret or self.args.verbose > 1:
-                self._finish(command, elide=False)
-            else:
-                self._finish(desc, elide=False)
-
-            if out:
-                self.host.print_out(out)
-            if err:
-                self.host.print_err(err)
-            if ret:
-                raise PynException('build failed')
+        if ret:
+            self._update('FAILED: ' + command)
+        elif self.args.verbose > 1:
+            self._finish(command, elide=False)
+        elif self.args.verbose:
+            self._finish(desc, elide=False)
         else:
             self._finish(desc)
+        if out:
+            self.host.print_out(out)
+        if err:
+            self.host.print_err(err)
+
+        if ret:
+            self._failures += 1
 
     def _start(self, msg, elide=True):
         self.stats.started += 1
@@ -125,7 +129,8 @@ class Builder(object):
         self.stats.finished += 1
         if elide:
             msg = msg[:78]
-        self._update(self.stats.format() + msg)
+        if self._should_overwrite:
+            self._update(self.stats.format() + msg)
 
     def _update(self, msg):
         if msg == self._last_line:
@@ -167,5 +172,5 @@ def _call(host, node, desc, command):
     return (node, desc, command, ret, out, err)
 
 
-def _dryrun_call(host, node, desc, command):
+def _dryrun_call(_host, node, desc, command):
     return (node, desc, command, 0, '', '')
