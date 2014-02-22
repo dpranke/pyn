@@ -10,7 +10,6 @@ from multiprocessing.pool import ThreadPool
 
 
 class Host(object):
-    # pylint: disable=R0201
     stderr = sys.stderr
     stdout = sys.stdout
     python_interpreter = sys.executable

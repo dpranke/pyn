@@ -1,14 +1,11 @@
-import re
-
 from common import PynException
-
 
 
 class NinjaParser(object):
     """Parse the contents of a .ninja file and return an AST."""
 
     def parse(self, msg):
-        v, p, err = self.grammar_(msg, 0, len(msg))
+        v, _, err = self.grammar_(msg, 0, len(msg))
         if err:
             raise PynException(err)
         else:
@@ -278,7 +275,7 @@ class NinjaParser(object):
         return [hd] + tl, p, None
 
     def path_(self, msg, start, end):
-        """ (('$' ' ')|(~(' '|':'|'='|'|'|eol) anything))+:vs -> ''.join(vs) """
+        """(('$' ' ')|(~(' '|':'|'='|'|'|eol) anything))+:vs -> ''.join(vs)"""
         vs = []
         p = start
         while p < end:
@@ -393,7 +390,7 @@ class NinjaParser(object):
     def eol_(self, msg, start, end):
         """ ws? (comment | '\n' | end) """
         if start < end and (msg[start] == ' ' or msg[start] == '$'):
-            _, p, err = self.ws_(msg, start, end)
+            _, p, _ = self.ws_(msg, start, end)
         else:
             p = start
         if p < end:

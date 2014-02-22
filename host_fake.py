@@ -2,7 +2,6 @@ from io import StringIO
 
 
 class FakeHost(object):
-    # "method could be a function" pylint: disable=R0201
     # "too many instance attributes" pylint: disable=R0902
     # "redefining built-in" pylint: disable=W0622
 

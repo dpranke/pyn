@@ -2,7 +2,6 @@ from common import Graph, Node, PynException, Rule, Scope
 
 
 class NinjaAnalyzer(object):
-    # "method could be a function" pylint: disable=R0201
     def __init__(self, host, args, parse, expand_vars):
         self.host = host
         self.args = args

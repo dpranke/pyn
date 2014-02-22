@@ -13,7 +13,7 @@ class Printer(object):
 
     def update(self, msg, elide=True):
         if elide:
-            msg = msg[:cols - 1]
+            msg = msg[:self.cols - 1]
         if self.should_overwrite:
             self.print_('\r' + ' ' * len(self.last_line) + '\r', end='')
         elif self.last_line:
