@@ -90,10 +90,12 @@ class Builder(object):
             self._start(desc)
 
         if self.args.dry_run:
-            return _FakeAsyncResult((node, desc, command, 0, '', ''))
+            call_fn = _dryrun_call
         else:
-            return self._pool.apply_async(_call,
-                                          (self.host, node, desc, command))
+            call_fn = _call
+
+        return self._pool.apply_async(call_fn,
+                                      (self.host, node, desc, command))
 
     def _build_done(self, result):
         node, desc, command, ret, out, err = result
@@ -165,23 +167,5 @@ def _call(host, node, desc, command):
     return (node, desc, command, ret, out, err)
 
 
-class _FakeAsyncResult(object):
-    def __init__(self, value):
-        self._value = value
-
-    def get(self, timeout=None):
-        if timeout and not self.ready():
-            time.sleep(timeout)
-        return self._value
-
-    @staticmethod
-    def wait():
-        return
-
-    @staticmethod
-    def ready():
-        return True
-
-    @staticmethod
-    def successful():
-        return True
+def _dryrun_call(host, node, desc, command):
+    return (node, desc, command, 0, '', '')
