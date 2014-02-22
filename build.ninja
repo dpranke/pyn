@@ -1,3 +1,7 @@
+rule pycombine
+  description = building $out
+  command = python -B pycombine.py $in > $out && chmod +x $out
+
 rule pycomp 
   command = python pycomp.py $in
   description = checking $in
@@ -160,6 +164,16 @@ build .coverage.common_test.py : pycov common_test.py
 build .coverage.main_test.py : pycov main_test.py
 build .coverage.ninja_parser_test.py : pycov ninja_parser_test.py
 
-build all : phony compile_python
+build all : phony compile_python out/pyn
+
+build out/pyn : pycombine $
+    main.py $
+    ninja_parser.py $
+    analyzer.py $
+    builder.py $
+    common.py $
+    stats.py $
+    printer.py $
+    host.py
 
 default all
