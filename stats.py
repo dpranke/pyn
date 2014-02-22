@@ -1,10 +1,10 @@
 class Stats(object):
-    def __init__(self, status_format, time_fn):
+    def __init__(self, status_format, time_fn, started_time):
         self.fmt = status_format
         self.finished = 0
         self.started = 0
         self.total = 0
-        self.started_time = None
+        self.started_time = started_time
         self._time = time_fn
 
     def format(self):

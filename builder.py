@@ -4,13 +4,13 @@ from printer import Printer
 
 
 class Builder(object):
-    def __init__(self, host, args, expand_vars):
+    def __init__(self, host, args, expand_vars, started_time):
         self.host = host
         self.args = args
         self._should_overwrite = args.overwrite_status and not args.verbose
         self.expand_vars = expand_vars
         self.stats = Stats(host.getenv('NINJA_STATUS', '[%s/%t] '),
-                           host.time)
+                           host.time, started_time)
         self._printer = Printer(host.print_out, self._should_overwrite)
         self._mtimes = {}
         self._failures = 0
@@ -26,8 +26,8 @@ class Builder(object):
         nodes_to_build = []
         for name in sorted_nodes:
             node = graph.nodes[name]
-            my_mtime = self._stat(name)
-            if any(self._stat(d) >= my_mtime for d in node.deps):
+            my_stat = self._stat(name)
+            if not my_stat or any(self._stat(d) > my_stat for d in node.deps):
                 nodes_to_build.append(node)
         return nodes_to_build
 
@@ -54,7 +54,7 @@ class Builder(object):
             if running_jobs:
                 self.host.sleep(0.03)
 
-        self.host.print_out('')
+        self._printer.flush()
         return 1 if self._failures else 0
 
     @staticmethod
@@ -114,10 +114,12 @@ class Builder(object):
             self._update(desc, elide=False)
         elif self._should_overwrite:
             self._update(desc)
+        if out or err:
+            self._printer.flush()
         if out:
-            self.host.print_out(out)
+            self.host.print_out(out, end='')
         if err:
-            self.host.print_err(err)
+            self.host.print_err(err, end='')
 
     def _update(self, msg, prefix=None, elide=False):
         prefix = prefix or self.stats.format()
@@ -126,10 +128,10 @@ class Builder(object):
     def _stat(self, name):
         if not name in self._mtimes:
             self._restat(name)
-        return self._mtimes.get(name, -1)
+        return self._mtimes.get(name, 0)
 
     def _restat(self, name):
         if self.host.exists(name):
             self._mtimes[name] = self.host.mtime(name)
         else:
-            self._mtimes[name] = -1
+            self._mtimes[name] = 0

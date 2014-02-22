@@ -14,7 +14,7 @@ class TestBuilder(unittest.TestCase):
         args.overwrite_status = True
         args.jobs = 1
         args.verbose = 0
-        Builder(Host(), args, expand_vars)
+        Builder(Host(), args, expand_vars, 0)
         self.assertTrue(True)
 
 

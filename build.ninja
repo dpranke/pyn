@@ -1,11 +1,25 @@
 rule pycomp 
-  command = python pycomp.py -MMD -MF .$out.d $in
-  depfile = .$out.d
+  command = python pycomp.py $in
   description = checking $in
+  # command = python pycomp.py -MMD -MF .$out.d $in
+  # depfile = .$out.d
 
 rule pycov
-  command = COVERAGE_FILE=$out coverage run $in 2> /dev/null
+  command = COVERAGE_FILE=$out coverage run $in
   description = generating python coverage for $in
+
+rule pycovrep
+  command = $
+      for i in $in ; $
+      do $
+        cp -p $$i .tmp.$$i; $
+      done ; $
+      coverage combine ; coverage --report ; $
+      for i in $in ; $
+      do $
+        mv .tmp.$$i $$i ; $
+      done
+  description = generating python coverage report
 
 rule pylint
   command = $
@@ -133,15 +147,12 @@ build .pytest.ninja_parser_test.py : pytest ninja_parser_test.py
 
 build coverage : phony .coverage
 
-build .coverage : shell $
+build .coverage : pycovrep $
     .coverage.analyzer_test.py $
     .coverage.builder_test.py $
     .coverage.main_test.py $
     .coverage.ninja_parser_test.py $
     .coverage.common_test.py
-  shell_cmd = coverage combine $in && $
-              coverage --report
-  shell_desc = generating python coverage report
 
 build .coverage.analyzer_test.py : pycov analyzer_test.py
 build .coverage.builder_test.py : pycov builder_test.py

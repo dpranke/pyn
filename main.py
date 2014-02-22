@@ -1,6 +1,5 @@
 import argparse
 import sys
-import textwrap
 
 from analyzer import NinjaAnalyzer
 from builder import Builder
@@ -13,6 +12,7 @@ VERSION = '0.4'
 
 
 def main(host, argv=None):
+    started_time = host.time()
     returncode, args = parse_args(host, argv)
     if returncode is not None:
         return returncode
@@ -26,13 +26,12 @@ def main(host, argv=None):
         host.print_err('unsupported tool "%s"' % args.tool)
         return 2
     if args.tool == 'list':
-        host.print_out(textwrap.dedent('''\
-            pyn subtools:
-            clean     clean built files
-            check     check the syntax and semantics of the build file
-                      (and all included files)
-            question  check to see if the build is up-to-date
-            '''))
+        host.print_out(
+            "pyn subtools:\n"
+            "clean     clean built files\n"
+            "check     check the syntax and semantics of the build file\n"
+            "          (and all included files)\n"
+            "question  check to see if the build is up-to-date")
         return 0
     if args.dir:
         if not host.exists(args.dir):
@@ -55,7 +54,7 @@ def main(host, argv=None):
         if args.tool == 'clean':
             return clean(host, args, graph)
 
-        builder = Builder(host, args, expand_vars)
+        builder = Builder(host, args, expand_vars, started_time)
         nodes_to_build = builder.find_nodes_to_build(graph)
         if not nodes_to_build:
             host.print_out('pyn: no work to do')
