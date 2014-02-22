@@ -90,13 +90,13 @@ class NinjaAnalyzer(object):
             raise PynException("'%s' not found." % path)
         ast = self.parse(self.host.read(path))
         subgraph = self.analyze(ast, path)
-        for s in subgraph.scopes.values():
+        for s in list(subgraph.scopes.values()):
             if s.name in graph.scopes:
                 raise PynException("scope '%s' declared in multiple files " %
                                    s.name)
             graph.scopes[s.name] = s
 
-        for n in subgraph.nodes.values():
+        for n in list(subgraph.nodes.values()):
             self._add_outputs_to_graph(n.outputs, n, graph)
         return graph
 
@@ -119,7 +119,7 @@ class NinjaAnalyzer(object):
             graph.nodes[output_name] = node
 
     def _add_deps_in_depfiles(self, graph):
-        for n in graph.nodes.values():
+        for n in list(graph.nodes.values()):
             depfile_path = self.expand_vars(n.scope['depfile'], n.scope)
             if self.host.exists(depfile_path):
                 n.deps.extend(self.host.read(depfile_path).split()[2:])

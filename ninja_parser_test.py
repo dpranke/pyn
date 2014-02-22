@@ -13,7 +13,7 @@ class TestNinjaParser(unittest.TestCase):
             actual_ast = parse(dedented_text)
         else:
             actual_ast = parse(text)
-        self.assertEquals(actual_ast, ast)
+        self.assertEqual(actual_ast, ast)
 
     def err(self, text, dedent=True, files=None):
         if dedent:
@@ -192,7 +192,7 @@ class TestExpandVars(unittest.TestCase):
         self.scope['bar'] = 'b'
 
     def check(self, inp, out):
-        self.assertEquals(expand_vars(inp, self.scope), out)
+        self.assertEqual(expand_vars(inp, self.scope), out)
 
     def err(self, inp):
         self.assertRaises(PynException, expand_vars, inp, self.scope)

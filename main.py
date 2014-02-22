@@ -108,7 +108,7 @@ def parse_args(host, argv):
     ap.add_argument('-n', action='store_true', dest='dry_run',
                     help=('dry run (don\'t run commands but act like they '
                           'succeeded)'))
-    ap.add_argument('-v', action='count', dest='verbose',
+    ap.add_argument('-v', action='count', dest='verbose', default=0,
                     help='show all command lines while building')
     ap.add_argument('-d', metavar='MODE', dest='debug',
                     help='enable debugging (use -d list to list modes)')

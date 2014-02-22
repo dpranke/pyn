@@ -184,7 +184,7 @@ class Builder(object):
         self._last_line = msg[last_nl + 1:]
 
     def clean(self, graph):
-        outputs = [n.name for n in graph.nodes.values()
+        outputs = [n.name for n in list(graph.nodes.values())
                    if n.rule_name != 'phony' and self.host.exists(n.name)]
         self.host.print_err('Cleaning...')
         for o in outputs:

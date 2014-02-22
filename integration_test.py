@@ -40,7 +40,7 @@ class IntegrationTestNinjaParser(TestNinjaParser):
             tmpdir = str(host.mkdtemp())
             host.chdir(tmpdir)
             host.write('build.ninja', text)
-            for path, contents in files.items():
+            for path, contents in list(files.items()):
                 dirname = host.dirname(path)
                 if dirname:
                     host.maybe_mkdir(dirname)

@@ -92,8 +92,11 @@ class Scope(object):
             parent_scope = self.parent.name
         else:
             parent_scope = 'None'
-        return 'Scope(name=%s, parent=%s, objs=%s)' % (
-            self.name, parent_scope, self.objs)
+        s = []
+        for k in sorted(self.objs.keys()):
+            s.append("'%s': '%s'" % (k, self.objs[k]))
+        return 'Scope(name=%s, parent=%s, objs={%s})' % (
+            self.name, parent_scope, ', '.join(s))
 
     def __contains__(self, key):
         return key in self.objs or (self.parent and key in self.parent)
