@@ -80,30 +80,31 @@ class Builder(object):
             self._build_done(p.get(timeout=0))
 
     def _build_node(self, graph, node):
-        if node.rule_name == 'phony':
-            self._finish(node.name)
-            return
-
         rule = graph.rules[node.rule_name]
         desc = self.expand_vars(rule.scope['description'], node.scope)
         command = self.expand_vars(rule.scope['command'], node.scope)
+
+        self.stats.started += 1
         if self.args.verbose > 1:
             self._start(command, elide=False)
         else:
             self._start(desc)
 
-        if self.args.dry_run:
-            call_fn = _dryrun_call
-        else:
-            call_fn = _call
+        def call(command):
+            if node.rule_name == 'phony' or self.args.dry_run:
+                ret, out, err = 0, '', ''
+            else:
+                ret, out, err = self.host.call(command)
+            return (node, desc, command, ret, out, err)
 
-        return self._pool.apply_async(call_fn,
-                                      (self.host, node, desc, command))
+        return self._pool.apply_async(call, (command,))
 
     def _build_done(self, result):
         node, desc, command, ret, out, err = result
         node.running = False
+        self.stats.finished += 1
         if ret:
+            self._failures += 1
             self._update('FAILED: ' + command)
         elif self.args.verbose > 1:
             self._finish(command, elide=False)
@@ -116,17 +117,12 @@ class Builder(object):
         if err:
             self.host.print_err(err)
 
-        if ret:
-            self._failures += 1
-
     def _start(self, msg, elide=True):
-        self.stats.started += 1
         if elide:
             msg = msg[:78]
         self._update(self.stats.format() + msg)
 
     def _finish(self, msg, elide=True):
-        self.stats.finished += 1
         if elide:
             msg = msg[:78]
         if self._should_overwrite:
@@ -165,12 +161,3 @@ class Builder(object):
             self._mtimes[name] = self.host.mtime(name)
         else:
             self._mtimes[name] = -1
-
-
-def _call(host, node, desc, command):
-    ret, out, err = host.call(command)
-    return (node, desc, command, ret, out, err)
-
-
-def _dryrun_call(_host, node, desc, command):
-    return (node, desc, command, 0, '', '')
