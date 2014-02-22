@@ -81,11 +81,11 @@ class Host(object):
         # _file__ is always an absolute path.
         return sys.modules[module_name].__file__
 
-    def print_err(self, msg):
-        self.stderr.write(msg + '\n')
+    def print_err(self, msg, end='\n'):
+        self.stderr.write(msg + end)
 
-    def print_out(self, msg):
-        self.stdout.write(msg + '\n')
+    def print_out(self, msg, end='\n'):
+        self.stdout.write(msg + end)
 
     def read(self, *comps):
         path = self.join(*comps)

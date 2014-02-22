@@ -89,11 +89,11 @@ class FakeHost(object):
         # __file__ is always an absolute path.
         return '/src/pyn/' + module_name
 
-    def print_err(self, msg):
-        self.stderr.write(msg + '\n')
+    def print_err(self, msg, end='\n'):
+        self.stderr.write(msg + end)
 
-    def print_out(self, msg):
-        self.stdout.write(msg + '\n')
+    def print_out(self, msg, end='\n'):
+        self.stdout.write(msg + end)
 
     def read(self, *comps):
         return self.files[self.join(self.cwd, *comps)]
