@@ -41,11 +41,16 @@ class NinjaAnalyzer(object):
         return graph
 
     def _merge_graphs(self, graph, subgraph):
-        for s in list(subgraph.scopes.values()):
-            if s.name in graph.scopes:
+        for name, rule in subgraph.rules.items():
+            if name in graph.rules:
+                raise PynException("rule '%s' declared in multiple files " %
+                                   name)
+            graph.rules[name] = rule
+        for name, scope in subgraph.scopes.items():
+            if name in graph.scopes:
                 raise PynException("scope '%s' declared in multiple files " %
-                                   s.name)
-            graph.scopes[s.name] = s
+                                   name)
+            graph.scopes[name] = scope
 
         self._add_nodes_to_graph(subgraph.nodes, graph)
         return graph
