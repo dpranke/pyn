@@ -5,9 +5,9 @@ class NinjaParser(object):
     """Parse the contents of a .ninja file and return an AST."""
 
     def parse(self, msg):
-        v, _, err = self.grammar_(msg, 0, len(msg))
+        v, p, err = self.grammar_(msg, 0, len(msg))
         if err:
-            raise PynException(err)
+            raise PynException("%d: %s" % (p, err))
         else:
             return v
 
@@ -63,6 +63,7 @@ class NinjaParser(object):
 
         v, p, err = self.default_(msg, start, end)
         if err:
+            import pdb; pdb.set_trace()
             return None, p, ("expecting one of 'build', 'rule', "
                              "a variable name', 'subninja', 'include', ",
                              "'pool', or 'default'")
@@ -307,13 +308,13 @@ class NinjaParser(object):
             return ''.join(vs), p, None
 
     def name_(self, msg, start, end):
-        """ letter:hd (letter|digit|'_')*:tl -> ''.join([hd] + tl) """
+        """ (letter|'_'):hd (letter|digit|'_')*:tl -> ''.join([hd] + tl) """
         p = start
         if p == end:
             return None, p, 'expecting a name'
         hd = msg[p]
-        if not hd.isalpha():
-            return None, p, 'expecting a letter to start a name'
+        if not hd.isalpha() and hd != '_':
+            return None, p, 'expecting a letter or "_" to start a name'
         p += 1
         tl = []
         while p < end and (msg[p].isalpha() or msg[p].isdigit() or
