@@ -69,6 +69,9 @@ def main(host, argv=None):
     except PynException as e:
         host.print_err(str(e))
         return 1
+    except KeyboardInterrupt as e:
+        host.print_err('Interrupted, exiting ..')
+        return 130
 
 
 def clean(host, args, graph):
