@@ -13,6 +13,5 @@ if __name__ == '__main__':
     cProfile.run('profile()', '.profiler_data')
     p = pstats.Stats('.profiler_data')
     p.strip_dirs()
-    p.sort_stats('time')
-    p.print_stats(50)
-
+    p.sort_stats('cumtime')
+    p.print_stats(30)
