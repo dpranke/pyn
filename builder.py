@@ -123,7 +123,7 @@ class Builder(object):
         if err:
             self.host.print_err(err, end='')
 
-    def _update(self, msg, prefix=None, elide=False):
+    def _update(self, msg, prefix=None, elide=True):
         prefix = prefix or self.stats.format()
         self._printer.update(prefix + msg, elide=elide)
 
