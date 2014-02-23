@@ -26,18 +26,30 @@ class NinjaAnalyzer(object):
         return graph
 
     def _add_includes(self, graph, scope):
-        for path in graph.includes:
-            if not self.host.exists(path):
-                raise PynException("'%s' not found." % path)
-            ast = self.parse(self.host.read(path))
+        asts = self._pmap(_read_and_parse, graph.includes)
+        for ast in asts:
             graph = self._add_ast(graph, scope, ast)
         return graph
 
-    def _add_subninjas(self, graph):
-        for path in graph.subninjas:
+    def _pmap(self, fn, paths):
+        for path in paths:
             if not self.host.exists(path):
                 raise PynException("'%s' not found." % path)
-            subgraph = self.analyze(ast, path)
+
+        pool = self.host.mp_pool()
+        vs = []
+        try:
+            vs = pool.map(_read_and_parse, [(self, path) for path in paths])
+            pool.close()
+        except:
+            pool.terminate()
+        finally:
+            pool.join()
+        return vs
+
+    def _add_subninjas(self, graph):
+        subgraphs = self._pmap(_read_and_analyze, graph.subninjas)
+        for subgraph in subgraphs:
             graph = self._merge_graphs(self, graph, subgraph)
         return graph
 
@@ -71,7 +83,6 @@ class NinjaAnalyzer(object):
                 raise PynException("build output '%s' declared more than "
                                    "once " % output_name)
             graph.nodes[output_name] = node
-
 
     def _decl_build(self, graph, scope, decl):
         _, outputs, rule_name, inputs, ideps, odeps, build_vars = decl
@@ -137,7 +148,17 @@ class NinjaAnalyzer(object):
         graph.includes.add(path)
         return graph
 
-
     def _decl_var(self, graph, scope, decl):
         self._add_vars_to_scope([decl], scope)
         return graph
+
+
+def _read_and_parse(arg_tuple):
+    analyzer, path = arg_tuple
+    return analyzer.parse(analyzer.host.read(path))
+
+
+def _read_and_analyze(arg_tuple):
+    analyzer, path = arg_tuple
+    ast = analyzer.parse(analyzer.host.read(path))
+    return analyzer.analyze(ast, path)

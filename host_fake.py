@@ -91,6 +91,9 @@ class FakeHost(object):
 
         return TemporaryDirectory(fs=self, **kwargs)
 
+    def mp_pool(self, processes=None):
+        return FakePool()
+
     def mtime(self, *comps):
         return self.mtimes[self.join(*comps)]
 
@@ -126,3 +129,17 @@ class FakeHost(object):
     def write(self, path, contents):
         self.files[path] = contents
         self.written_files[path] = contents
+
+
+class FakePool(object):
+    def close(self):
+        pass
+
+    def map(self, fn, iterable):
+        return [fn(i) for i in iterable]
+
+    def join(self):
+        pass
+
+    def terminate(self):
+        pass
