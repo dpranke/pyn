@@ -46,13 +46,13 @@ class Builder(object):
                         running_jobs.append((n, p))
                     else:
                         break
-                self._process_completed_jobs(running_jobs)
+                self._process_completed_jobs(graph, running_jobs)
                 if nodes_to_build and self._failures < self.args.errors:
                     self.host.sleep(0.03)
 
             self._pool.close()
             while running_jobs:
-                self._process_completed_jobs(running_jobs)
+                self._process_completed_jobs(graph, running_jobs)
                 if running_jobs:
                     self.host.sleep(0.03)
         finally:
@@ -62,8 +62,7 @@ class Builder(object):
         self._printer.flush()
         return 1 if self._failures else 0
 
-    @staticmethod
-    def _find_next_available_node(graph, nodes_to_build):
+    def _find_next_available_node(self, graph, nodes_to_build):
         next_node = None
         for n in nodes_to_build:
             if not any(d in graph.nodes and graph.nodes[d].running
@@ -82,14 +81,15 @@ class Builder(object):
 
         self._build_node_started(node, desc, command)
 
-        return self._pool.apply_async(_call, (node, desc, command,
-                                              self.args.dry_run, self.host))
+        dry_run = node.rule_name == 'phony' or self.args.dry_run
+        return self._pool.apply_async(_call, (node.name, desc, command,
+                                              dry_run, self.host))
 
-    def _process_completed_jobs(self, running_jobs):
+    def _process_completed_jobs(self, graph, running_jobs):
         completed_jobs = [(n, p) for n, p in running_jobs if p.ready()]
         for n, p in completed_jobs:
             running_jobs.remove((n, p))
-            self._build_node_done(p.get(timeout=0))
+            self._build_node_done(graph, p.get(timeout=0))
 
     def _build_node_started(self, node, desc, command):
         node.running = True
@@ -99,9 +99,9 @@ class Builder(object):
         else:
             self._update(desc)
 
-    def _build_node_done(self, result):
-        node, desc, command, ret, out, err = result
-        node.running = False
+    def _build_node_done(self, graph, result):
+        node_name, desc, command, ret, out, err = result
+        graph.nodes[node_name].running = False
         self.stats.finished += 1
 
         if ret:
@@ -136,9 +136,9 @@ class Builder(object):
             self._mtimes[name] = 0
 
 
-def _call(node, desc, command, dry_run, host):
-    if node.rule_name == 'phony' or dry_run:
+def _call(node_name, desc, command, dry_run, host):
+    if dry_run:
         ret, out, err = 0, '', ''
     else:
         ret, out, err = host.call(command)
-    return (node, desc, command, ret, out, err)
+    return (node_name, desc, command, ret, out, err)

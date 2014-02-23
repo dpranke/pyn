@@ -83,20 +83,17 @@ class Host(object):
         return os.stat(self.join(*comps)).st_mtime
 
     def mp_pool(self, processes=None):
-        # FIXME: process seem to hang, so use threads for now.
-        # return multiprocessing.Pool(processes)
-        from multiprocessing.pool import ThreadPool
-        return ThreadPool(processes)
+        return multiprocessing.Pool(processes)
 
     def path_to_module(self, module_name):
         # _file__ is always an absolute path.
         return sys.modules[module_name].__file__
 
     def print_err(self, msg, end='\n'):
-        self.stderr.write(msg + end)
+        self.stderr.write(str(msg) + end)
 
     def print_out(self, msg, end='\n'):
-        self.stdout.write(msg + end)
+        self.stdout.write(str(msg) + end)
         self.stdout.flush()
 
     def read(self, *comps):
