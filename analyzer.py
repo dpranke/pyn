@@ -8,17 +8,70 @@ class NinjaAnalyzer(object):
         self.parse = parse
         self.expand_vars = expand_vars
 
-    def analyze(self, ast, filename=None, graph=None, scope=None):
-        assert filename or (graph and scope)
-        graph = graph or Graph()
-        scope = scope or Scope(filename, None)
+    def analyze(self, ast, filename):
+        graph = Graph()
+        scope = Scope(filename, None)
         graph.scopes[filename] = scope
-        for decl in ast:
-            graph = getattr(self, '_decl_' + decl[0])(graph, scope, decl)
 
+        self._add_ast(graph, scope, ast)
+        self._add_includes(graph, scope)
+        self._add_subninjas(graph)
         self._add_deps_in_depfiles(graph)
 
         return graph
+
+    def _add_ast(self, graph, scope, ast):
+        for decl in ast:
+            graph = getattr(self, '_decl_' + decl[0])(graph, scope, decl)
+        return graph
+
+    def _add_includes(self, graph, scope):
+        for path in graph.includes:
+            if not self.host.exists(path):
+                raise PynException("'%s' not found." % path)
+            ast = self.parse(self.host.read(path))
+            graph = self._add_ast(graph, scope, ast)
+        return graph
+
+    def _add_subninjas(self, graph):
+        for path in graph.subninjas:
+            if not self.host.exists(path):
+                raise PynException("'%s' not found." % path)
+            subgraph = self.analyze(ast, path)
+            graph = self._merge_graphs(self, graph, subgraph)
+        return graph
+
+    def _merge_graphs(self, graph, subgraph):
+        for s in list(subgraph.scopes.values()):
+            if s.name in graph.scopes:
+                raise PynException("scope '%s' declared in multiple files " %
+                                   s.name)
+            graph.scopes[s.name] = s
+
+        for n in list(subgraph.nodes.values()):
+            self._add_outputs_to_graph(n.outputs, n, graph)
+        return graph
+
+    def _add_deps_in_depfiles(self, graph):
+        for n in list(graph.nodes.values()):
+            depfile_path = self.expand_vars(n.scope['depfile'], n.scope)
+            if self.host.exists(depfile_path):
+                n.deps.extend(self.host.read(depfile_path).split()[2:])
+
+    def _add_vars_to_scope(self, var_decls, scope):
+        for _, name, val in var_decls:
+            if name in scope.objs:
+                raise PynException("'var %s' declared more than once "
+                                   " in %s'" % (name, scope.name))
+            scope.objs[name] = val
+
+    def _add_outputs_to_graph(self, outputs, node, graph):
+        for output_name in outputs:
+            if output_name in graph.nodes:
+                raise PynException("build output '%s' declared more than "
+                                   "once " % output_name)
+            graph.nodes[output_name] = node
+
 
     def _decl_build(self, graph, scope, decl):
         _, outputs, rule_name, inputs, ideps, odeps, build_vars = decl
@@ -39,14 +92,10 @@ class NinjaAnalyzer(object):
         graph.defaults = graph.defaults + defaults
         return graph
 
-    def _decl_include(self, graph, scope, decl):
+    def _decl_include(self, graph, _scope, decl):
         _, path = decl
-
-        if not self.host.exists(path):
-            raise PynException("'%s' not found." % path)
-
-        ast = self.parse(self.host.read(path))
-        return self.analyze(ast, filename=None, graph=graph, scope=scope)
+        graph.includes.add(path)
+        return graph
 
     def _decl_pool(self, graph, _scope, decl):
         _, name, pool_vars = decl
@@ -85,40 +134,10 @@ class NinjaAnalyzer(object):
 
     def _decl_subninja(self, graph, _scope, decl):
         _, path = decl
-        if not self.host.exists(path):
-            raise PynException("'%s' not found." % path)
-        ast = self.parse(self.host.read(path))
-        subgraph = self.analyze(ast, path)
-        for s in list(subgraph.scopes.values()):
-            if s.name in graph.scopes:
-                raise PynException("scope '%s' declared in multiple files " %
-                                   s.name)
-            graph.scopes[s.name] = s
-
-        for n in list(subgraph.nodes.values()):
-            self._add_outputs_to_graph(n.outputs, n, graph)
+        graph.includes.add(path)
         return graph
+
 
     def _decl_var(self, graph, scope, decl):
         self._add_vars_to_scope([decl], scope)
         return graph
-
-    def _add_vars_to_scope(self, var_decls, scope):
-        for _, name, val in var_decls:
-            if name in scope.objs:
-                raise PynException("'var %s' declared more than once "
-                                   " in %s'" % (name, scope.name))
-            scope.objs[name] = val
-
-    def _add_outputs_to_graph(self, outputs, node, graph):
-        for output_name in outputs:
-            if output_name in graph.nodes:
-                raise PynException("build output '%s' declared more than "
-                                   "once " % output_name)
-            graph.nodes[output_name] = node
-
-    def _add_deps_in_depfiles(self, graph):
-        for n in list(graph.nodes.values()):
-            depfile_path = self.expand_vars(n.scope['depfile'], n.scope)
-            if self.host.exists(depfile_path):
-                n.deps.extend(self.host.read(depfile_path).split()[2:])

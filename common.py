@@ -9,6 +9,8 @@ class Graph(object):
         self.rules = {}
         self.pools = {}
         self.scopes = {}
+        self.subninjas = set()
+        self.includes = set()
 
     def __repr__(self):
         return ('Graph(defaults=%s, nodes=%s, pools=%s, rules=%s, scopes=%s)' %
