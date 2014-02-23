@@ -3,10 +3,11 @@
 import cProfile
 import pstats
 
-from main import _real_main
+from host import Host
+from main import main
 
 def profile():
-    return _real_main()
+    return main(Host())
 
 if __name__ == '__main__':
     cProfile.run('profile()', '.profiler_data')
