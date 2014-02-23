@@ -8,7 +8,7 @@ from host import Host
 from ninja_parser import parse, expand_vars
 
 
-VERSION = '0.4'
+VERSION = '0.5'
 
 
 def main(host, argv=None):
