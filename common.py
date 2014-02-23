@@ -32,13 +32,16 @@ class Node(object):
 def find_nodes_to_build(graph, requested_targets):
     """Return all of the nodes the requested targets depend on."""
     unvisited_nodes = requested_targets[:]
+    unvisited_set = set(unvisited_nodes)
     nodes_to_build = set()
     while unvisited_nodes:
         node = unvisited_nodes.pop(0)
+        unvisited_set.remove(node)
         nodes_to_build.add(node)
         for d in graph.nodes[node].deps:
-            if d not in nodes_to_build and d in graph.nodes:
+            if d not in nodes_to_build and d not in unvisited_set and d in graph.nodes:
                 unvisited_nodes.append(d)
+                unvisited_set.add(d)
     return nodes_to_build
 
 
@@ -52,23 +55,30 @@ def tsort(graph, nodes_to_build):
     # This algorithm diverges a bit from the Wikipedia algorithm by
     # inserting new nodes at the tail of the sorted node list instead of the
     # head, because we want to ultimately do a bottom-up traversal.
-    def visit(node, visited_nodes, sorted_nodes, unvisited_nodes):
+    def visit(node, visited_nodes, sorted_nodes, unvisited_nodes,
+              unvisited_set, sorted_set):
         if node in visited_nodes:
             raise PynException("'%s' is part of a cycle" % node)
 
         visited_nodes.add(node)
         for d in graph.nodes[node].deps:
-            if d in graph.nodes and d not in sorted_nodes:
-                visit(d, visited_nodes, sorted_nodes, unvisited_nodes)
+            if d in graph.nodes and d not in sorted_set:
+                visit(d, visited_nodes, sorted_nodes, unvisited_nodes,
+                      unvisited_set, sorted_set)
         if node in unvisited_nodes:
             unvisited_nodes.remove(node)
+            unvisited_set.remove(node)
         sorted_nodes.append(node)
+        sorted_set.add(node)
 
     visited_nodes = set()
-    sorted_nodes = []
     unvisited_nodes = [n for n in nodes_to_build]
+    sorted_nodes = []
+    sorted_set = set(sorted_nodes)
+    unvisited_set = set(unvisited_nodes)
     while unvisited_nodes:
-        visit(unvisited_nodes[0], visited_nodes, sorted_nodes, unvisited_nodes)
+        visit(unvisited_nodes[0], visited_nodes, sorted_nodes, unvisited_nodes,
+              unvisited_set, sorted_set)
     return sorted_nodes
 
 
