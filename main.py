@@ -1,4 +1,5 @@
 import argparse
+import cPickle
 import sys
 
 from analyzer import NinjaAnalyzer
@@ -8,7 +9,7 @@ from host import Host
 from ninja_parser import parse, expand_vars
 
 
-VERSION = '0.5'
+VERSION = '0.6a'
 
 
 def main(host, argv=None):
@@ -43,15 +44,33 @@ def main(host, argv=None):
         return 2
 
     try:
-        ast = parse(host.read(args.file))
+        graph = None
+        if host.exists('.pyn.db'):
+            graph_str = host.read('.pyn.db')
+            graph = cPickle.loads(graph_str)
 
-        analyzer = NinjaAnalyzer(host, args, parse, expand_vars)
-        graph = analyzer.analyze(ast, args.file)
+            graph_mtime = host.mtime('.pyn.db')
+            file_mtime = host.mtime(args.file)
+            if (file_mtime > graph_mtime or
+                any(host.mtime(f) > graph_mtime for f in graph.includes) or
+                any(host.mtime(f) > graph_mtime for f in graph.subninjas)):
+                graph = None
+
+        if not graph:
+            ast = parse(host.read(args.file))
+            analyzer = NinjaAnalyzer(host, args, parse, expand_vars)
+            graph = analyzer.analyze(ast, args.file)
+
+            graph_str = cPickle.dumps(graph)
+            host.write('.pyn.db', graph_str)
+
         if args.tool == 'check':
             host.print_out('pyn: syntax is correct')
             return 0
 
         if args.tool == 'clean':
+            if host.exists('.pyn.db'):
+                host.remove('.pyn.db')
             return clean(host, args, graph)
 
         builder = Builder(host, args, expand_vars, started_time)

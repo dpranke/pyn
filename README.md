@@ -48,6 +48,5 @@ the LICENSE file in the source repo.
 * various tools (-t browse, commands, deps, graph, query, targets, compdb,
   recompact)
   * also '-t clean targets' to only clean specific targets
-* a database (like .ninja_log) for faster startup
 * hash-based build tracking in addition to mtime-based tracking?
 * more tests
