@@ -46,15 +46,15 @@ class Builder(object):
                         running_jobs.append((n, p))
                     else:
                         break
-                self._process_completed_jobs(graph, running_jobs)
-                if nodes_to_build and self._failures < self.args.errors:
-                    self.host.sleep(0.03)
+                did_work = self._process_completed_jobs(graph, running_jobs)
+                if not did_work and nodes_to_build and self._failures < self.args.errors:
+                    self.host.sleep(0.01)
 
             self._pool.close()
             while running_jobs:
                 self._process_completed_jobs(graph, running_jobs)
-                if running_jobs:
-                    self.host.sleep(0.03)
+                if not did_work and running_jobs:
+                    self.host.sleep(0.01)
         finally:
             self._pool.terminate()
             self._pool.join()
@@ -87,9 +87,12 @@ class Builder(object):
 
     def _process_completed_jobs(self, graph, running_jobs):
         completed_jobs = [(n, p) for n, p in running_jobs if p.ready()]
+        did_work = False
         for n, p in completed_jobs:
             running_jobs.remove((n, p))
             self._build_node_done(graph, p.get(timeout=0))
+            did_work = True
+        return did_work
 
     def _build_node_started(self, node, desc, command):
         node.running = True
