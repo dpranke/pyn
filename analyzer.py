@@ -9,14 +9,14 @@ class NinjaAnalyzer(object):
         self.expand_vars = expand_vars
 
     def analyze(self, ast, filename):
-        graph = Graph()
+        graph = Graph(filename)
         scope = Scope(filename, None)
         graph.scopes[filename] = scope
 
-        self._add_ast(graph, scope, ast)
-        self._add_includes(graph, scope)
-        self._add_subninjas(graph)
-        self._add_deps_in_depfiles(graph)
+        graph = self._add_ast(graph, scope, ast)
+        graph = self._add_includes(graph)
+        graph = self._add_subninjas(graph)
+        graph = self._add_deps_in_depfiles(graph)
 
         return graph
 
@@ -25,32 +25,19 @@ class NinjaAnalyzer(object):
             graph = getattr(self, '_decl_' + decl[0])(graph, scope, decl)
         return graph
 
-    def _add_includes(self, graph, scope):
+    def _add_includes(self, graph):
         asts = self._pmap(_read_and_parse, graph.includes)
         for ast in asts:
-            graph = self._add_ast(graph, scope, ast)
+            graph = self._add_ast(graph, graph.scopes[graph.name], ast)
         return graph
-
-    def _pmap(self, fn, paths):
-        for path in paths:
-            if not self.host.exists(path):
-                raise PynException("'%s' not found." % path)
-
-        pool = self.host.mp_pool()
-        vs = []
-        try:
-            vs = pool.map(_read_and_parse, [(self, path) for path in paths])
-            pool.close()
-        except:
-            pool.terminate()
-        finally:
-            pool.join()
-        return vs
 
     def _add_subninjas(self, graph):
         subgraphs = self._pmap(_read_and_analyze, graph.subninjas)
-        for subgraph in subgraphs:
-            graph = self._merge_graphs(self, graph, subgraph)
+        for subgraph, includes, subninjas in subgraphs:
+            subgraph = self._add_includes(subgraph)
+            subgraph = self._add_subninjas(subgraph)
+            graph = self._merge_graphs(graph, subgraph)
+
         return graph
 
     def _merge_graphs(self, graph, subgraph):
@@ -60,8 +47,7 @@ class NinjaAnalyzer(object):
                                    s.name)
             graph.scopes[s.name] = s
 
-        for n in list(subgraph.nodes.values()):
-            self._add_outputs_to_graph(n.outputs, n, graph)
+        self._add_nodes_to_graph(subgraph.nodes, graph)
         return graph
 
     def _add_deps_in_depfiles(self, graph):
@@ -69,20 +55,42 @@ class NinjaAnalyzer(object):
             depfile_path = self.expand_vars(n.scope['depfile'], n.scope)
             if self.host.exists(depfile_path):
                 n.deps.extend(self.host.read(depfile_path).split()[2:])
+        return graph
 
     def _add_vars_to_scope(self, var_decls, scope):
         for _, name, val in var_decls:
             if name in scope.objs:
                 raise PynException("'var %s' declared more than once "
-                                   " in %s'" % (name, scope.name))
+                                   "in %s'" % (name, scope.name))
             scope.objs[name] = val
 
-    def _add_outputs_to_graph(self, outputs, node, graph):
-        for output_name in outputs:
-            if output_name in graph.nodes:
+    def _add_nodes_to_graph(self, nodes, graph):
+        for name, node in nodes.items():
+            if name in graph.nodes:
                 raise PynException("build output '%s' declared more than "
-                                   "once " % output_name)
-            graph.nodes[output_name] = node
+                                   "once " % name)
+            graph.nodes[name] = node
+
+    def _pmap(self, fn, paths):
+        for path in paths:
+            if not self.host.exists(path):
+                raise PynException("'%s' not found." % path)
+
+        return map(fn, [(self, path) for path in paths])
+
+        # FIXME: Using a parallel map seems to just be slower.
+        # vs = []
+        # tuples = [(self, path) for path in paths]
+        # pool = self.host.mp_pool(self.args.jobs)
+        # try:
+        #    vs = pool.map(fn, tuples)
+        #    pool.close()
+        #except:
+        #    pool.terminate()
+        #    raise
+        # finally:
+        #    pool.join()
+        # return vs
 
     def _decl_build(self, graph, scope, decl):
         _, outputs, rule_name, inputs, ideps, odeps, build_vars = decl
@@ -94,7 +102,7 @@ class NinjaAnalyzer(object):
         self._add_vars_to_scope(build_vars, build_scope)
 
         n = Node(build_name, build_scope, rule_name, inputs + ideps + odeps)
-        self._add_outputs_to_graph(outputs, n, graph)
+        self._add_nodes_to_graph({n.name: n}, graph)
         return graph
 
     def _decl_default(self, graph, _scope, decl):
@@ -145,7 +153,7 @@ class NinjaAnalyzer(object):
 
     def _decl_subninja(self, graph, _scope, decl):
         _, path = decl
-        graph.includes.add(path)
+        graph.subninjas.add(path)
         return graph
 
     def _decl_var(self, graph, scope, decl):
@@ -160,5 +168,17 @@ def _read_and_parse(arg_tuple):
 
 def _read_and_analyze(arg_tuple):
     analyzer, path = arg_tuple
-    ast = analyzer.parse(analyzer.host.read(path))
-    return analyzer.analyze(ast, path)
+    try:
+        ast = analyzer.parse(analyzer.host.read(path))
+        graph = Graph(path)
+        scope = Scope(path, None)
+        graph.scopes[path] = scope
+        graph = analyzer._add_ast(graph, scope, ast)
+        graph = analyzer._add_deps_in_depfiles(graph)
+        return (graph, graph.includes, graph.subninjas)
+    except PynException as ex:
+        analyzer.host.print_err("failed to parse %s: %s" % (path, str(ex)))
+        graph = Graph(path)
+        scope = Scope(path, None)
+        graph.scopes[path] = scope
+        return (graph, set(), set())
