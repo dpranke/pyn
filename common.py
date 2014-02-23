@@ -3,7 +3,8 @@ class PynException(Exception):
 
 
 class Graph(object):
-    def __init__(self):
+    def __init__(self, name):
+        self.name = name
         self.defaults = []
         self.nodes = {}
         self.rules = {}
@@ -13,9 +14,7 @@ class Graph(object):
         self.includes = set()
 
     def __repr__(self):
-        return ('Graph(defaults=%s, nodes=%s, pools=%s, rules=%s, scopes=%s)' %
-                (self.defaults, self.nodes, self.pools, self.rules,
-                 self.scopes))
+        return 'Graph(name="%s")' % self.name
 
 
 class Node(object):
@@ -27,8 +26,7 @@ class Node(object):
         self.running = False
 
     def __repr__(self):
-        return 'Node(name=%s, scope=%s, rule_name=%s, deps=%s)' % (
-            self.name, self.scope.name, self.rule_name, self.deps)
+        return 'Node(name="%s")' % self.name
 
 
 def find_nodes_to_build(graph, requested_targets):
@@ -91,14 +89,11 @@ class Scope(object):
 
     def __repr__(self):
         if self.parent:
-            parent_scope = self.parent.name
+            parent_scope = '"%s"' % self.parent.name
         else:
             parent_scope = 'None'
         s = []
-        for k in sorted(self.objs.keys()):
-            s.append("'%s': '%s'" % (k, self.objs[k]))
-        return 'Scope(name=%s, parent=%s, objs={%s})' % (
-            self.name, parent_scope, ', '.join(s))
+        return 'Scope(name="%s", parent=%s)' % (self.name, parent_scope)
 
     def __contains__(self, key):
         return key in self.objs or (self.parent and key in self.parent)
