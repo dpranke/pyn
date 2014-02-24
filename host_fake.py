@@ -92,7 +92,7 @@ class FakeHost(object):
         return TemporaryDirectory(fs=self, **kwargs)
 
     def mp_pool(self, processes=None):
-        return FakePool()
+        return FakePool(processes)
 
     def mtime(self, *comps):
         return self.mtimes[self.join(*comps)]
@@ -132,6 +132,9 @@ class FakeHost(object):
 
 
 class FakePool(object):
+    def __init__(self, processes=None):
+        self.processes = processes
+
     def close(self):
         pass
 

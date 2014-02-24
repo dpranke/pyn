@@ -7,7 +7,6 @@ import tempfile
 import time
 
 
-
 class Host(object):
     stderr = sys.stderr
     stdout = sys.stdout
