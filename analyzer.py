@@ -12,34 +12,34 @@ class NinjaAnalyzer(object):
         graph = Graph(filename)
         scope = Scope(filename, None)
         graph.scopes[filename] = scope
-
-        graph = self.add_ast(graph, scope, ast)
-        graph = self.add_includes(graph)
-        graph = self.add_subninjas(graph)
-
+        graph = self._add_ast(graph, scope, ast)
+        graph = self._add_includes(graph)
+        graph = self._add_subninjas(graph)
         return graph
 
-    def add_ast(self, graph, scope, ast):
+    def _add_ast(self, graph, scope, ast):
         for decl in ast:
             graph = getattr(self, '_decl_' + decl[0])(graph, scope, decl)
         return graph
 
-    def add_includes(self, graph):
-        asts = self._pmap(_read_and_parse, graph.includes)
-        for ast in asts:
-            graph = self.add_ast(graph, graph.scopes[graph.name], ast)
+    def _add_includes(self, graph):
+        for path in graph.includes:
+            if not self.host.exists(path):
+                raise PynException("'%s' not found." % path)
+            ast = self.parse(self.host.read(path))
+            graph = self._add_ast(graph, graph.scopes[graph.name], ast)
         return graph
 
-    def add_subninjas(self, graph):
-        subgraphs = self._pmap(_read_and_analyze, graph.subninjas)
-        for subgraph in subgraphs:
-            subgraph = self.add_includes(subgraph)
-            subgraph = self.add_subninjas(subgraph)
-            graph = self.merge_graphs(graph, subgraph)
-
+    def _add_subninjas(self, graph):
+        for path in graph.subninjas:
+            if not self.host.exists(path):
+                raise PynException("'%s' not found." % path)
+            ast = self.parse(self.host.read(path))
+            subgraph = self.analyze(ast, path)
+            graph = self._merge_graphs(graph, subgraph)
         return graph
 
-    def merge_graphs(self, graph, subgraph):
+    def _merge_graphs(self, graph, subgraph):
         for name, rule in subgraph.rules.items():
             if name in graph.rules:
                 raise PynException("rule '%s' declared in multiple files " %
@@ -67,27 +67,6 @@ class NinjaAnalyzer(object):
                 raise PynException("build output '%s' declared more than "
                                    "once " % name)
             graph.nodes[name] = node
-
-    def _pmap(self, fn, paths):
-        for path in paths:
-            if not self.host.exists(path):
-                raise PynException("'%s' not found." % path)
-
-        return [fn((self, path)) for path in paths]
-
-        # FIXME: Using a parallel map seems to just be slower.
-        # vs = []
-        # tuples = [(self, path) for path in paths]
-        # pool = self.host.mp_pool(self.args.jobs)
-        # try:
-        #    vs = pool.map(fn, tuples)
-        #    pool.close()
-        #except:
-        #    pool.terminate()
-        #    raise
-        # finally:
-        #    pool.join()
-        # return vs
 
     def _decl_build(self, graph, scope, decl):
         _, outputs, rule_name, inputs, ideps, odeps, build_vars = decl
@@ -156,21 +135,3 @@ class NinjaAnalyzer(object):
     def _decl_var(self, graph, scope, decl):
         self._add_vars_to_scope([decl], scope)
         return graph
-
-
-def _read_and_parse(arg_tuple):
-    analyzer, path = arg_tuple
-    return analyzer.parse(analyzer.host.read(path))
-
-
-def _read_and_analyze(arg_tuple):
-    analyzer, path = arg_tuple
-    graph = Graph(path)
-    scope = Scope(path, None)
-    graph.scopes[path] = scope
-    try:
-        ast = analyzer.parse(analyzer.host.read(path))
-        graph = analyzer.add_ast(graph, scope, ast)
-    except PynException as ex:
-        analyzer.host.print_err("failed to parse %s: %s" % (path, str(ex)))
-    return graph
