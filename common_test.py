@@ -9,23 +9,21 @@ from common import Graph, Node, Rule, Scope, PynException, \
 
 class TestGraph(unittest.TestCase):
     def test_repr(self):
-        self.assertEqual(repr(Graph()),
-                         ('Graph(defaults=[], nodes={}, pools={},'
-                          ' rules={}, scopes={})'))
+        self.assertEqual(repr(Graph('build.ninja')),
+                         'Graph(name="build.ninja")')
 
 
 class TestNode(unittest.TestCase):
     def test_repr(self):
         self.assertEqual(repr(Node('foo.o', Scope('build.ninja', None),
                                    'cc', [])),
-                         'Node(name=foo.o, scope=build.ninja,'
-                         ' rule_name=cc, deps=[])')
+                         'Node(name="foo.o")')
 
 
 class TestRule(unittest.TestCase):
     def test_repr(self):
         self.assertEqual(repr(Rule('cc', Scope('build.ninja', None))),
-                         'Rule(name=cc, scope=build.ninja)')
+                         'Rule(name="cc")')
 
 
 class TestScope(unittest.TestCase):
@@ -38,12 +36,8 @@ class TestScope(unittest.TestCase):
         self.c['foo'] = 'c-foo'
 
     def test_repr(self):
-        self.assertEqual(repr(self.p),
-                         "Scope(name=build.ninja, parent=None, "
-                         "objs={'bar': 'p-bar', 'foo': 'p-foo'})")
-        self.assertEqual(repr(self.c),
-                         "Scope(name=foo.subninja, parent=build.ninja, "
-                         "objs={'foo': 'c-foo'})")
+        self.assertEqual(repr(self.p), 'Scope(name="build.ninja")')
+        self.assertEqual(repr(self.c), 'Scope(name="foo.subninja")')
 
     def test_basic(self):
         self.assertEqual(self.p['foo'], 'p-foo')
@@ -69,21 +63,21 @@ class TestScope(unittest.TestCase):
 
 class TestTsort(unittest.TestCase):
     def test_cycle(self):
-        g = Graph()
+        g = Graph('build.ninja')
         n1 = Node(name='foo.so', scope='build.ninja', rule_name='shlib',
-                  deps=['bar.so'])
+                  explicit_deps=['bar.so'])
         n2 = Node(name='bar.so', scope='build.ninja', rule_name='shlib',
-                  deps=['foo.so'])
+                  explicit_deps=['foo.so'])
         g.nodes[n1.name] = n1
         g.nodes[n2.name] = n2
         self.assertRaises(PynException, tsort, g, ['foo.so'])
 
     def test_simple(self):
-        g = Graph()
+        g = Graph('build.ninja')
         n1 = Node(name='foo.so', scope='build.ninja', rule_name='shlib',
-                  deps=['foo.o'])
+                  explicit_deps=['foo.o'])
         n2 = Node(name='foo.o', scope='build.ninja', rule_name='cc',
-                  deps=['foo.c'])
+                  explicit_deps=['foo.c'])
         g.nodes[n1.name] = n1
         g.nodes[n2.name] = n2
         self.assertEqual(tsort(g, [n1.name]), [n2.name, n1.name])
@@ -91,11 +85,11 @@ class TestTsort(unittest.TestCase):
 
 class TestFindNodesToBuild(unittest.TestCase):
     def test_simple(self):
-        g = Graph()
+        g = Graph('build.ninja')
         n1 = Node(name='foo.so', scope='build.ninja', rule_name='shlib',
-                  deps=['foo.o'])
+                  explicit_deps=['foo.o'])
         n2 = Node(name='foo.o', scope='build.ninja', rule_name='cc',
-                  deps=['foo.c'])
+                  explicit_deps=['foo.c'])
         g.nodes[n1.name] = n1
         g.nodes[n2.name] = n2
         self.assertEqual(find_nodes_to_build(g, [n1.name]),

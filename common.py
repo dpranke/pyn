@@ -12,7 +12,7 @@ class Graph(object):
         self.scopes = {}
         self.subninjas = set()
         self.includes = set()
-        self.dirty = False
+        self.is_dirty = False
 
     def __repr__(self):
         return 'Graph(name="%s")' % self.name
@@ -48,9 +48,10 @@ def find_nodes_to_build(graph, requested_targets):
     nodes_to_build = set()
     while unvisited_nodes:
         node_name = unvisited_nodes.pop(0)
+        node = graph.nodes[node_name]
         unvisited_set.remove(node_name)
         nodes_to_build.add(node_name)
-        for d in graph.nodes[node_name].deps():
+        for d in node.deps():
             if (d not in nodes_to_build and d not in unvisited_set and
                     d in graph.nodes):
                 unvisited_nodes.append(d)
@@ -101,7 +102,7 @@ class Rule(object):
         self.scope = scope
 
     def __repr__(self):
-        return 'Rule(name=%s, scope=%s)' % (self.name, self.scope.name)
+        return 'Rule(name="%s")' % self.name
 
 
 class Scope(object):
@@ -111,11 +112,7 @@ class Scope(object):
         self.objs = {}
 
     def __repr__(self):
-        if self.parent:
-            parent_scope = '"%s"' % self.parent.name
-        else:
-            parent_scope = 'None'
-        return 'Scope(name="%s", parent=%s)' % (self.name, parent_scope)
+        return 'Scope(name="%s")' % self.name
 
     def __contains__(self, key):
         return key in self.objs or (self.parent and key in self.parent)

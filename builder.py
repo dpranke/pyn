@@ -77,7 +77,8 @@ class Builder(object):
             nodes_to_build.remove(next_node)
         return next_node
 
-    def _build_node(self, graph, node):
+    def _build_node(self, graph, node_name):
+        node = graph.nodes[node_name]
         rule = graph.rules[node.rule_name]
         desc = self.expand_vars(rule.scope['description'], node.scope)
         command = self.expand_vars(rule.scope['command'], node.scope)

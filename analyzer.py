@@ -73,7 +73,7 @@ class NinjaAnalyzer(object):
             if not self.host.exists(path):
                 raise PynException("'%s' not found." % path)
 
-        return [fn(self, path) for path in paths]
+        return [fn((self, path)) for path in paths]
 
         # FIXME: Using a parallel map seems to just be slower.
         # vs = []

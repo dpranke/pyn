@@ -5,6 +5,7 @@ out
 *.pyc.d
 *.py,cover
 
+.pyn.db
 .ninja_deps
 .ninja_log
 .coverage*

@@ -63,7 +63,6 @@ class NinjaParser(object):
 
         v, p, err = self.default_(msg, start, end)
         if err:
-            import pdb; pdb.set_trace()
             return None, p, ("expecting one of 'build', 'rule', "
                              "a variable name', 'subninja', 'include', ",
                              "'pool', or 'default'")
