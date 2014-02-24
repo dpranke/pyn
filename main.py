@@ -11,7 +11,7 @@ from tools import tool_names, list_tools, run_tool
 from var_expander import expand_vars
 
 
-VERSION = '0.6a'
+VERSION = '0.6'
 
 
 def main(host, argv=None):
