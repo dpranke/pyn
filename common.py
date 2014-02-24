@@ -12,18 +12,30 @@ class Graph(object):
         self.scopes = {}
         self.subninjas = set()
         self.includes = set()
+        self.dirty = False
 
     def __repr__(self):
         return 'Graph(name="%s")' % self.name
 
 
 class Node(object):
-    def __init__(self, name, scope, rule_name, deps):
+    def __init__(self, name, scope, rule_name, explicit_deps=None,
+                 implicit_deps=None, order_only_deps=None, depsfile_deps=None):
         self.name = name
         self.scope = scope
         self.rule_name = rule_name
-        self.deps = deps
+        self.explicit_deps = explicit_deps or []
+        self.implicit_deps = implicit_deps or []
+        self.order_only_deps = order_only_deps or []
+        self.depsfile_deps = depsfile_deps or []
         self.running = False
+
+    def deps(self, include_order_only=False):
+        node_names = (self.explicit_deps + self.implicit_deps +
+                      self.depsfile_deps)
+        if include_order_only:
+            node_names += self.order_only_deps
+        return node_names
 
     def __repr__(self):
         return 'Node(name="%s")' % self.name
@@ -35,11 +47,12 @@ def find_nodes_to_build(graph, requested_targets):
     unvisited_set = set(unvisited_nodes)
     nodes_to_build = set()
     while unvisited_nodes:
-        node = unvisited_nodes.pop(0)
-        unvisited_set.remove(node)
-        nodes_to_build.add(node)
-        for d in graph.nodes[node].deps:
-            if d not in nodes_to_build and d not in unvisited_set and d in graph.nodes:
+        node_name = unvisited_nodes.pop(0)
+        unvisited_set.remove(node_name)
+        nodes_to_build.add(node_name)
+        for d in graph.nodes[node_name].deps():
+            if (d not in nodes_to_build and d not in unvisited_set and
+                    d in graph.nodes):
                 unvisited_nodes.append(d)
                 unvisited_set.add(d)
     return nodes_to_build
@@ -55,24 +68,24 @@ def tsort(graph, nodes_to_build):
     # This algorithm diverges a bit from the Wikipedia algorithm by
     # inserting new nodes at the tail of the sorted node list instead of the
     # head, because we want to ultimately do a bottom-up traversal.
-    def visit(node, visited_nodes, sorted_nodes, unvisited_nodes,
+    def visit(node_name, visited_nodes, sorted_nodes, unvisited_nodes,
               unvisited_set, sorted_set):
-        if node in visited_nodes:
-            raise PynException("'%s' is part of a cycle" % node)
+        if node_name in visited_nodes:
+            raise PynException("'%s' is part of a cycle" % node_name)
 
-        visited_nodes.add(node)
-        for d in graph.nodes[node].deps:
+        visited_nodes.add(node_name)
+        for d in graph.nodes[node_name].deps(include_order_only=True):
             if d in graph.nodes and d not in sorted_set:
                 visit(d, visited_nodes, sorted_nodes, unvisited_nodes,
                       unvisited_set, sorted_set)
-        if node in unvisited_nodes:
-            unvisited_nodes.remove(node)
-            unvisited_set.remove(node)
-        sorted_nodes.append(node)
-        sorted_set.add(node)
+        if node_name in unvisited_nodes:
+            unvisited_nodes.remove(node_name)
+            unvisited_set.remove(node_name)
+        sorted_nodes.append(node_name)
+        sorted_set.add(node_name)
 
     visited_nodes = set()
-    unvisited_nodes = [n for n in nodes_to_build]
+    unvisited_nodes = [node_name for node_name in nodes_to_build]
     sorted_nodes = []
     sorted_set = set(sorted_nodes)
     unvisited_set = set(unvisited_nodes)
@@ -102,7 +115,6 @@ class Scope(object):
             parent_scope = '"%s"' % self.parent.name
         else:
             parent_scope = 'None'
-        s = []
         return 'Scope(name="%s", parent=%s)' % (self.name, parent_scope)
 
     def __contains__(self, key):

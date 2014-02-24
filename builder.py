@@ -24,22 +24,23 @@ class Builder(object):
                         if graph.nodes[n].rule_name != 'phony']
 
         nodes_to_build = []
-        for name in sorted_nodes:
-            node = graph.nodes[name]
-            my_stat = self._stat(name)
-            if not my_stat or any(self._stat(d) > my_stat for d in node.deps):
-                nodes_to_build.append(node)
+        for node_name in sorted_nodes:
+            n = graph.nodes[node_name]
+            my_stat = self._stat(node_name)
+            if not my_stat or any(self._stat(d) > my_stat for d in n.deps()):
+                nodes_to_build.append(node_name)
         return nodes_to_build
 
     def build(self, graph, nodes_to_build):
-        self.stats.total = len(nodes_to_build)
-        self.stats.started = 0
-        self.stats.started_time = self.host.time()
+        stats = self.stats
+        stats.total = len(nodes_to_build)
+        stats.started = 0
+        stats.started_time = self.host.time()
 
         running_jobs = []
         try:
             while nodes_to_build and self._failures < self.args.errors:
-                while self.stats.started - self.stats.finished < self.args.jobs:
+                while stats.started - stats.finished < self.args.jobs:
                     n = self._find_next_available_node(graph, nodes_to_build)
                     if n:
                         p = self._build_node(graph, n)
@@ -47,7 +48,8 @@ class Builder(object):
                     else:
                         break
                 did_work = self._process_completed_jobs(graph, running_jobs)
-                if not did_work and nodes_to_build and self._failures < self.args.errors:
+                if (not did_work and nodes_to_build and
+                        self._failures < self.args.errors):
                     self.host.sleep(0.01)
 
             self._pool.close()
@@ -64,10 +66,11 @@ class Builder(object):
 
     def _find_next_available_node(self, graph, nodes_to_build):
         next_node = None
-        for n in nodes_to_build:
+        for node_name in nodes_to_build:
+            n = graph.nodes[node_name]
             if not any(d in graph.nodes and graph.nodes[d].running
-                       for d in n.deps):
-                next_node = n
+                       for d in n.deps(include_order_only=True)):
+                next_node = node_name
                 break
 
         if next_node:
@@ -104,7 +107,18 @@ class Builder(object):
 
     def _build_node_done(self, graph, result):
         node_name, desc, command, ret, out, err = result
-        graph.nodes[node_name].running = False
+        n = graph.nodes[node_name]
+        n.running = False
+
+        if n.scope['depfile'] and n.scope['deps'] == 'gcc':
+            path = self.expand_vars(n.scope['depfile'], n.scope)
+            if self.host.exists(path):
+                depsfile_deps = self.host.read(path).split()[2:]
+                self.host.remove(path)
+                if n.depsfile_deps != depsfile_deps:
+                    n.depsfile_deps = depsfile_deps
+                    graph.dirty = True
+
         self.stats.finished += 1
 
         if ret:

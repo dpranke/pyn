@@ -52,15 +52,14 @@ def main(host, argv=None):
             graph_mtime = host.mtime('.pyn.db')
             file_mtime = host.mtime(args.file)
             if (file_mtime > graph_mtime or
-                any(host.mtime(f) > graph_mtime for f in graph.includes) or
-                any(host.mtime(f) > graph_mtime for f in graph.subninjas)):
+                    any(host.mtime(f) > graph_mtime for f in graph.includes) or
+                    any(host.mtime(f) > graph_mtime for f in graph.subninjas)):
                 graph = None
 
         if not graph:
             ast = parse(host.read(args.file))
             analyzer = NinjaAnalyzer(host, args, parse, expand_vars)
             graph = analyzer.analyze(ast, args.file)
-
             graph_str = cPickle.dumps(graph)
             host.write('.pyn.db', graph_str)
 
@@ -83,7 +82,11 @@ def main(host, argv=None):
             host.print_err('build is not up to date.')
             return 1
 
-        return builder.build(graph, nodes_to_build)
+        res = builder.build(graph, nodes_to_build)
+        if graph.is_dirty:
+            graph_str = cPickle.dumps(graph)
+            host.write('.pyn.db', graph_str)
+        return res
 
     except PynException as e:
         host.print_err(str(e))
@@ -97,7 +100,7 @@ def clean(host, args, graph):
     files_to_remove = []
     for output_name, node in graph.nodes.items():
         if (node.rule_name != 'phony' and host.exists(output_name) and
-            (node.scope['generator'] != '1' or '-g' in args.targets)):
+                (node.scope['generator'] != '1' or '-g' in args.targets)):
             files_to_remove.append(output_name)
     if args.verbose:
         host.print_err('Cleaning...')
