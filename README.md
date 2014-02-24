@@ -38,8 +38,6 @@ the LICENSE file in the source repo.
 * rspfiles
 * detecting when the command needed for a build has changed and the
   outputs should be rebuilt.
-* proper deps files handling
-  * delete on clean and/or when generated and added to database
 * NINJA_STATUS option %c 
 
 ### Also:
