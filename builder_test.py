@@ -2,8 +2,8 @@ import argparse
 import unittest
 
 from host import Host
-from ninja_parser import expand_vars
 from builder import Builder
+from var_expander import expand_vars
 
 
 class TestBuilder(unittest.TestCase):

@@ -4,7 +4,7 @@ import unittest
 
 from host import Host
 from main_test import TestMain
-from ninja_parser_test import TestNinjaParser
+from parser_test import TestNinjaParser
 
 SHOULD_RUN_COVERAGE = False
 

@@ -1,4 +1,4 @@
-out
+bin
 
 *.swp
 *.pyc
@@ -12,5 +12,3 @@ out
 .profiler_data
 .pylint*
 .pytest*
-hello/hello.o
-hello/hello
