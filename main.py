@@ -44,24 +44,26 @@ def main(host, argv=None):
         return 2
 
     try:
-        graph = None
+        old_graph = None
+        needs_rescan = True
         if host.exists('.pyn.db'):
             graph_str = host.read('.pyn.db')
-            graph = cPickle.loads(graph_str)
+            old_graph = cPickle.loads(graph_str)
 
             graph_mtime = host.mtime('.pyn.db')
             file_mtime = host.mtime(args.file)
-            if (file_mtime > graph_mtime or
-                    any(host.mtime(f) > graph_mtime for f in graph.includes) or
-                    any(host.mtime(f) > graph_mtime for f in graph.subninjas)):
-                graph = None
+            needs_rescan = (file_mtime > graph_mtime or
+                            any(host.mtime(f) > graph_mtime for
+                                f in old_graph.includes) or
+                            any(host.mtime(f) > graph_mtime for
+                                f in old_graph.subninjas))
 
-        if not graph:
+        if needs_rescan:
             ast = parse(host.read(args.file))
             analyzer = NinjaAnalyzer(host, args, parse, expand_vars)
             graph = analyzer.analyze(ast, args.file)
-            graph_str = cPickle.dumps(graph)
-            host.write('.pyn.db', graph_str)
+        else:
+            graph = old_graph
 
         if args.tool == 'check':
             host.print_out('pyn: syntax is correct')
@@ -73,7 +75,7 @@ def main(host, argv=None):
             return clean(host, args, graph)
 
         builder = Builder(host, args, expand_vars, started_time)
-        nodes_to_build = builder.find_nodes_to_build(graph)
+        nodes_to_build = builder.find_nodes_to_build(old_graph, graph)
         if not nodes_to_build:
             host.print_out('pyn: no work to do')
             return 0
@@ -93,7 +95,7 @@ def main(host, argv=None):
         return 1
     except KeyboardInterrupt as e:
         host.print_err('Interrupted, exiting ..')
-        return 130
+        return 130  # SIGINT
 
 
 def clean(host, args, graph):

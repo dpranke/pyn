@@ -34,17 +34,15 @@ the LICENSE file in the source repo.
 
 * support for the -k flag for load throttling
 * support for pools
-* restat and generator support
+* restat/generator support
 * rspfiles
-* detecting when the command needed for a build has changed and the
-  outputs should be rebuilt.
 * NINJA_STATUS option %c 
-
-### Also:
-
 * various debug modes (-d stats, explain, keeprsp)
 * various tools (-t browse, commands, deps, graph, query, targets, compdb,
   recompact)
   * also '-t clean targets' to only clean specific targets
-* hash-based build tracking in addition to mtime-based tracking?
+
+## Also
+
+* add hash-based build tracking in addition to mtime-based tracking?
 * more tests

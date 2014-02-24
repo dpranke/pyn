@@ -16,7 +16,7 @@ class Builder(object):
         self._failures = 0
         self._pool = self.host.mp_pool(args.jobs)
 
-    def find_nodes_to_build(self, graph):
+    def find_nodes_to_build(self, old_graph, graph):
         requested_targets = self.args.targets or graph.defaults
         nodes_to_build = find_nodes_to_build(graph, requested_targets)
         sorted_nodes = tsort(graph, nodes_to_build)
@@ -29,6 +29,14 @@ class Builder(object):
             my_stat = self._stat(node_name)
             if not my_stat or any(self._stat(d) > my_stat for d in n.deps()):
                 nodes_to_build.append(node_name)
+                continue
+
+            if old_graph and node_name in old_graph.nodes:
+                if (self._command(old_graph, node_name) !=
+                        self._command(graph, node_name)):
+                    nodes_to_build.append(node_name)
+                    continue
+
         return nodes_to_build
 
     def build(self, graph, nodes_to_build):
@@ -76,6 +84,11 @@ class Builder(object):
         if next_node:
             nodes_to_build.remove(next_node)
         return next_node
+
+    def _command(self, graph, node_name):
+        node = graph.nodes[node_name]
+        rule = graph.rules[node.rule_name]
+        return self.expand_vars(rule.scope['command'], node.scope)
 
     def _build_node(self, graph, node_name):
         node = graph.nodes[node_name]
