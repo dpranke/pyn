@@ -105,7 +105,7 @@ build main_test.pyc : pycomp main_test.py
 build host.pyc : pycomp host.py
 build host_fake.pyc : pycomp host_fake.py
 build integration_test.pyc : pycomp integration_test.py
-build parser.pyc : pycomp ninja_parser.py
+build parser.pyc : pycomp parser.py
 build parser_test.pyc : pycomp parser_test.py
 build printer.pyc : pycomp printer.py
 build stats.pyc : pycomp stats.py
@@ -159,13 +159,13 @@ build test : phony $
   .pytest.builder_test.py $
   .pytest.common_test.py $
   .pytest.main_test.py $
-  .pytest.ninja_parser_test.py
+  .pytest.parser_test.py
 
 build .pytest.analyzer_test.py : pytest analyzer_test.py
 build .pytest.builder_test.py : pytest builder_test.py
 build .pytest.common_test.py : pytest common_test.py
 build .pytest.main_test.py : pytest main_test.py
-build .pytest.ninja_parser_test.py : pytest parser_test.py
+build .pytest.parser_test.py : pytest parser_test.py
 build .pytest.var_expander_test.py : pytest var_expander_test.py
 
 build coverage : phony .coverage
