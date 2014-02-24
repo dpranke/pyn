@@ -12,6 +12,9 @@ class Host(object):
     stdout = sys.stdout
     python_interpreter = sys.executable
 
+    def abspath(self, *comps):
+        return os.path.abspath(self.join(*comps))
+
     def call(self, cmd_str):
         proc = subprocess.Popen(cmd_str, shell=True, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
@@ -40,7 +43,7 @@ class Host(object):
         return os.path.join(*comps)
 
     def maybe_mkdir(self, *comps):
-        path = self.join(*comps)
+        path = self.abspath(self.join(*comps))
         if not self.exists(path):
             os.mkdir(path)
 

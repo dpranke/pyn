@@ -19,10 +19,11 @@ class Graph(object):
 
 
 class Node(object):
-    def __init__(self, name, scope, rule_name, explicit_deps=None,
+    def __init__(self, name, scope, outputs, rule_name, explicit_deps=None,
                  implicit_deps=None, order_only_deps=None, depsfile_deps=None):
         self.name = name
         self.scope = scope
+        self.outputs = outputs
         self.rule_name = rule_name
         self.explicit_deps = explicit_deps or []
         self.implicit_deps = implicit_deps or []

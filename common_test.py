@@ -15,7 +15,7 @@ class TestGraph(unittest.TestCase):
 
 class TestNode(unittest.TestCase):
     def test_repr(self):
-        self.assertEqual(repr(Node('foo.o', Scope('build.ninja', None),
+        self.assertEqual(repr(Node('foo.o', ['foo.o'], Scope('build.ninja', None),
                                    'cc', [])),
                          'Node(name="foo.o")')
 
@@ -64,20 +64,20 @@ class TestScope(unittest.TestCase):
 class TestTsort(unittest.TestCase):
     def test_cycle(self):
         g = Graph('build.ninja')
-        n1 = Node(name='foo.so', scope='build.ninja', rule_name='shlib',
-                  explicit_deps=['bar.so'])
-        n2 = Node(name='bar.so', scope='build.ninja', rule_name='shlib',
-                  explicit_deps=['foo.so'])
+        n1 = Node(name='foo.so', scope='build.ninja', outputs=['foo.so'],
+                  rule_name='shlib', explicit_deps=['bar.so'])
+        n2 = Node(name='bar.so', scope='build.ninja', outputs=['bar.so'],
+                  rule_name='shlib', explicit_deps=['foo.so'])
         g.nodes[n1.name] = n1
         g.nodes[n2.name] = n2
         self.assertRaises(PynException, tsort, g, ['foo.so'])
 
     def test_simple(self):
         g = Graph('build.ninja')
-        n1 = Node(name='foo.so', scope='build.ninja', rule_name='shlib',
-                  explicit_deps=['foo.o'])
-        n2 = Node(name='foo.o', scope='build.ninja', rule_name='cc',
-                  explicit_deps=['foo.c'])
+        n1 = Node(name='foo.so', scope='build.ninja', outputs=['foo.so'],
+                  rule_name='shlib', explicit_deps=['foo.o'])
+        n2 = Node(name='foo.o', scope='build.ninja', outputs=['foo.o'],
+                  rule_name='cc', explicit_deps=['foo.c'])
         g.nodes[n1.name] = n1
         g.nodes[n2.name] = n2
         self.assertEqual(tsort(g, [n1.name]), [n2.name, n1.name])
@@ -86,10 +86,10 @@ class TestTsort(unittest.TestCase):
 class TestFindNodesToBuild(unittest.TestCase):
     def test_simple(self):
         g = Graph('build.ninja')
-        n1 = Node(name='foo.so', scope='build.ninja', rule_name='shlib',
-                  explicit_deps=['foo.o'])
-        n2 = Node(name='foo.o', scope='build.ninja', rule_name='cc',
-                  explicit_deps=['foo.c'])
+        n1 = Node(name='foo.so', scope='build.ninja', outputs=['foo.so'],
+                  rule_name='shlib', explicit_deps=['foo.o'])
+        n2 = Node(name='foo.o', scope='build.ninja', outputs=['foo.so'],
+                  rule_name='cc', explicit_deps=['foo.c'])
         g.nodes[n1.name] = n1
         g.nodes[n2.name] = n2
         self.assertEqual(find_nodes_to_build(g, [n1.name]),

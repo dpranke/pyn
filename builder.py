@@ -99,6 +99,9 @@ class Builder(object):
         self._build_node_started(node, desc, command)
 
         dry_run = node.rule_name == 'phony' or self.args.dry_run
+        if not dry_run:
+            for o in node.outputs:
+                self.host.maybe_mkdir(self.host.dirname(o))
         return self._pool.apply_async(_call, (node.name, desc, command,
                                               dry_run, self.host))
 

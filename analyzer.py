@@ -69,15 +69,16 @@ class NinjaAnalyzer(object):
             graph.nodes[name] = node
 
     def _decl_build(self, graph, scope, decl):
-        _, outputs, rule_name, inputs, ideps, odeps, build_vars = decl
+        _, outputs, rule_name, edeps, ideps, odeps, build_vars = decl
 
         build_name = ' '.join(outputs)
         build_scope = Scope(build_name, scope)
         build_scope['out'] = ' '.join(outputs)
-        build_scope['in'] = ' '.join(inputs)
+        build_scope['in'] = ' '.join(edeps)
         self._add_vars_to_scope(build_vars, build_scope)
 
-        n = Node(build_name, build_scope, rule_name, inputs, ideps, odeps)
+        n = Node(build_name, build_scope, outputs, rule_name, edeps, ideps,
+                 odeps)
         self._add_nodes_to_graph({n.name: n}, graph)
         return graph
 
