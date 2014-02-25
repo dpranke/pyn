@@ -1,8 +1,8 @@
 from common import PynException
 
 
-def expand_vars(msg, scope):
-    return VarExpander(scope).parse(msg)
+def expand_vars(msg, scope, rule_scope=None):
+    return VarExpander(scope, rule_scope).parse(msg)
 
 
 class VarExpander(object):
@@ -16,8 +16,9 @@ class VarExpander(object):
     varname = (letter|'_')+:ls      -> ''.join(ls)
     """
 
-    def __init__(self, scope):
+    def __init__(self, scope, rule_scope=None):
         self.scope = scope
+        self.rule_scope = rule_scope
 
     def parse(self, msg):
         v, p, err = self.grammar_(msg, 0, len(msg))
@@ -26,12 +27,24 @@ class VarExpander(object):
         else:
             return v
 
+    def lookup(self, var):
+        if var in self.scope.objs:
+            return self.scope.objs[var]
+        if self.rule_scope and var in self.rule_scope.objs:
+            return self.rule_scope.objs[var]
+        if self.scope.parent:
+            return self.scope.parent[var]
+        return ''
+
     def grammar_(self, msg, start, end):
         vs = []
         v, p, err = self.chunk_(msg, start, end)
-        while v:
+        if not err and v:
             vs.append(v)
+        while not err and p < end:
             v, p, err = self.chunk_(msg, p, end)
+            if not err and v:
+                vs.append(v)
         if err:
             return (None, p, err)
         return (''.join(vs), p, err)
@@ -49,7 +62,7 @@ class VarExpander(object):
                 elif p > end - 1:
                     return (None, p, "expecting a closing }")
                 elif msg[p] == '}':
-                    return (self.scope[v], p + 1, None)
+                    return (self.lookup(v), p + 1, None)
                 else:
                     return (None, p, "expecting a closing }")
             else:
@@ -57,7 +70,7 @@ class VarExpander(object):
                 if err:
                     return (None, p, err)
                 else:
-                    return (self.scope[v], p, None)
+                    return (self.lookup(v), p, None)
         elif end - start > 0:
             return msg[start], start + 1, None
         else:
