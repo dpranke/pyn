@@ -63,6 +63,26 @@ def question(host, args, old_graph, graph, started_time):
         return 0
 
 
+def query(host, args, _old_graph, graph, started_time):
+    """show inputs/outputs for a path"""
+    target = args.targets[0]
+    if target in graph.nodes:
+        inputs = graph.nodes[target].deps()
+    else:
+        inputs = []
+    outputs = [node_name for node_name in graph.nodes if
+               target in graph.nodes[node_name].deps()]
+    host.print_out(target)
+    if inputs:
+        host.print_out("  inputs:")
+        for node_name in inputs:
+            host.print_out("    " + node_name)
+    if outputs:
+        host.print_out("  outputs:")
+        for node_name in outputs:
+            host.print_out("    " + node_name)
+
+
 def tool_names():
     return _TOOLS.keys()
 
@@ -84,5 +104,6 @@ _TOOLS = {
     'clean': clean,
     'commands': commands,
     'list': list_tools,
+    'query': query,
     'question': question,
 }

@@ -38,8 +38,7 @@ the LICENSE file in the source repo.
 * rspfiles
 * NINJA_STATUS option %c 
 * various debug modes (-d stats, explain, keeprsp)
-* various tools (-t browse, commands, deps, graph, query, targets, compdb,
-  recompact)
+* various tools (-t browse, deps, graph, targets, compdb, recompact)
   * also '-t clean targets' to only clean specific targets
 
 ## Also
