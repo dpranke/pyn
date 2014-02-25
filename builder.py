@@ -88,13 +88,17 @@ class Builder(object):
     def _command(self, graph, node_name):
         node = graph.nodes[node_name]
         rule = graph.rules[node.rule_name]
-        return self.expand_vars(rule.scope['command'], node.scope)
+        return self.expand_vars(rule.scope['command'], node.scope, rule.scope)
+
+    def _description(self, graph, node_name):
+        node = graph.nodes[node_name]
+        rule = graph.rules[node.rule_name]
+        return self.expand_vars(rule.scope['description'], node.scope, rule.scope)
 
     def _build_node(self, graph, node_name):
         node = graph.nodes[node_name]
-        rule = graph.rules[node.rule_name]
-        desc = self.expand_vars(rule.scope['description'], node.scope)
-        command = self.expand_vars(rule.scope['command'], node.scope)
+        desc = self._description(graph, node_name)
+        command = self._command(graph, node_name)
 
         self._build_node_started(node, desc, command)
 
@@ -128,7 +132,7 @@ class Builder(object):
         n.running = False
 
         if n.scope['depfile'] and n.scope['deps'] == 'gcc':
-            path = self.expand_vars(n.scope['depfile'], n.scope)
+            path = self.expand_vars(n.scope['depfile'], n.scope, rule.scope)
             if self.host.exists(path):
                 depsfile_deps = self.host.read(path).split()[2:]
                 self.host.remove(path)
@@ -143,8 +147,6 @@ class Builder(object):
             self._update(command, prefix='FAILED: ', elide=False)
         elif self.args.verbose > 1:
             self._update(command, elide=False)
-        elif self.args.verbose:
-            self._update(desc, elide=False)
         elif self._should_overwrite:
             self._update(desc)
         if out or err:
