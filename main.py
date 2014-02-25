@@ -83,6 +83,7 @@ def _load_graphs(host, args):
         ast = parse(host.read(args.file))
         analyzer = NinjaAnalyzer(host, args, parse, expand_vars)
         graph = analyzer.analyze(ast, args.file)
+        graph.is_dirty = True
     else:
         graph = old_graph
 
