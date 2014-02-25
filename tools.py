@@ -63,7 +63,7 @@ def question(host, args, old_graph, graph, started_time):
         return 0
 
 
-def query(host, args, _old_graph, graph, started_time):
+def query(host, args, _old_graph, graph, _started_time):
     """show inputs/outputs for a path"""
     target = args.targets[0]
     if target in graph.nodes:
@@ -82,6 +82,12 @@ def query(host, args, _old_graph, graph, started_time):
         for node_name in outputs:
             host.print_out("    " + node_name)
 
+
+def rules(host, args, _old_graph, graph, _started_time):
+    """list all the rules"""
+    for rule_name in sorted(graph.rules):
+        host.print_out("%s %s" % (rule_name,
+                                  graph.rules[rule_name].scope['command']))
 
 def tool_names():
     return _TOOLS.keys()
@@ -106,4 +112,5 @@ _TOOLS = {
     'list': list_tools,
     'query': query,
     'question': question,
+    'rules': rules,
 }
