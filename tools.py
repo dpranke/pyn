@@ -1,4 +1,5 @@
 from builder import Builder
+from common import find_nodes_to_build, tsort
 from var_expander import expand_vars
 
 
@@ -34,6 +35,21 @@ def clean(host, args, _old_graph, graph, _started_time):
     return 0
 
 
+def commands(host, args, _old_graph, graph, _started_time):
+    """list all commands required to rebuild given targets"""
+    requested_targets = args.targets or graph.default
+    nodes_to_build = find_nodes_to_build(graph, requested_targets)
+    sorted_nodes = tsort(graph, nodes_to_build)
+    sorted_nodes = [n for n in sorted_nodes
+                    if graph.nodes[n].rule_name != 'phony']
+
+    for node_name in sorted_nodes:
+        node = graph.nodes[node_name]
+        rule = graph.rules[node.rule_name]
+        host.print_out(expand_vars(rule.scope['command'], node.scope,
+                                   rule.scope))
+
+
 def question(host, args, old_graph, graph, started_time):
     """check to see if the build is up to date"""
 
@@ -66,6 +82,7 @@ def run_tool(host, args, old_graph, graph, started_time):
 _TOOLS = {
     'check': check,
     'clean': clean,
+    'commands': commands,
     'list': list_tools,
     'question': question,
 }
