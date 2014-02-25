@@ -8,9 +8,9 @@ class NinjaAnalyzer(object):
         self.parse = parse
         self.expand_vars = expand_vars
 
-    def analyze(self, ast, filename):
+    def analyze(self, ast, filename, parent_scope=None):
         graph = Graph(filename)
-        scope = Scope(filename, None)
+        scope = Scope(filename, parent_scope)
         graph.scopes[filename] = scope
         graph = self._add_ast(graph, scope, ast)
         graph = self._add_includes(graph)
@@ -35,7 +35,7 @@ class NinjaAnalyzer(object):
             if not self.host.exists(path):
                 raise PynException("'%s' not found." % path)
             ast = self.parse(self.host.read(path))
-            subgraph = self.analyze(ast, path)
+            subgraph = self.analyze(ast, path, graph.scopes[graph.name])
             graph = self._merge_graphs(graph, subgraph)
         return graph
 
@@ -54,12 +54,15 @@ class NinjaAnalyzer(object):
         self._add_nodes_to_graph(subgraph.nodes, graph)
         return graph
 
-    def _add_vars_to_scope(self, var_decls, scope):
+    def _add_vars_to_scope(self, var_decls, scope, expand=True):
         for _, name, val in var_decls:
             if name in scope.objs:
                 raise PynException("'var %s' declared more than once "
                                    "in %s'" % (name, scope.name))
-            scope.objs[name] = val
+            if expand:
+                scope.objs[name] = self.expand_vars(val, scope)
+            else:
+                scope.objs[name] = val
 
     def _add_nodes_to_graph(self, nodes, graph):
         for name, node in nodes.items():
@@ -122,8 +125,8 @@ class NinjaAnalyzer(object):
         if rule_name in graph.rules:
             raise PynException("'rule %s' declared more than once" % rule_name)
 
-        rule_scope = Scope(rule_name, scope.name)
-        self._add_vars_to_scope(rule_vars, rule_scope)
+        rule_scope = Scope(rule_name, scope)
+        self._add_vars_to_scope(rule_vars, rule_scope, expand=False)
         rule = Rule(rule_name, rule_scope)
         graph.rules[rule_name] = rule
         return graph
