@@ -1,8 +1,8 @@
 from common import PynException
 
 
-def parse(msg):
-    return NinjaParser().parse(msg)
+def parse(msg, fname=''):
+    return NinjaParser().parse(msg, fname)
 
 
 class NinjaParser(object):
