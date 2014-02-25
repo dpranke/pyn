@@ -50,6 +50,25 @@ def commands(host, args, _old_graph, graph, _started_time):
                                    rule.scope))
 
 
+def deps(host, args, _old_graph, graph, _started_time):
+    """show dependencies stored in the deps log"""
+    if args.targets:
+        targets = args.targets
+    else:
+        targets = graph.default
+
+    for node_name in targets:
+        n = graph.nodes[node_name]
+        depsfile_deps = n.scope['depsfile_deps']
+        if depsfile_deps:
+            host.print_out("%s: #deps %d" % (node_name,
+                                                len(depsfile_deps)))
+            for dep in depsfile_deps:
+                host.print_out("    %s" % dep)
+        else:
+            host.print_out("%s: deps not found" % node_name)
+
+
 def question(host, args, old_graph, graph, started_time):
     """check to see if the build is up to date"""
 
@@ -109,6 +128,7 @@ _TOOLS = {
     'check': check,
     'clean': clean,
     'commands': commands,
+    'deps': deps,
     'list': list_tools,
     'query': query,
     'question': question,
