@@ -391,21 +391,18 @@ class NinjaParser(object):
         return ps, p, None
 
     def empty_line_(self, msg, start, end):
-        """ ws? (comment | '\n') """
+        """ ws? comment? '\n' """
         _, p, err = self.ws_(msg, start, end)
+        if p < end:
+            _, p, err = self.comment_(msg, p, end)
         if p < end and msg[p] == '\n':
             return '\n', p + 1, None
-        elif p < end:
-            v, p, err = self.comment_(msg, p, end)
-            if err:
-                return None, p, err
-            else:
-                return v, p, err
-        else:
-            return None, p, "expecting a '\n' or a '#'"
+        elif p >= end:
+            return None, p, None
+        return None, p, "expecting a '\n' or EOF"
 
     def eol_(self, msg, start, end):
-        """ ws? (comment | '\n' | end) """
+        """ ws? ('\n' | end) """
         if start < end and (msg[start] == ' ' or msg[start] == '$'):
             _, p, _ = self.ws_(msg, start, end)
         else:
@@ -413,10 +410,8 @@ class NinjaParser(object):
         if p < end:
             if msg[p] == '\n':
                 return '\n', p + 1, None
-            elif msg[p] == '#':
-                return self.comment_(msg, p, end)
             else:
-                return None, p, "expecting a newline, comment, or EOF"
+                return None, p, "expecting a newline, or EOF"
         else:
             return None, p, None
 
@@ -440,9 +435,10 @@ class NinjaParser(object):
 
     def comment_(self, msg, start, end):
         """ '#' (~'\n' anything)* ('\n'|end) """
-        if msg[start] != '#':
+        p = start
+        if msg[p] != '#':
             return None, start, "expecting a '#'"
-        p = start + 1
+        p += 1
         while p < end and msg[p] != '\n':
             p += 1
         if p < end:
