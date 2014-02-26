@@ -1,28 +1,28 @@
-#!/usr/bin/env python
 import textwrap
 import unittest
 
-from common import PynException, Scope
-from ninja_parser import parse, expand_vars
+from common import PynException
+from parser import parse
 
 
 class TestNinjaParser(unittest.TestCase):
-    # 'too many public methods' pylint: disable=R0904
-
-    def check(self, text, ast, dedent=True):
+    # unused argument 'files'  pylint:disable=W0613
+    def check(self, text, ast, dedent=True, files=None):
         if dedent:
             dedented_text = textwrap.dedent(text)
             actual_ast = parse(dedented_text)
         else:
             actual_ast = parse(text)
-        self.assertEquals(actual_ast, ast)
+        self.assertEqual(actual_ast, ast)
 
-    def err(self, text, dedent=True):
+    def err(self, text, dedent=True, files=None):
         if dedent:
             dedented_text = textwrap.dedent(text)
             self.assertRaises(PynException, parse, dedented_text)
         else:
             self.assertRaises(PynException, parse, text)
+
+    # pylint:enable=W0613
 
     def test_blanks(self):
         self.check('', [])
@@ -33,22 +33,27 @@ class TestNinjaParser(unittest.TestCase):
         self.check('\n', [])
         self.check('\n\n', [])
 
-        # A file w/ spaces but no newline should fail.
-        self.err('  ', dedent=False)
-
     def test_spaces_in_paths(self):
         self.check('build foo$ bar : cc foo.c',
                    [['build', ['foo bar'], 'cc', ['foo.c'],
                               [], [], []]])
         self.check('subninja foo$ bar',
-                   [['subninja', 'foo bar']])
+                   [['subninja', 'foo bar']],
+                   files={'foo bar': ''})
 
     def test_comments(self):
         self.check('# comment', [])
         self.check('# comment\n', [])
         self.check('\n# comment', [])
+
+        # Note that end-of-line comments are *not* allowed
         self.check('cflags = -Wall # comment',
-                   [['var', 'cflags', '-Wall']])
+                   [['var', 'cflags', '-Wall # comment']])
+
+        # Note here that the comment gets parsed as if it is two targets.
+        self.check('build foo.o : cc foo.c # comment',
+                   [['build', ['foo.o'], 'cc', ['foo.c', '#', 'comment'],
+                     [], [], []]])
 
     def test_vars(self):
         self.check('f = bar', [['var', 'f', 'bar']])
@@ -60,8 +65,10 @@ class TestNinjaParser(unittest.TestCase):
         self.check('foo = ba $\n  r', [['var', 'foo', 'ba r']])
 
     def test_include(self):
-        self.check('include foo.ninja', [['include', 'foo.ninja']])
-        self.check('include foo.ninja\n', [['include', 'foo.ninja']])
+        self.check('include foo.ninja', [['include', 'foo.ninja']],
+                   files={'foo.ninja': ''})
+        self.check('include foo.ninja\n', [['include', 'foo.ninja']],
+                   files={'foo.ninja': ''})
         self.err('include')
         self.err('include ')
 
@@ -71,8 +78,10 @@ class TestNinjaParser(unittest.TestCase):
         self.err('rule foo 1234')
 
     def test_subninja(self):
-        self.check('subninja foo.ninja', [['subninja', 'foo.ninja']])
-        self.check('subninja foo.ninja\n', [['subninja', 'foo.ninja']])
+        self.check('subninja foo.ninja', [['subninja', 'foo.ninja']],
+                   files={'foo.ninja': ''})
+        self.check('subninja foo.ninja\n', [['subninja', 'foo.ninja']],
+                   files={'foo.ninja': ''})
         self.err('subninja')
         self.err('subninja ')
 
@@ -81,6 +90,8 @@ class TestNinjaParser(unittest.TestCase):
                         depth = 1
                    ''', [['pool', 'foo',
                           [['var', 'depth', '1']]]])
+        self.err('pool')
+        self.err('pool:')
         self.err('pool 123')
         self.err('pool foo bar')
 
@@ -151,6 +162,8 @@ class TestNinjaParser(unittest.TestCase):
         self.err('buildfoo')
         self.err('build ')
         self.err('build :')
+        self.err('build foo.# foo')
+        self.err('build foo.o : cc foo.c :')
         self.err('build foo.o|')
         self.err('build foo.o:|')
         self.err('build foo.o: cc foo.c |')
@@ -172,51 +185,6 @@ class TestNinjaParser(unittest.TestCase):
 
         # no equals sign
         self.err('foo ')
-
-
-class TestExpandVars(unittest.TestCase):
-    # 'too many public methods' pylint: disable=R0904
-
-    def setUp(self):  # 'invalid name' pylint: disable=C0103
-        self.scope = Scope('base', None)
-        self.scope['foo'] = 'a'
-        self.scope['bar'] = 'b'
-
-    def check(self, inp, out):
-        self.assertEquals(expand_vars(inp, self.scope), out)
-
-    def err(self, inp):
-        self.assertRaises(PynException, expand_vars, inp, self.scope)
-
-    def test_noop(self):
-        self.check('xyz', 'xyz')
-
-    def test_simple(self):
-        self.check('$foo', 'a')
-        self.check('$foo bar', 'a bar')
-        self.check('c$foo', 'ca')
-
-    def test_escapes(self):
-        self.check('$$', '$')
-        self.check('$ ', ' ')
-        self.check('$:', ':')
-
-    def test_curlies(self):
-        self.check('${foo}', 'a')
-        self.check('${foo}bar', 'abar')
-
-    def test_undefined_var_expands_to_nothing(self):
-        self.check('$baz', '')
-
-    def test_periods_terminate_variable_names(self):
-        self.check('$foo.bar', 'a.bar')
-
-    def test_errors(self):
-        self.err('${')
-        self.err('${baz')
-        self.err('$')
-        self.err('$123')
-        self.err('${baz foo')
 
 
 if __name__ == '__main__':

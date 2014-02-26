@@ -9,20 +9,16 @@ from common import PynException
 NinjaParser = OMeta.makeGrammar("""
 grammar  = (empty_line* decl)*:ds empty_line* end      -> ds
 
-decl     = build | rule | var | subninja | include | pool | default
+decl     = build | rule | subninja | include
+         | pool | default | var
 
 build    = "build" ws paths:os ws? ':' ws name:rule
-            explicit_deps:eds implicit_deps:ids order_only_deps:ods eol
+            explicit_deps:eds implicit_deps:ids
+            order_only_deps:ods eol
             ws_vars:vs                                 -> ['build', os, rule,
                                                            eds, ids, ods, vs]
 
 rule     = "rule" ws name:n eol ws_vars:vs             -> ['rule', n, vs]
-
-ws_vars  = (ws var)*:vs                                -> vs
-
-var      = name:n ws? '=' ws? value:v eol              -> ['var', n, v]
-
-value    = (~eol (('$' ' ' -> ' ')|('$' '\n' ' '+ -> '')|anything))*:vs -> ''.join(vs)
 
 subninja = "subninja" ws path:p eol                    -> ['subninja', p]
 
@@ -32,32 +28,45 @@ pool     = "pool" ws name:n eol ws_vars:vars           -> ['pool', n, vars]
 
 default  = "default" ws paths:ps eol                   -> ['default', ps]
 
+ws_vars  = (ws var)*:vs                                -> vs
+
+var      = name:n ws? '=' ws? value:v eol              -> ['var', n, v]
+
+value    = (~eol value_ch)*:vs                         -> ''.join(vs)
+
+value_ch = '$' ' '                                     -> ' '
+         | '$' '\n' ' '+                               -> ''
+         | ~eol anything:ch                            -> ch
+
 paths    = path:hd (ws path)*:tl                       -> [hd] + tl
 
-path     = (('$' ' ')|(~(' '|':'|'='|'|'|eol) anything))+:p -> ''.join(p)
+path     = path_ch+:p                                  -> ''.join(p)
 
-name     = letter:hd (letter|digit|'_')*:tl            -> ''.join([hd] + tl)
+path_ch  = '$' ' '                                     -> ' '
+         | ~(' ' | ':' | '=' | '|' | eol) anything:ch  -> ch
 
-explicit_deps = ws? paths:ps                           -> ps
-         |                                             -> []
+name     = (letter|'_'):hd (letter|digit|'_')*:tl      -> ''.join([hd] + tl)
 
-implicit_deps = ws? '|' ws? paths:ps                   -> ps
-         |                                             -> []
+explicit_deps   = ws? paths:ps                         -> ps
+                |                                      -> []
+
+implicit_deps   = ws? '|' ws? paths:ps                 -> ps
+                |                                      -> []
 
 order_only_deps = ws? '|' '|' ws? paths:ps             -> ps
-         |                                             -> []
+                |                                      -> []
 
-empty_line = ws? (comment | '\n')
+empty_line      = ws? comment? ('\n' | end)
 
-eol      = ws? (comment | '\n' | end)
+eol             = ws? ('\n' | end)
 
-ws       = (' '|('$' '\n'))+
+ws              = (' '|('$' '\n'))+
 
-comment  = '#' (~'\n' anything)* ('\n'|end)
+comment         = '#' (~'\n' anything)* ('\n'|end)
 """, {})
 
 
-def parse(msg):
+def parse(msg, fname=''):
     try:
         return NinjaParser.parse(msg)
     except ParseError as e:

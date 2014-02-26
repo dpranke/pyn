@@ -1,65 +1,76 @@
-#!/usr/bin/env python
-
-from __future__ import print_function
-
 import re
 import unittest
 
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 from host import Host
-
-import main
+from main import main, VERSION
 
 
 class TestMain(unittest.TestCase):
-    # 'too many public methods' pylint: disable=R0904
-
-    def check(self, cmd_str, returncode, out_regex, err_regex):
+    @staticmethod
+    def call(argv):
         host = Host()
-        result = host.call('%s %s %s' % (
-                           host.python_interpreter, ' main.py ', cmd_str))
-        self.assertEquals(result[0], returncode)
-        self.assertTrue(re.match(out_regex, result[1], re.MULTILINE),
-                        '%s does not match %s' % (out_regex, result[1]))
-        self.assertTrue(re.match(err_regex, result[2], re.MULTILINE),
-                        '%s does not match %s' % (err_regex, result[2]))
+        host.stdout = StringIO()
+        host.stderr = StringIO()
+        actual_returncode = main(host, argv)
+        out = host.stdout.getvalue()
+        err = host.stderr.getvalue()
+        return actual_returncode, out, err
 
-    def check_main(self, argv, out_regex, err_regex):
-        out = StringIO()
-        err = StringIO()
-        host = Host()
+    def check(self, argv, returncode, out_regex, err_regex):
+        actual_returncode, out, err = self.call(argv)
+        if returncode is not None:
+            self.assertEqual(actual_returncode, returncode)
+        self.assertTrue(re.match(out_regex, out, re.MULTILINE),
+                        '%s does not match %s' % (out_regex, out))
+        self.assertTrue(re.match(err_regex, err, re.MULTILINE),
+                        '%s does not match %s' % (err_regex, err))
 
-        def print_err(*args, **kwargs):
-            print(*args, file=err, **kwargs)
+    def test_bad_arg(self):
+        self.check(['--bad-arg'], 2, '', '')
 
-        def print_out(*args, **kwargs):
-            print(*args, file=out, **kwargs)
+    def test_bad_dir(self):
+        self.check(['-C', 'missing_dir'], 2, '', '"missing_dir" not found\n')
 
-        host.print_err = print_err
-        host.print_out = print_out
+    def test_bad_file(self):
+        self.check(['-f', 'missing_build.ninja'], 2, '',
+                   '"missing_build.ninja" not found\n')
 
-        main.main(host, argv)
+    def test_bad_tool(self):
+        self.check(['-t', 'foo'], 2, '', 'unsupported tool "foo"\n')
 
-        self.assertTrue(re.match(out_regex, out.getvalue(), re.MULTILINE),
-                        '%s does not match %s' % (out_regex, out.getvalue()))
-        self.assertTrue(re.match(err_regex, err.getvalue(), re.MULTILINE),
-                        '%s does not match %s' % (err_regex, err.getvalue()))
+    def test_list(self):
+        self.check(['-t', 'list'], 0, '.+', '')
 
-    def test_version(self):
-        self.check('--version', 0, main.VERSION + '\n', '')
-        try:
-            self.check_main(['--version'], main.VERSION + '\n', '')
-            self.fail('should have raise PynExit()')
-        except Exception as ex:
-            self.assertEqual(ex.message, main.VERSION)
+    def test_chdir(self):
+        self.check(['-n', '-C', '.'], 0, '', '.*')
 
-    def test_usage(self):
-        self.check('--help', 0, 'usage:.+', '')
-        self.check('-h', 0, 'usage:.+', '')
+    def test_check(self):
+        self.check(['-t', 'check'], 0, '', '.*')
+
+    def test_clean(self):
+        self.check(['-n', '-t', 'clean'], 0, '', '.*')
+
+    def test_question(self):
+        # pass returncode=None here because the result may vary.
+        self.check(['-t', 'question'], None, '', '.*')
+
+    def test_debug(self):
+        self.check(['-d', 'foo'], 2, '', '-d is not supported yet\n')
 
     def test_dry_run(self):
-        self.check_main(['-n'], '', '.+')
+        self.check(['-n'], 0, '.+', '')
+
+    def test_usage(self):
+        self.check(['--help'], 0, 'usage:.+', '')
+        self.check(['-h'], 0, 'usage:.+', '')
+
+    def test_version(self):
+        self.check(['--version'], 0, VERSION + '\n', '')
 
 
 if __name__ == '__main__':

@@ -17,7 +17,7 @@ def main():
 
 def write_deps(deps_file, source_file):
     deps = [source_file]
-    for m in sys.modules.values():
+    for m in list(sys.modules.values()):
         mf = getattr(m, '__file__', None)
         if mf and (not mf.startswith('/System') and
                    not mf.startswith('/Library')):

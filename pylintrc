@@ -67,6 +67,7 @@ load-plugins=
 # C0103: Invalid name ""
 # C0111: Missing docstring
 # I0011: Locally disabling WNNNN
+# R0201: Method could be a function
 # R0801: Similar lines
 # R0902: Too many instance attributes
 # R0903: Too few public methods
@@ -76,7 +77,7 @@ load-plugins=
 # W0511: TODO
 # W0614: Unused import X from wildcard import
 # W0703: Catch "Exception"
-disable=C0111,I0010,I0011,R0801,W0142,W0511,W0703
+disable=C0111,I0010,I0011,R0201,R0801,W0142,W0511,W0703
 
 
 [REPORTS]
@@ -202,7 +203,7 @@ method-rgx=[a-z_][a-z0-9_]{2,40}$
 attr-rgx=[a-z_][a-z0-9_]{2,30}$
 
 # Regular expression which should only match correct argument names
-argument-rgx=[a-z_][a-z0-9_]{2,30}$
+argument-rgx=[a-z_][a-z0-9_]{1,30}$
 
 # Regular expression which should only match correct variable names
 variable-rgx=[a-z_][a-z0-9_]{0,30}$
@@ -235,10 +236,10 @@ ignored-argument-names=_.*
 max-locals=32
 
 # Maximum number of return / yield for function / method body
-max-returns=6
+max-returns=32
 
 # Maximum number of branch for function / method body
-max-branchs=12
+max-branchs=32
 
 # Maximum number of statements in function / method body
 max-statements=50
@@ -253,7 +254,7 @@ max-attributes=10
 min-public-methods=0
 
 # Maximum number of public methods for a class (see R0904).
-max-public-methods=20
+max-public-methods=100
 
 
 [CLASSES]
