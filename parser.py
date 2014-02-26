@@ -53,16 +53,12 @@ class NinjaParser(object):
             return None, p, err
 
     def decl_(self, msg, start, end):
-        """ build | rule | var | subninja | include | pool | default """
+        """ build | rule | subninja | include | pool | default | var """
         v, p, err = self.build_(msg, start, end)
         if not err:
             return v, p, None
 
         v, p, err = self.rule_(msg, start, end)
-        if not err:
-            return v, p, None
-
-        v, p, err = self.var_(msg, start, end)
         if not err:
             return v, p, None
 
@@ -79,12 +75,15 @@ class NinjaParser(object):
             return v, p, None
 
         v, p, err = self.default_(msg, start, end)
-        if err:
-            return None, p, ("expecting one of 'build', 'rule', "
-                             "a variable name', 'subninja', 'include', ",
-                             "'pool', or 'default'")
-        else:
+        if not err:
             return v, p, None
+
+        v, p, err = self.var_(msg, start, end)
+        if not err:
+            return v, p, None
+
+        return None, p, ("expecting one of 'build', 'rule', 'subninja', "
+                         "'include', 'pool', 'default', or a a variable name")
 
     def build_(self, msg, start, end):
         """ "build" ws paths:os ws? ':' ws name:rule
@@ -391,7 +390,7 @@ class NinjaParser(object):
         return ps, p, None
 
     def empty_line_(self, msg, start, end):
-        """ ws? comment? '\n' """
+        """ ws? comment? ('\n'|end) """
         _, p, err = self.ws_(msg, start, end)
         if p < end:
             _, p, err = self.comment_(msg, p, end)
