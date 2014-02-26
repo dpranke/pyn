@@ -108,6 +108,42 @@ def rules(host, args, _old_graph, graph, _started_time):
         host.print_out("%s %s" % (rule_name,
                                   graph.rules[rule_name].scope['command']))
 
+def targets(host, args, _old_graph, graph, _started_time):
+    """list targets by their rule or depth in the DAG"""
+    if args.targets[0] == 'rule':
+        if len(args.targets) == 2:
+            for node_name, node in graph.nodes.items():
+                if node.rule_name == args.targets[1]:
+                    host.print_out(node_name)
+        else:
+            leaves = set()
+            for node in graph.nodes.values():
+                for d in node.deps():
+                    if d not in graph.nodes:
+                        leaves.add(d)
+            for leaf in leaves:
+                host.print_out(leaf)
+    elif args.targets[0] == 'all':
+        for node_name in graph.nodes:
+            host.print_out(node_name)
+    elif args.targets[0] == 'depth':
+
+        def print_at(name, depth, max_depth):
+            host.print_out("%s%s" % ('  ' * depth,
+                                     name))
+            if not max_depth or depth < max_depth:
+                if name in graph.nodes:
+                    for d in graph.nodes[name].deps():
+                        print_at(d, depth + 1, max_depth)
+
+        if len(args.targets) == 2:
+            depth = int(args.targets[1])
+        else:
+            depth = 1
+        for d in graph.defaults:
+            print_at(d, 0, 0)
+
+
 def tool_names():
     return _TOOLS.keys()
 
@@ -133,4 +169,5 @@ _TOOLS = {
     'query': query,
     'question': question,
     'rules': rules,
+    'targets': targets,
 }
