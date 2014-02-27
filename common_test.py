@@ -9,8 +9,10 @@ from common import Graph, Node, Rule, Scope, PynException, \
 
 class TestGraph(unittest.TestCase):
     def test_repr(self):
+        print "hello, world"
         self.assertEqual(repr(Graph('build.ninja')),
                          'Graph(name="build.ninja")')
+        self.fail()
 
 
 class TestNode(unittest.TestCase):
@@ -85,6 +87,7 @@ class TestTsort(unittest.TestCase):
 
 class TestFindNodesToBuild(unittest.TestCase):
     def test_simple(self):
+        print "hello, world"
         g = Graph('build.ninja')
         n1 = Node(name='foo.so', scope='build.ninja', outputs=['foo.so'],
                   rule_name='shlib', explicit_deps=['foo.o'])
