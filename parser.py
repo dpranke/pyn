@@ -2,46 +2,53 @@ from common import PynException
 
 
 def parse(msg, fname):
-    return NinjaParser().parse(msg, fname)
+    return NinjaParser(msg, fname).parse()
 
 
 class NinjaParser(object):
     """Parse the contents of a .ninja file and return an AST."""
+    def __init__(self, msg, fname):
+        self.msg = msg
+        self.end = len(msg)
+        self.fname = fname
 
-    def parse(self, msg, fname):
-        v, p, err = self.grammar_(msg, 0, len(msg))
+    def parse(self):
+        msg = self.msg
+        v, p, err = self.grammar_(0)
         if err:
             lineno = 1
             colno = 1
-            for c in xrange(p):
-                if msg[c] == '\n':
+            i = 0
+            while i < p:
+                if msg[i] == '\n':
                     lineno += 1
                     colno = 1
                 else:
                     colno += 1
+                i += 1
 
-            pos_str = '%s:%d:%d' % (fname, lineno, colno)
+            pos_str = '%s:%d:%d' % (self.fname, lineno, colno)
             raise PynException("%s %s" % (pos_str, err))
         else:
             return v
 
-    def expect(self, msg, start, end, substr):
+    def expect(self, start, substr):
         l = len(substr)
-        if (end - start) < l or msg[start:start + l] != substr:
+        if (self.end - start) < l or self.msg[start:start + l] != substr:
             return None, start, 'expecting "%s" at %d' % (substr, start)
         return substr, start + l, None
 
-    def grammar_(self, msg, start, end):
+    def grammar_(self, start):
         """ ((empty_line* decl)*:ds empty_line*) end -> ds """
         ds = []
         err = None
         p = start
-        while not err and p < end:
-            while not err and p < end:
-                _, p, err = self.empty_line_(msg, p, end)
+        while not err and p < self.end:
+            while not err and p < self.end:
+                _, p, err = self.empty_line_(p)
             orig_p = p
-            if p < end:
-                v, p, err = self.decl_(msg, orig_p, end)
+            if p < self.end:
+                v, p, err = self.decl_(orig_p)
                 if not err:
                     ds.append(v)
         if not err:
@@ -49,248 +56,250 @@ class NinjaParser(object):
         else:
             return None, p, err
 
-    def decl_(self, msg, start, end):
+    def decl_(self, start):
         """ build | rule | subninja | include | pool | default | var """
-        v, p, err = self.build_(msg, start, end)
+        v, p, err = self.build_(start)
         if not err:
             return v, p, None
 
-        v, p, err = self.rule_(msg, start, end)
+        v, p, err = self.rule_(start)
         if not err:
             return v, p, None
 
-        v, p, err = self.subninja_(msg, start, end)
+        v, p, err = self.subninja_(start)
         if not err:
             return v, p, None
 
-        v, p, err = self.include_(msg, start, end)
+        v, p, err = self.include_(start)
         if not err:
             return v, p, None
 
-        v, p, err = self.pool_(msg, start, end)
+        v, p, err = self.pool_(start)
         if not err:
             return v, p, None
 
-        v, p, err = self.default_(msg, start, end)
+        v, p, err = self.default_(start)
         if not err:
             return v, p, None
 
-        v, p, err = self.var_(msg, start, end)
+        v, p, err = self.var_(start)
         if not err:
             return v, p, None
 
         return None, p, ("expecting one of 'build', 'rule', 'subninja', "
                          "'include', 'pool', 'default', or a a variable name")
 
-    def build_(self, msg, start, end):
+    def build_(self, start):
         """ "build" ws paths:os ws? ':' ws name:rule
             explicit_deps:eds implicit_deps:ids order_only_deps:ods eol
             ws_vars:vs -> ['build', os, rule, eds, ids, ods, vs] """
         p = start
-        v, p, err = self.expect(msg, p, end, 'build')
+        v, p, err = self.expect(p, 'build')
         if err:
             return v, p, err
 
-        _, p, err = self.ws_(msg, p, end)
+        _, p, err = self.ws_(p)
         if err:
             return None, p, err
 
-        os, p, err = self.paths_(msg, p, end)
+        os, p, err = self.paths_(p)
         if err:
             return None, p, err
 
-        _, p, _ = self.ws_(msg, p, end)
+        _, p, _ = self.ws_(p)
 
-        v, p, err = self.expect(msg, p, end, ':')
+        v, p, err = self.expect(p, ':')
         if err:
             return None, p, err
 
-        _, p, _ = self.ws_(msg, p, end)
+        _, p, _ = self.ws_(p)
 
-        rule, p, err = self.name_(msg, p, end)
+        rule, p, err = self.name_(p)
         if err:
             return None, p, err
 
-        eds, p, _ = self.explicit_deps_(msg, p, end)
+        eds, p, _ = self.explicit_deps_(p)
 
-        ids, p, err = self.implicit_deps_(msg, p, end)
+        ids, p, err = self.implicit_deps_(p)
         if err:
             return None, p, err
 
-        ods, p, err = self.order_only_deps_(msg, p, end)
+        ods, p, err = self.order_only_deps_(p)
         if err:
             return None, p, err
 
-        _, p, err = self.eol_(msg, p, end)
+        _, p, err = self.eol_(p)
         if err:
             return None, p, err
 
-        vs, p, _ = self.ws_vars_(msg, p, end)
+        vs, p, _ = self.ws_vars_(p)
 
         return ['build', os, rule, eds, ids, ods, vs], p, None
 
-    def rule_(self, msg, start, end):
+    def rule_(self, start):
         """ "rule" ws name:n eol ws_vars:vs -> ['rule', n, vs] """
         p = start
 
-        _, p, err = self.expect(msg, p, end, 'rule')
+        _, p, err = self.expect(p, 'rule')
         if err:
             return None, p, err
 
-        _, p, err = self.ws_(msg, p, end)
+        _, p, err = self.ws_(p)
         if err:
             return None, p, err
 
-        n, p, err = self.name_(msg, p, end)
+        n, p, err = self.name_(p)
         if err:
             return None, p, err
 
-        _, p, err = self.eol_(msg, p, end)
+        _, p, err = self.eol_(p)
         if err:
             return None, p, err
 
-        vs, p, _ = self.ws_vars_(msg, p, end)
+        vs, p, _ = self.ws_vars_(p)
 
         return ['rule', n, vs], p, None
 
-    def ws_vars_(self, msg, start, end):
+    def ws_vars_(self, start):
         """ (ws var)*:vs -> vs """
         p = start
         vs = []
         err = None
-        while p < end and not err:
-            _, p, err = self.ws_(msg, p, end)
+        while p < self.end and not err:
+            _, p, err = self.ws_(p)
             if not err:
-                v, p, err = self.var_(msg, p, end)
+                v, p, err = self.var_(p)
                 if not err:
                     vs.append(v)
         return vs, p, None
 
-    def var_(self, msg, start, end):
+    def var_(self, start):
         """ name:n ws? '=' ws? value:v eol -> ['var', n, v] """
-        n, p, err = self.name_(msg, start, end)
+        n, p, err = self.name_(start)
         if err:
             return None, p, err
 
-        _, p, _ = self.ws_(msg, p, end)
+        _, p, _ = self.ws_(p)
 
-        _, p, err = self.expect(msg, p, end, '=')
+        _, p, err = self.expect(p, '=')
         if err:
             return None, p, err
 
-        _, p, _ = self.ws_(msg, p, end)
+        _, p, _ = self.ws_(p)
 
-        v, p, _ = self.value_(msg, p, end)
+        v, p, _ = self.value_(p)
 
-        _, p, _ = self.eol_(msg, p, end)
+        _, p, _ = self.eol_(p)
         return ['var', n, v], p, None
 
-    def value_(self, msg, start, end):
+    def value_(self, start):
         """ (~eol (('$' ' ' -> ' ')|('$' '\n' ' '+ -> '')|anything))*:vs
             -> ''.join(vs) """
-        p = start
+        msg, p, end = self.msg, start, self.end
+
         vs = []
-        _, _, err = self.eol_(msg, p, end)
+        _, _, err = self.eol_(p)
         while err and p < end:
             if p < (end - 1) and msg[p:p + 2] == '$ ':
                 vs.append(' ')
                 p += 2
             elif p < (end - 1) and msg[p:p + 2] == '$\n':
                 p += 2
-                _, p, _ = self.ws_(msg, p, end)
+                _, p, _ = self.ws_(p)
             else:
                 vs.append(msg[p])
                 p += 1
-            _, _, err = self.eol_(msg, p, end)
+            _, _, err = self.eol_(p)
         return ''.join(vs), p, None
 
-    def subninja_(self, msg, start, end):
+    def subninja_(self, start):
         """ "subninja" ws path:p eol -> ['subninja', p] """
-        v, p, err = self.expect(msg, start, end, 'subninja')
+        v, p, err = self.expect(start, 'subninja')
         if err:
             return v, p, err
 
-        v, p, err = self.ws_(msg, p, end)
+        v, p, err = self.ws_(p)
         if err:
             return None, p, err
 
-        v, p, err = self.path_(msg, p, end)
+        v, p, err = self.path_(p)
         if err:
             return None, p, err
 
-        _, p, err = self.eol_(msg, p, end)
+        _, p, err = self.eol_(p)
         return ['subninja', v], p, None
 
-    def include_(self, msg, start, end):
+    def include_(self, start):
         """ "include" ws path:p eol -> ['include', p] """
-        v, p, err = self.expect(msg, start, end, 'include')
+        v, p, err = self.expect(start, 'include')
         if err:
             return v, p, err
 
-        v, p, err = self.ws_(msg, p, end)
+        v, p, err = self.ws_(p)
         if err:
             return None, p, err
 
-        v, p, err = self.path_(msg, p, end)
+        v, p, err = self.path_(p)
         if err:
             return None, p, err
 
-        _, p, err = self.eol_(msg, p, end)
+        _, p, err = self.eol_(p)
         return ['include', v], p, None
 
-    def pool_(self, msg, start, end):
+    def pool_(self, start):
         """ "pool" ws name:n eol ws_vars:vs -> ['pool', n, vs] """
-        _, p, err = self.expect(msg, start, end, 'pool')
+        _, p, err = self.expect(start, 'pool')
         if err:
             return None, p, err
-        _, p, err = self.ws_(msg, p, end)
+        _, p, err = self.ws_(p)
         if err:
             return None, p, err
-        n, p, err = self.name_(msg, p, end)
+        n, p, err = self.name_(p)
         if err:
             return None, p, err
-        _, p, err = self.eol_(msg, p, end)
+        _, p, err = self.eol_(p)
         if err:
             return None, p, err
-        vs, p, _ = self.ws_vars_(msg, p, end)
+        vs, p, _ = self.ws_vars_(p)
         return ['pool', n, vs], p, None
 
-    def default_(self, msg, start, end):
+    def default_(self, start):
         """ "default" ws paths:ps eol  -> ['default', ps] """
-        v, p, err = self.expect(msg, start, end, 'default')
+        v, p, err = self.expect(start, 'default')
         if err:
             return v, p, err
 
-        v, p, err = self.ws_(msg, p, end)
+        v, p, err = self.ws_(p)
         if err:
             return None, p, err
 
-        v, p, err = self.paths_(msg, p, end)
+        v, p, err = self.paths_(p)
         if err:
             return None, p, err
 
-        _, p, err = self.eol_(msg, p, end)
+        _, p, err = self.eol_(p)
         return ['default', v], p, None
 
-    def paths_(self, msg, start, end):
+    def paths_(self, start):
         """ path:hd (ws path)*:tl -> [hd] + tl """
-        hd, p, err = self.path_(msg, start, end)
+        hd, p, err = self.path_(start)
         tl = []
         if err:
             return None, p, err
 
-        while p < end and not err:
-            v, p, err = self.ws_(msg, p, end)
+        while p < self.end and not err:
+            v, p, err = self.ws_(p)
             if not err:
-                v, p, err = self.path_(msg, p, end)
+                v, p, err = self.path_(p)
                 if not err:
                     tl.append(v)
         return [hd] + tl, p, None
 
-    def path_(self, msg, start, end):
+    def path_(self, start):
         """(('$' ' ')|(~(' '|':'|'='|'|'|eol) anything))+:vs -> ''.join(vs)"""
+        msg, p, end = self.msg, start, self.end
         vs = []
-        p = start
+
         while p < end:
             c = msg[p]
             if c.isalpha():
@@ -313,88 +322,95 @@ class NinjaParser(object):
         else:
             return ''.join(vs), p, None
 
-    def name_(self, msg, start, end):
+    def name_(self, start):
         """ (letter|'_'):hd (letter|digit|'_')*:tl -> ''.join([hd] + tl) """
-        p = start
-        if p == end:
-            return None, p, 'expecting a name'
+        if start == self.end:
+            return None, start, 'expecting a name'
+
+        msg, p, end = self.msg, start, self.end
         hd = msg[p]
         if not hd.isalpha() and hd != '_':
             return None, p, 'expecting a letter or "_" to start a name'
         p += 1
         tl = []
-        while p < end and (msg[p].isalpha() or msg[p].isdigit() or
-                           msg[p] == '_'):
-            tl.append(msg[p])
-            p += 1
+        while p < end:
+            c = msg[p]
+            if c.isalpha() or c.isdigit() or c == '_':
+                tl.append(c)
+                p += 1
+            else:
+                break
         return hd + ''.join(tl), p, None
 
-    def explicit_deps_(self, msg, start, end):
+    def explicit_deps_(self, start):
         """ ws? paths:ps -> ps | -> [] """
-        if start == end:
+        if start == self.end:
             return [], start, None
 
-        _, p, _ = self.ws_(msg, start, end)
+        _, p, _ = self.ws_(start)
 
-        ps, p, err = self.paths_(msg, p, end)
+        ps, p, err = self.paths_(p)
         if err:
             return [], start, None
         return ps, p, None
 
-    def implicit_deps_(self, msg, start, end):
+    def implicit_deps_(self, start):
         """ ws? (~'|' '|') '|' ws? paths:ps -> ps | -> [] """
-        if start == end:
+        msg = self.msg
+        if start == self.end:
             return [], start, None
 
-        _, p, _ = self.ws_(msg, start, end)
+        _, p, _ = self.ws_(start)
 
-        if (p < end - 1) and msg[p] == '|' and msg[p + 1] == '|':
+        if (p < self.end - 1) and msg[p] == '|' and msg[p + 1] == '|':
             return [], start, None
 
-        _, p, err = self.expect(msg, p, end, '|')
+        _, p, err = self.expect(p, '|')
         if err:
             return [], start, None
 
-        _, p, _ = self.ws_(msg, p, end)
+        _, p, _ = self.ws_(p)
 
-        ps, p, err = self.paths_(msg, p, end)
+        ps, p, err = self.paths_(p)
         if err:
             return None, p, err
         return ps, p, None
 
-    def order_only_deps_(self, msg, start, end):
+    def order_only_deps_(self, start):
         """ ws? '|' '|' ws? paths:ps -> ps | -> [] """
-        if start == end:
+        if start == self.end:
             return [], start, None
 
-        _, p, _ = self.ws_(msg, start, end)
+        _, p, _ = self.ws_(start)
 
-        _, p, err = self.expect(msg, p, end, '||')
+        _, p, err = self.expect(p, '||')
         if err:
             return [], start, None
 
-        _, p, _ = self.ws_(msg, p, end)
+        _, p, _ = self.ws_(p)
 
-        ps, p, err = self.paths_(msg, p, end)
+        ps, p, err = self.paths_(p)
         if err:
             return None, p, err
         return ps, p, None
 
-    def empty_line_(self, msg, start, end):
+    def empty_line_(self, start):
         """ ws? comment? ('\n'|end) """
-        _, p, _ = self.ws_(msg, start, end)
+        msg, p, end = self.msg, start, self.end
+        _, p, _ = self.ws_(start)
         if p < end:
-            _, p, _ = self.comment_(msg, p, end)
+            _, p, _ = self.comment_(p)
         if p < end and msg[p] == '\n':
             return '\n', p + 1, None
         elif p >= end:
             return None, p, None
         return None, p, "expecting a '\n' or EOF"
 
-    def eol_(self, msg, start, end):
+    def eol_(self, start):
         """ ws? ('\n' | end) """
+        msg, p, end = self.msg, start, self.end
         if start < end and (msg[start] == ' ' or msg[start] == '$'):
-            _, p, _ = self.ws_(msg, start, end)
+            _, p, _ = self.ws_(start)
         else:
             p = start
         if p < end:
@@ -405,9 +421,9 @@ class NinjaParser(object):
         else:
             return None, p, None
 
-    def ws_(self, msg, start, end):
+    def ws_(self, start):
         """ (' '|('$' '\n'))+ """
-        p = start
+        msg, p, end = self.msg, start, self.end
         if start == end:
             return None, p, "expecting either ' ' or '$\n'"
         err = None
@@ -423,9 +439,9 @@ class NinjaParser(object):
         else:
             return None, p, None
 
-    def comment_(self, msg, start, end):
+    def comment_(self, start):
         """ '#' (~'\n' anything)* ('\n'|end) """
-        p = start
+        msg, p, end = self.msg, start, self.end
         if msg[p] != '#':
             return None, start, "expecting a '#'"
         p += 1
