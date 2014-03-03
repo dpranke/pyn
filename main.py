@@ -80,7 +80,7 @@ def _load_graphs(host, args):
                             f in old_graph.subninjas))
 
     if needs_rescan:
-        ast = parse(host.read(args.file))
+        ast = parse(host.read(args.file), args.file)
         analyzer = NinjaAnalyzer(host, args, parse, expand_vars)
         graph = analyzer.analyze(ast, args.file)
         graph.is_dirty = True

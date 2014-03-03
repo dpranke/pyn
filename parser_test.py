@@ -10,17 +10,19 @@ class TestNinjaParser(unittest.TestCase):
     def check(self, text, ast, dedent=True, files=None):
         if dedent:
             dedented_text = textwrap.dedent(text)
-            actual_ast = parse(dedented_text)
+            actual_ast = parse(dedented_text, 'build.ninja')
         else:
-            actual_ast = parse(text)
+            actual_ast = parse(text, 'build.ninja')
         self.assertEqual(actual_ast, ast)
 
     def err(self, text, dedent=True, files=None):
         if dedent:
             dedented_text = textwrap.dedent(text)
-            self.assertRaises(PynException, parse, dedented_text)
+            self.assertRaises(PynException, parse, dedented_text,
+                              'build.ninja')
         else:
-            self.assertRaises(PynException, parse, text)
+            self.assertRaises(PynException, parse, text,
+                              'build.ninja')
 
     # pylint:enable=W0613
 
@@ -93,6 +95,7 @@ class TestNinjaParser(unittest.TestCase):
 
     def test_syntax_err(self):
         self.err('syntaxerror')
+        self.err('foo = 4\nsyntaxerror')
 
     def test_sample(self):
         self.check('''

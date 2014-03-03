@@ -1,14 +1,14 @@
 from common import PynException
 
 
-def parse(msg, fname=''):
+def parse(msg, fname):
     return NinjaParser().parse(msg, fname)
 
 
 class NinjaParser(object):
     """Parse the contents of a .ninja file and return an AST."""
 
-    def parse(self, msg, fname=''):
+    def parse(self, msg, fname):
         v, p, err = self.grammar_(msg, 0, len(msg))
         if err:
             lineno = 1
@@ -20,10 +20,7 @@ class NinjaParser(object):
                 else:
                     colno += 1
 
-            if fname:
-                pos_str = '%s:%d:%d' % (fname, lineno, colno)
-            else:
-                pos_str = '%d:%d' % (lineno, colno)
+            pos_str = '%s:%d:%d' % (fname, lineno, colno)
             raise PynException("%s %s" % (pos_str, err))
         else:
             return v
