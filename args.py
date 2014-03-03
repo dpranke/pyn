@@ -59,7 +59,7 @@ def parse_args(host, argv, version, tool_names):
     ap.add_argument('targets', nargs='*', default=[],
                     help=argparse.SUPPRESS)
     args = ap.parse_args(args=argv)
-    if ap.returncode:
+    if ap.returncode is not None:
         return ap.returncode, None
 
     if args.debug:

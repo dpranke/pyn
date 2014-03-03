@@ -30,6 +30,16 @@ as a parser generator. PyMeta 2 is an implementation of
 pyn is licensed under the Apache Source License. For more information see
 the LICENSE file in the source repo.
 
+## Additional functionality:
+
+* '-t check' will report if the syntax of the build files is correct
+* '-t question' will report if the build is up to date.
+* '-t rules' will dump the list of rules in the graph
+* --no-overwrite-mode will cause pyn to act as if stdout is not a terminal
+  (every message will appear on its own line). (and --overwrite-mode
+  will force pyn to treat the output as if it is a terminal).
+
+ 
 ## Things that still need to be implemented:
 
 * support for the -k flag for load throttling
@@ -38,9 +48,8 @@ the LICENSE file in the source repo.
 * rspfiles
 * NINJA_STATUS option %c 
 * various debug modes (-d stats, explain, keeprsp)
-* various tools (-t browse, commands, deps, graph, query, targets, compdb,
-  recompact)
-  * also '-t clean targets' to only clean specific targets
+* various tools (-t browse, graph, compdb, recompact)
+* have '-t clean targets' only clean specific targets
 
 ## Also
 

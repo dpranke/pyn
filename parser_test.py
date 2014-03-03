@@ -35,9 +35,6 @@ class TestNinjaParser(unittest.TestCase):
         self.check('\n', [])
         self.check('\n\n', [])
 
-        # A file w/ spaces but no newline should fail.
-        self.err('  ', dedent=False)
-
     def test_spaces_in_paths(self):
         self.check('build foo$ bar : cc foo.c',
                    [['build', ['foo bar'], 'cc', ['foo.c'],
@@ -50,8 +47,15 @@ class TestNinjaParser(unittest.TestCase):
         self.check('# comment', [])
         self.check('# comment\n', [])
         self.check('\n# comment', [])
+
+        # Note that end-of-line comments are *not* allowed
         self.check('cflags = -Wall # comment',
-                   [['var', 'cflags', '-Wall']])
+                   [['var', 'cflags', '-Wall # comment']])
+
+        # Note here that the comment gets parsed as if it is two targets.
+        self.check('build foo.o : cc foo.c # comment',
+                   [['build', ['foo.o'], 'cc', ['foo.c', '#', 'comment'],
+                     [], [], []]])
 
     def test_vars(self):
         self.check('f = bar', [['var', 'f', 'bar']])
