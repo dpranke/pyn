@@ -88,8 +88,11 @@ build compile_python : phony $
   parser.pyc $
   parser_test.pyc $
   printer.pyc $
+  printer_test.pyc $
   tools.pyc $
+  tools_test.pyc $
   stats.pyc $
+  stats_test.pyc $
   var_expander.pyc $
   var_expander_test.pyc
 
@@ -108,8 +111,11 @@ build integration_test.pyc : pycomp integration_test.py
 build parser.pyc : pycomp parser.py
 build parser_test.pyc : pycomp parser_test.py
 build printer.pyc : pycomp printer.py
+build printer_test.pyc : pycomp printer_test.py
 build stats.pyc : pycomp stats.py
+build stats_test.pyc : pycomp stats_test.py
 build tools.pyc : pycomp tools.py
+build tools_test.pyc : pycomp tools_test.py
 build var_expander.pyc : pycomp var_expander.py
 build var_expander_test.pyc : pycomp var_expander_test.py
 
@@ -129,8 +135,11 @@ build lint : phony $
   .pylint.parser.py $
   .pylint.parser_test.py $
   .pylint.printer.py $
+  .pylint.printer_test.py $
   .pylint.stats.py $
+  .pylint.stats_test.py $
   .pylint.tools.py $
+  .pylint.tools_test.py $
   .pylint.var_expander.py $
   .pylint.var_expander_test.py 
 
@@ -149,8 +158,11 @@ build .pylint.main_test.py : pylint main_test.py
 build .pylint.parser.py : pylint parser.py
 build .pylint.parser_test.py : pylint parser_test.py
 build .pylint.printer.py : pylint printer.py
+build .pylint.printer_test.py : pylint printer_test.py
 build .pylint.stats.py : pylint stats.py
+build .pylint.stats_test.py : pylint stats_test.py
 build .pylint.tools.py : pylint tools.py
+build .pylint.tools_test.py : pylint tools_test.py
 build .pylint.var_expander.py : pylint var_expander.py
 build .pylint.var_expander_test.py : pylint var_expander_test.py
 
@@ -159,13 +171,19 @@ build test : phony $
   .pytest.builder_test.py $
   .pytest.common_test.py $
   .pytest.main_test.py $
-  .pytest.parser_test.py
+  .pytest.parser_test.py $
+  .pytest.printer_test.py $
+  .pytest.stats_test.py $
+  .pytest.tools_test.py
 
 build .pytest.analyzer_test.py : pytest analyzer_test.py
 build .pytest.builder_test.py : pytest builder_test.py
 build .pytest.common_test.py : pytest common_test.py
 build .pytest.main_test.py : pytest main_test.py
 build .pytest.parser_test.py : pytest parser_test.py
+build .pytest.printer_test.py : pytest printer_test.py
+build .pytest.stats_test.py : pytest stats_test.py
+build .pytest.tools_test.py : pytest tools_test.py
 build .pytest.var_expander_test.py : pytest var_expander_test.py
 
 build coverage : phony .coverage
@@ -176,6 +194,9 @@ build .coverage : pycovrep $
     .coverage.common_test.py $
     .coverage.main_test.py $
     .coverage.parser_test.py $
+    .coverage.printer_test.py $
+    .coverage.stats_test.py $
+    .coverage.tools_test.py $
     .coverage.var_expander_test.py
 
 build .coverage.analyzer_test.py : pycov analyzer_test.py
@@ -183,6 +204,9 @@ build .coverage.builder_test.py : pycov builder_test.py
 build .coverage.common_test.py : pycov common_test.py
 build .coverage.main_test.py : pycov main_test.py
 build .coverage.parser_test.py : pycov parser_test.py
+build .coverage.printer_test.py : pycov printer_test.py
+build .coverage.stats_test.py : pycov stats_test.py
+build .coverage.tools_test.py : pycov tools_test.py
 build .coverage.var_expander_test.py : pycov var_expander_test.py
 
 build all : phony compile_python bin/pyn
