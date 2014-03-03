@@ -50,7 +50,7 @@ class VarExpander(object):
         return (''.join(vs), p, err)
 
     def chunk_(self, msg, start, end):
-        if end - start > 0 and msg[start] == '$':
+        if end > start and msg[start] == '$':
             if end - start == 1:
                 return (None, start + 1, "expecting a varname or a '{'")
             elif msg[start + 1] in (' ', ':', '$'):
@@ -71,10 +71,8 @@ class VarExpander(object):
                     return (None, p, err)
                 else:
                     return (self.lookup(v), p, None)
-        elif end - start > 0:
-            return msg[start], start + 1, None
         else:
-            return None, start, None
+            return msg[start], start + 1, None
 
     def varname_(self, msg, start, end):
         vs = []
