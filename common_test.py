@@ -15,7 +15,8 @@ class TestGraph(unittest.TestCase):
 
 class TestNode(unittest.TestCase):
     def test_repr(self):
-        self.assertEqual(repr(Node('foo.o', ['foo.o'], Scope('build.ninja', None),
+        self.assertEqual(repr(Node('foo.o', ['foo.o'], Scope('build.ninja',
+                                                             None),
                                    'cc', [])),
                          'Node(name="foo.o")')
 

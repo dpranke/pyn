@@ -53,16 +53,15 @@ def commands(host, args, _old_graph, graph, _started_time):
 def deps(host, args, _old_graph, graph, _started_time):
     """show dependencies stored in the deps log"""
     if args.targets:
-        targets = args.targets
+        node_names = args.targets
     else:
-        targets = graph.default
+        node_names = graph.default
 
-    for node_name in targets:
+    for node_name in node_names:
         n = graph.nodes[node_name]
         depsfile_deps = n.scope['depsfile_deps']
         if depsfile_deps:
-            host.print_out("%s: #deps %d" % (node_name,
-                                                len(depsfile_deps)))
+            host.print_out("%s: #deps %d" % (node_name, len(depsfile_deps)))
             for dep in depsfile_deps:
                 host.print_out("    %s" % dep)
         else:
@@ -102,11 +101,12 @@ def query(host, args, _old_graph, graph, _started_time):
             host.print_out("    " + node_name)
 
 
-def rules(host, args, _old_graph, graph, _started_time):
+def rules(host, _args, _old_graph, graph, _started_time):
     """list all the rules"""
     for rule_name in sorted(graph.rules):
         host.print_out("%s %s" % (rule_name,
                                   graph.rules[rule_name].scope['command']))
+
 
 def targets(host, args, _old_graph, graph, _started_time):
     """list targets by their rule or depth in the DAG"""
@@ -137,11 +137,11 @@ def targets(host, args, _old_graph, graph, _started_time):
                         print_at(d, depth + 1, max_depth)
 
         if len(args.targets) == 2:
-            depth = int(args.targets[1])
+            max_depth = int(args.targets[1])
         else:
-            depth = 1
+            max_depth = 1
         for d in graph.defaults:
-            print_at(d, 0, 0)
+            print_at(d, 0, max_depth)
 
 
 def tool_names():

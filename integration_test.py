@@ -63,14 +63,10 @@ class IntegrationTestNinjaParser(TestNinjaParser):
         # Note that we ignore what the AST is.
         self.assertEqual(returncode, 0)
 
-    def err(self, text, dedent=True, files=None):
+    def err(self, text, files=None):
         files = files or {}
-        if dedent:
-            dedented_text = textwrap.dedent(text)
-            returncode, _, _ = self._call(dedented_text, files)
-        else:
-            returncode, _, _ = self._call(text, files)
-
+        dedented_text = textwrap.dedent(text)
+        returncode, _, _ = self._call(dedented_text, files)
         self.assertNotEquals(returncode, 0)
 
 if __name__ == '__main__':

@@ -306,14 +306,8 @@ class NinjaParser(object):
             elif c in (':', '=', '|'):
                 break
             else:
-                orig_p = p
-                v, p, err = self.eol_(msg, p, end)
-                if v or not err:
-                    p = orig_p
-                    break
-                else:
-                    vs.append(c)
-                    p += 1
+                vs.append(c)
+                p += 1
         if len(vs) == 0:
             return None, start, 'expecting a path'
         else:
@@ -388,9 +382,9 @@ class NinjaParser(object):
 
     def empty_line_(self, msg, start, end):
         """ ws? comment? ('\n'|end) """
-        _, p, err = self.ws_(msg, start, end)
+        _, p, _ = self.ws_(msg, start, end)
         if p < end:
-            _, p, err = self.comment_(msg, p, end)
+            _, p, _ = self.comment_(msg, p, end)
         if p < end and msg[p] == '\n':
             return '\n', p + 1, None
         elif p >= end:

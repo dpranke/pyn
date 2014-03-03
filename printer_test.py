@@ -5,6 +5,7 @@ from printer import Printer
 
 class TestPrinter(unittest.TestCase):
     def setUp(self):
+        # 'Invalid name' pylint: disable=C0103
         self.out = []
 
     def print_(self, msg, end='\n'):

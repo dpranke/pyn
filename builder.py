@@ -93,7 +93,8 @@ class Builder(object):
     def _description(self, graph, node_name):
         node = graph.nodes[node_name]
         rule = graph.rules[node.rule_name]
-        return self.expand_vars(rule.scope['description'], node.scope, rule.scope)
+        return self.expand_vars(rule.scope['description'], node.scope,
+                                rule.scope)
 
     def _build_node(self, graph, node_name):
         node = graph.nodes[node_name]
@@ -129,6 +130,7 @@ class Builder(object):
     def _build_node_done(self, graph, result):
         node_name, desc, command, ret, out, err = result
         n = graph.nodes[node_name]
+        rule = graph.rules[n.rule_name]
         n.running = False
 
         if n.scope['depfile'] and n.scope['deps'] == 'gcc':

@@ -21,7 +21,7 @@ def write_deps(deps_file, source_file):
         mf = getattr(m, '__file__', None)
         if mf and (not mf.startswith('/System') and
                    not mf.startswith('/Library')):
-            deps.append(mf.replace('.pyc', '.py'))
+            deps.append(mf.replace('.pyc', '.py').replace(' ', '\\ '))
 
     with open(deps_file, 'w') as df:
         df.write("%s : %s\n" % (source_file.replace('.py', '.pyc'),

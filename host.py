@@ -48,7 +48,7 @@ class Host(object):
             os.mkdir(path)
 
     def mkdtemp(self, **kwargs):
-        return tempfile.mkdtemp(**self._kwargs)
+        return tempfile.mkdtemp(**kwargs)
 
     def mtime(self, *comps):
         return os.stat(self.join(*comps)).st_mtime

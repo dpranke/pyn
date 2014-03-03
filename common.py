@@ -21,6 +21,7 @@ class Graph(object):
 class Node(object):
     def __init__(self, name, scope, outputs, rule_name, explicit_deps=None,
                  implicit_deps=None, order_only_deps=None, depsfile_deps=None):
+        # 'too many arguments' pylint: disable=R0913
         self.name = name
         self.scope = scope
         self.outputs = outputs

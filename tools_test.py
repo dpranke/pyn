@@ -1,7 +1,5 @@
 import unittest
 
-from tools import check, clean, question
-
 
 class TestCheck(unittest.TestCase):
     def test_basic(self):
