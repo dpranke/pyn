@@ -1,4 +1,7 @@
-from io import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 
 
 class FakeHost(object):
@@ -57,39 +60,13 @@ class FakeHost(object):
         if not path in self.dirs:
             self.dirs.add(path)
 
-    def _mktemp(self, suffix='', prefix='tmp', dir=None, **_kwargs):
+    def mkdtemp(self, suffix='', prefix='tmp', dir=None, **_kwargs):
         if dir is None:
             dir = self.sep + '__im_tmp'
         curno = self.current_tmpno
         self.current_tmpno += 1
         self.last_tmpdir = self.join(dir, '%s_%u_%s' % (prefix, curno, suffix))
         return self.last_tmpdir
-
-    def mkdtemp(self, **kwargs):
-        # pylint: disable=W0212
-        # pylint: disable=C0103
-
-        class TemporaryDirectory(object):
-            def __init__(self, fs, **kwargs):
-                self._kwargs = kwargs
-                self._filesystem = fs
-                self._directory_path = fs._mktemp(**kwargs)
-                fs.maybe_mkdir(self._directory_path)
-
-            def __str__(self):
-                return self._directory_path
-
-            def __enter__(self):
-                return self._directory_path
-
-            def __exit__(self, type, value, traceback):
-                # Only self-delete if necessary.
-
-                # FIXME: Should we delete non-empty directories?
-                if self._filesystem.exists(self._directory_path):
-                    self._filesystem.rmtree(self._directory_path)
-
-        return TemporaryDirectory(fs=self, **kwargs)
 
     def mp_pool(self, processes=None):
         return FakePool(processes)
@@ -98,7 +75,6 @@ class FakeHost(object):
         return self.mtimes[self.join(*comps)]
 
     def path_to_module(self, module_name):
-        # __file__ is always an absolute path.
         return '/src/pyn/' + module_name
 
     def print_err(self, msg, end='\n'):

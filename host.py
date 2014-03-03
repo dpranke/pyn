@@ -48,38 +48,7 @@ class Host(object):
             os.mkdir(path)
 
     def mkdtemp(self, **kwargs):
-        """Create and return a uniquely named directory.
-
-        This is like tempfile.mkdtemp, but if used in a with statement
-        the directory will self-delete at the end of the block (if the
-        directory is empty; non-empty directories raise errors). The
-        directory can be safely deleted inside the block as well, if so
-        desired.
-
-        Note that the object returned is not a string and does not
-        support all of the string methods. If you need a string, coerce the
-        object to a string and go from there.
-        """
-        class TemporaryDirectory(object):
-            def __init__(self, **kwargs):
-                self._kwargs = kwargs
-                self._directory_path = tempfile.mkdtemp(**self._kwargs)
-
-            def __str__(self):
-                return self._directory_path
-
-            def __enter__(self):
-                return self._directory_path
-
-            # "Redefining built-in 'type': pylint:disable=W0622
-            def __exit__(self, type, value, traceback):
-                # Only self-delete if necessary.
-
-                # FIXME: Should we delete non-empty directories?
-                if os.path.exists(self._directory_path):
-                    os.rmdir(self._directory_path)
-
-        return TemporaryDirectory(**kwargs)
+        return tempfile.mkdtemp(**self._kwargs)
 
     def mtime(self, *comps):
         return os.stat(self.join(*comps)).st_mtime
