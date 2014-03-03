@@ -15,14 +15,10 @@ class TestNinjaParser(unittest.TestCase):
             actual_ast = parse(text, 'build.ninja')
         self.assertEqual(actual_ast, ast)
 
-    def err(self, text, dedent=True, files=None):
-        if dedent:
-            dedented_text = textwrap.dedent(text)
-            self.assertRaises(PynException, parse, dedented_text,
-                              'build.ninja')
-        else:
-            self.assertRaises(PynException, parse, text,
-                              'build.ninja')
+    def err(self, text, files=None):
+        dedented_text = textwrap.dedent(text)
+        self.assertRaises(PynException, parse, dedented_text,
+                          'build.ninja')
 
     # pylint:enable=W0613
 
