@@ -11,13 +11,7 @@ rule pycomp
 
 rule pycov
   description = generating python coverage
-  command = $
-      coverage erase ; $
-      for i in $in ; $
-      do $
-        coverage run --append $$i; $
-      done; $
-      coverage --report
+  command = pytest -c -q $in 
 
 rule pep8_rule
   command = pep8 $in 
@@ -32,8 +26,8 @@ rule pylint_rule
   description = pylint $in
 
 rule pytest
-  command = pytest $in 
-  description = python $in
+  command = pytest -q $in 
+  description = running python tests
 
 rule shell
   command = $shell_cmd
