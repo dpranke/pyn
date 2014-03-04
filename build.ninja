@@ -2,7 +2,7 @@ rule pycombine
   description = building $out
   command = python -B utils/pycombine.py $in > $out && chmod +x $out
 
-rule pycomp 
+rule pycomp
   # command = python utils/pycomp.py $in
   description = checking $in
   command = python utils/pycomp.py -MMD -MF .$out.d $in
@@ -11,10 +11,10 @@ rule pycomp
 
 rule pycov
   description = generating python coverage
-  command = pytest -c -q $in 
+  command = pytest -c -q $in
 
 rule pep8_rule
-  command = pep8 $in 
+  command = pep8 $in
   description = pep8 $in
 
 rule pyflakes_rule
@@ -22,11 +22,11 @@ rule pyflakes_rule
   description = pyflakes $in
 
 rule pylint_rule
-  command = pylint --rcfile pylintrc $in 
+  command = pylint --rcfile pylintrc $in
   description = pylint $in
 
 rule pytest
-  command = pytest -q $in 
+  command = pytest -q $in
   description = running python tests
 
 rule shell
