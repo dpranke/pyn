@@ -6,8 +6,6 @@ from host import Host
 from main_test import TestMain
 from parser_test import TestNinjaParser
 
-SHOULD_RUN_COVERAGE = False
-
 
 class IntegrationTestMain(TestMain):
     @staticmethod
@@ -15,11 +13,8 @@ class IntegrationTestMain(TestMain):
         host = Host()
         path_to_main = host.join(host.dirname(host.path_to_module(__name__)),
                                  'main.py')
-        if SHOULD_RUN_COVERAGE:
-            cmd_prefix = ['coverage', 'run', '--append', path_to_main]
-        else:
-            cmd_prefix = [host.python_interpreter, path_to_main]
-
+        path_to_main = path_to_main.replace(' ', '\\ ')
+        cmd_prefix = [host.python_interpreter, path_to_main]
         return host.call(' '.join(cmd_prefix + argv))
 
 
@@ -30,10 +25,8 @@ class IntegrationTestNinjaParser(TestNinjaParser):
 
         host_module_path = host.path_to_module(host.__module__)
         path_to_main = host.join(host.dirname(host_module_path), 'main.py')
-        if SHOULD_RUN_COVERAGE:
-            cmd_prefix = ['coverage', 'run', '--append', path_to_main]
-        else:
-            cmd_prefix = [host.python_interpreter, path_to_main]
+        path_to_main = path_to_main.replace(' ', '\\ ')
+        cmd_prefix = [host.python_interpreter, path_to_main]
 
         orig_wd = host.getcwd()
         try:
@@ -69,8 +62,6 @@ class IntegrationTestNinjaParser(TestNinjaParser):
         returncode, _, _ = self._call(dedented_text, files)
         self.assertNotEquals(returncode, 0)
 
+
 if __name__ == '__main__':
-    if '-c' in sys.argv:
-        sys.argv.remove('-c')
-        SHOULD_RUN_COVERAGE = True
     unittest.main()
