@@ -93,7 +93,7 @@ class NinjaAnalyzer(object):
 
     def _decl_include(self, graph, _scope, decl):
         _, path = decl
-        graph.includes.add(path)
+        graph.includes.append(path)
         return graph
 
     def _decl_pool(self, graph, _scope, decl):
@@ -133,7 +133,7 @@ class NinjaAnalyzer(object):
 
     def _decl_subninja(self, graph, _scope, decl):
         _, path = decl
-        graph.subninjas.add(path)
+        graph.subninjas.append(path)
         return graph
 
     def _decl_var(self, graph, scope, decl):

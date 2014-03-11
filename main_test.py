@@ -148,11 +148,11 @@ class TestBuild(unittest.TestCase):
         out_files['foo'] = 'foo\n'
         self.check(in_files, out_files)
 
-    def test_multiple_subninjas(self):
+    def test_multiple_rules_fails(self):
         in_files = {}
         in_files['build.ninja'] = textwrap.dedent("""
             subninja echo.ninja
-            subninja ehco.ninja
+            subninja echo.ninja
 
             build foo : echo_out build.ninja
 
@@ -161,6 +161,28 @@ class TestBuild(unittest.TestCase):
         in_files['echo.ninja'] = textwrap.dedent("""
             rule echo_out
                 command = echo $out > $out
+            """)
+
+        # FIXME: This should succeed.
+        #out_files = in_files.copy()
+        #out_files['foo'] = 'foo\n'
+        #self.check(in_files, out_files)
+        self.check(in_files, expected_return_code=1)
+
+    def test_multiple_subninja_vars_fails(self):
+        in_files = {}
+        in_files['build.ninja'] = textwrap.dedent("""
+            subninja echo.ninja
+            subninja echo.ninja
+
+            rule echo_out
+                command = echo $out > $out
+
+            build foo : echo_out build.ninja
+
+            default foo
+            """)
+        in_files['echo.ninja'] = textwrap.dedent("""
             """)
 
         # FIXME: This should succeed.

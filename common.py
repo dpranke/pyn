@@ -10,8 +10,8 @@ class Graph(object):
         self.rules = {}
         self.pools = {}
         self.scopes = {}
-        self.subninjas = set()
-        self.includes = set()
+        self.subninjas = []
+        self.includes = []
         self.is_dirty = False
 
     def __repr__(self):
