@@ -3,12 +3,13 @@ import sys
 import textwrap
 import unittest
 
+import main_test
+import parser_test
+
 from host import Host
-from main_test import TestArgs, TestBuild
-from parser_test import TestNinjaParser
 
 
-class IntegrationTestArgs(TestArgs):
+class IntegrationTestArgs(main_test.TestArgs):
     @staticmethod
     def call(argv):
         host = Host()
@@ -19,7 +20,7 @@ class IntegrationTestArgs(TestArgs):
         return host.call(' '.join(cmd_prefix + argv))
 
 
-class IntegrationTestBuild(TestBuild):
+class IntegrationTestBuild(main_test.TestBuild):
     def cmd_prefix(self):
         # return ['ninja']
         host = Host()
@@ -60,7 +61,7 @@ class IntegrationTestBuild(TestBuild):
             host.chdir(orig_wd)
 
 
-class IntegrationTestNinjaParser(TestNinjaParser):
+class IntegrationTestNinjaParser(parser_test.TestNinjaParser):
     @staticmethod
     def _call(text, files):
         host = Host()
