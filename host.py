@@ -72,6 +72,9 @@ class Host(object):
         with open(path) as f:
             return f.read()
 
+    def relpath(self, path, start):
+        return os.path.relpath(path, start)
+
     def remove(self, *comps):
         os.remove(self.join(*comps))
 

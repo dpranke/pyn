@@ -86,6 +86,9 @@ class FakeHost(object):
     def read(self, *comps):
         return self.files[self.join(self.cwd, *comps)]
 
+    def relpath(self, path, start):
+        return path.replace(start + '/', '')
+
     def remove(self, *comps):
         del self.files[self.join(*comps)]
 
