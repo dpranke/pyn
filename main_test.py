@@ -75,7 +75,7 @@ class TestArgs(unittest.TestCase):
         self.check(['--version'], 0, VERSION + '\n', '')
 
 
-class EvalTest(unittest.TestCase):
+class TestBuild(unittest.TestCase):
     def files_to_ignore(self):
         # return ['.ninja_deps', '.ninja_log']
         return ['.pyn.db']
