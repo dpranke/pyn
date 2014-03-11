@@ -93,8 +93,8 @@ class Builder(object):
     def _description(self, graph, node_name):
         node = graph.nodes[node_name]
         rule = graph.rules[node.rule_name]
-        return self.expand_vars(rule.scope['description'], node.scope,
-                                rule.scope)
+        desc = rule.scope['description'] or rule.scope['command']
+        return self.expand_vars(desc, node.scope, rule.scope)
 
     def _build_node(self, graph, node_name):
         node = graph.nodes[node_name]
