@@ -80,6 +80,20 @@ class TestBuild(unittest.TestCase):
         # return ['.ninja_deps', '.ninja_log']
         return ['.pyn.db']
 
+    def _write_files(self, host, files):
+        for path, contents in list(files.items()):
+            dirname = host.dirname(path)
+            if dirname:
+                host.maybe_mkdir(dirname)
+            host.write(path, contents)
+
+    def _read_files(self, host, tmpdir):
+        out_files = {}
+        for f in host.files:
+            if f.startswith(tmpdir):
+                out_files[f.replace(tmpdir + '/', '')] = host.files[f]
+        return out_files
+
     def _call(self, files):
         host = FakeHost()
 
@@ -96,30 +110,28 @@ class TestBuild(unittest.TestCase):
             orig_wd = host.getcwd()
             tmpdir = str(host.mkdtemp())
             host.chdir(tmpdir)
-            for path, contents in list(files.items()):
-                dirname = host.dirname(path)
-                if dirname:
-                    host.maybe_mkdir(dirname)
-                host.write(path, contents)
+            self._write_files(host, files)
 
             returncode = main(host, [])
-            out_files = {}
-            for f in host.files:
-                if f.startswith(tmpdir):
-                    out_files[f.replace(tmpdir + '/', '')] = host.files[f]
+
+            out_files = self._read_files(host, tmpdir)
             return returncode, out_files
         finally:
             host.rmtree(tmpdir)
             host.chdir(orig_wd)
 
-    def check(self, in_files, expected_out_files):
+    def check(self, in_files, expected_out_files=None,
+              expected_return_code=0):
         returncode, actual_out_files = self._call(in_files)
-        self.assertEqual(returncode, 0)
-        for k, v in expected_out_files.items():
-            self.assertEqual(expected_out_files[k], v)
 
-        all_out_files = set(actual_out_files.keys()).difference(self.files_to_ignore())
-        self.assertEqual(all_out_files, set(expected_out_files.keys()))
+        self.assertEqual(returncode, expected_return_code)
+
+        if expected_out_files:
+            for k, v in expected_out_files.items():
+                self.assertEqual(expected_out_files[k], v)
+            all_out_files = set(actual_out_files.keys()).difference(
+                self.files_to_ignore())
+            self.assertEqual(all_out_files, set(expected_out_files.keys()))
 
     def test_basic(self):
         in_files = {}
@@ -136,7 +148,28 @@ class TestBuild(unittest.TestCase):
         out_files['foo'] = 'foo\n'
         self.check(in_files, out_files)
 
-    def disabled_test_var_expansion(self):
+    def test_multiple_subninjas(self):
+        in_files = {}
+        in_files['build.ninja'] = textwrap.dedent("""
+            subninja echo.ninja
+            subninja ehco.ninja
+
+            build foo : echo_out build.ninja
+
+            default foo
+            """)
+        in_files['echo.ninja'] = textwrap.dedent("""
+            rule echo_out
+                command = echo $out > $out
+            """)
+
+        # FIXME: This should succeed.
+        #out_files = in_files.copy()
+        #out_files['foo'] = 'foo\n'
+        #self.check(in_files, out_files)
+        self.check(in_files, expected_return_code=1)
+
+    def test_var_expansion(self):
         in_files = {}
         in_files['build.ninja'] = textwrap.dedent("""
             v = foo
@@ -151,8 +184,9 @@ class TestBuild(unittest.TestCase):
             build $v : echo_out build.ninja
             """)
 
-        out_files = in_files.copy()
-        out_files['foo'] = 'foo\n'
-        out_files['bar'] = 'bar\n'
-
-        self.check(in_files, out_files)
+        # FIXME: This should succeed.
+        #out_files = in_files.copy()
+        #out_files['foo'] = 'foo\n'
+        #out_files['bar'] = 'bar\n'
+        #self.check(in_files, out_files)
+        self.check(in_files, expected_return_code=1)
