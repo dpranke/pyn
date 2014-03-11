@@ -1,4 +1,5 @@
 import re
+import textwrap
 import unittest
 
 try:
@@ -7,10 +8,11 @@ except ImportError:
     from io import StringIO
 
 from host import Host
+from host_fake import FakeHost
 from main import main, VERSION
 
 
-class TestMain(unittest.TestCase):
+class TestArgs(unittest.TestCase):
     @staticmethod
     def call(argv):
         host = Host()
@@ -71,6 +73,89 @@ class TestMain(unittest.TestCase):
 
     def test_version(self):
         self.check(['--version'], 0, VERSION + '\n', '')
+
+
+class EvalTest(unittest.TestCase):
+    def files_to_ignore(self):
+        # return ['.ninja_deps', '.ninja_log']
+        return ['.pyn.db']
+
+    def _call(self, files):
+        host = FakeHost()
+
+        def fake_call(arg_str):
+            args = arg_str.split()
+            if args[0] == 'echo' and args[2] == '>':
+                host.write(host.join(host.cwd, args[3]), args[1] + '\n')
+                return 0, '', ''
+            return 1, '', ''
+
+        host.call = fake_call
+
+        try:
+            orig_wd = host.getcwd()
+            tmpdir = str(host.mkdtemp())
+            host.chdir(tmpdir)
+            for path, contents in list(files.items()):
+                dirname = host.dirname(path)
+                if dirname:
+                    host.maybe_mkdir(dirname)
+                host.write(path, contents)
+
+            returncode = main(host, [])
+            out_files = {}
+            for f in host.files:
+                if f.startswith(tmpdir):
+                    out_files[f.replace(tmpdir + '/', '')] = host.files[f]
+            return returncode, out_files
+        finally:
+            host.rmtree(tmpdir)
+            host.chdir(orig_wd)
+
+    def check(self, in_files, expected_out_files):
+        returncode, actual_out_files = self._call(in_files)
+        self.assertEqual(returncode, 0)
+        for k, v in expected_out_files.items():
+            self.assertEqual(expected_out_files[k], v)
+
+        all_out_files = set(actual_out_files.keys()).difference(self.files_to_ignore())
+        self.assertEqual(all_out_files, set(expected_out_files.keys()))
+
+    def test_basic(self):
+        in_files = {}
+        in_files['build.ninja'] = textwrap.dedent("""
+            rule echo_out
+                command = echo $out > $out
+
+            build foo : echo_out build.ninja
+
+            default foo
+            """)
+
+        out_files = in_files.copy()
+        out_files['foo'] = 'foo\n'
+        self.check(in_files, out_files)
+
+    def disabled_test_var_expansion(self):
+        in_files = {}
+        in_files['build.ninja'] = textwrap.dedent("""
+            v = foo
+
+            rule echo_out
+                command = echo $out > $out
+
+            build $v : echo_out build.ninja
+
+            v = bar
+
+            build $v : echo_out build.ninja
+            """)
+
+        out_files = in_files.copy()
+        out_files['foo'] = 'foo\n'
+        out_files['bar'] = 'bar\n'
+
+        self.check(in_files, out_files)
 
 
 if __name__ == '__main__':
