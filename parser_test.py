@@ -184,7 +184,3 @@ class TestNinjaParser(unittest.TestCase):
 
         # no equals sign
         self.err('foo ')
-
-
-if __name__ == '__main__':
-    unittest.main()

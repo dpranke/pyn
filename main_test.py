@@ -156,7 +156,3 @@ class TestBuild(unittest.TestCase):
         out_files['bar'] = 'bar\n'
 
         self.check(in_files, out_files)
-
-
-if __name__ == '__main__':
-    unittest.main()

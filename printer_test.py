@@ -16,7 +16,3 @@ class TestPrinter(unittest.TestCase):
         pr.update('foo')
         pr.flush()
         self.assertEqual(self.out, ['foo', '\n'])
-
-
-if __name__ == '__main__':
-    unittest.main()

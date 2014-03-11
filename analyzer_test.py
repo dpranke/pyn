@@ -105,6 +105,3 @@ class TestAnalyzer(unittest.TestCase):
 
     def test_default(self):
         self.check([['default', ['all']]])
-
-if __name__ == '__main__':
-    unittest.main()

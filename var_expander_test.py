@@ -76,7 +76,3 @@ class TestExpandVars(unittest.TestCase):
         # ensure that undefined variables are handled properly and
         # don't result in whitespace, either.
         self.check('$foo$baz$bar', 'ab')
-
-
-if __name__ == '__main__':
-    unittest.main()

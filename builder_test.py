@@ -16,7 +16,3 @@ class TestBuilder(unittest.TestCase):
         args.verbose = 0
         Builder(Host(), args, expand_vars, 0)
         self.assertTrue(True)
-
-
-if __name__ == '__main__':
-    unittest.main()

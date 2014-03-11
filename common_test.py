@@ -95,7 +95,3 @@ class TestFindNodesToBuild(unittest.TestCase):
         g.nodes[n2.name] = n2
         self.assertEqual(find_nodes_to_build(g, [n1.name]),
                          set([n1.name, n2.name]))
-
-
-if __name__ == '__main__':
-    unittest.main()
