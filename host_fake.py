@@ -39,7 +39,7 @@ class FakeHost(object):
         return 2
 
     def dirname(self, path):
-        return path.split('/')[:-1].join('/')
+        return '/'.join(path.split('/')[:-1])
 
     def exists(self, *comps):
         path = self.join(self.cwd, *comps)
@@ -96,8 +96,8 @@ class FakeHost(object):
         path = self.join(*comps)
         for f in self.files:
             if f.startswith(path):
-                f.files[f] = None
-                f.written_files[f] = None
+                self.files[f] = None
+                self.written_files[f] = None
 
     def sleep(self, time_secs):
         pass
@@ -106,8 +106,9 @@ class FakeHost(object):
         return 0
 
     def write(self, path, contents):
-        self.files[path] = contents
-        self.written_files[path] = contents
+        full_path = self.join(self.cwd, path)
+        self.files[full_path] = contents
+        self.written_files[full_path] = contents
 
 
 class FakePool(object):
@@ -117,6 +118,9 @@ class FakePool(object):
     def close(self):
         pass
 
+    def apply_async(self, fn, args):
+        return FakePromise(fn, args)
+
     def map(self, fn, iterable):
         return [fn(i) for i in iterable]
 
@@ -125,3 +129,20 @@ class FakePool(object):
 
     def terminate(self):
         pass
+
+
+class FakePromise(object):
+    def __init__(self, fn, args):
+        self.fn = fn
+        self.args = args
+        self.result = None
+        self.called = False
+
+    def ready(self):
+        return True
+
+    def get(self, timeout=None):
+        if not self.called:
+            self.result = self.fn(*self.args)
+            self.called = True
+        return self.result
