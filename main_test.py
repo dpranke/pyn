@@ -113,6 +113,7 @@ class UnitTestMixin(object):
         err = host.stderr.getvalue()
         return returncode, out, err
 
+
 class CheckMixin(object):
     def _write_files(self, host, files):
         for path, contents in list(files.items()):
@@ -155,6 +156,7 @@ class CheckMixin(object):
 
         self.assertEqual(returncode, expected_return_code)
         if expected_out is not None:
+            # FIXME: add a test that actual checks stderr for matches.
             self.assertEqual(expected_out, actual_out)
         if expected_err is not None:
             self.assertEqual(expected_err, actual_err)
@@ -214,7 +216,7 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
                 command = echo $out > $out
             """)
 
-        # FIXME: This should succeed.
+        # FIXME: Make multiple definitions of the same rule a warning?
         #out_files = in_files.copy()
         #out_files['foo'] = 'foo\n'
         #self.check(in_files, out_files)
@@ -236,7 +238,7 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
         in_files['echo.ninja'] = textwrap.dedent("""
             """)
 
-        # FIXME: This should succeed.
+        # FIXME: Make multiple inclusions of the same subninja work?.
         #out_files = in_files.copy()
         #out_files['foo'] = 'foo\n'
         #self.check(in_files, out_files)
@@ -257,7 +259,7 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
             build $v : echo_out build.ninja
             """)
 
-        # FIXME: This should succeed.
+        # FIXME: Enable test for proper var expansion.
         #out_files = in_files.copy()
         #out_files['foo'] = 'foo\n'
         #out_files['bar'] = 'bar\n'
@@ -279,31 +281,27 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
         self.check(in_files, out_files)
 
     def test_command_line_changes(self):
-        # FIXME: write :)
+        # FIXME: write a test to check rebuild when command line changes.
         pass
 
     def test_target_out_of_date(self):
-        # FIXME: write :)
+        # FIXME: write a test where a target is out of date
         pass
 
     def test_verbose(self):
-        # FIXME: write :)
+        # FIXME: write a test for build w/ -v
         pass
 
     def test_really_verboses(self):
-        # FIXME: write :)
+        # FIXME: write a test for build w/ -vv
         pass
 
     def test_gcc_deps(self):
-        # FIXME: write :)
+        # FIXME: write a test for real gcc deps
         pass
 
     def test_ctrl_c(self):
-        # FIXME: write :)
-        pass
-
-    def test_no_work_to_do(self):
-        # FIXME: write :)
+        # FIXME: write a test to handle ctrl-c
         pass
 
     def test_command_fails(self):
@@ -337,6 +335,14 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
 
 
 class TestTools(unittest.TestCase, UnitTestMixin, CheckMixin):
+    def test_clean_generated(self):
+        # FIXME: write a test for clean -g
+        pass
+
+    def test_clean_verbose(self):
+        # FIXME: write a test for clean -v
+        pass
+
     def test_commands(self):
         in_files, _ = default_test_files()
         self.check(in_files, args=['-t', 'commands'],
