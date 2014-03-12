@@ -9,14 +9,19 @@ import parser_test
 from host import Host
 
 
+path_to_this_module = os.path.abspath(__file__)
+
+
+def path_to_main():
+    path = os.path.join(os.path.dirname(path_to_this_module), 'main.py')
+    return path.replace(' ', '\\ ')
+
+
 class IntegrationTestArgs(main_test.TestArgs):
     @staticmethod
     def call(argv):
         host = Host()
-        path_to_main = host.join(host.dirname(host.path_to_module(__name__)),
-                                 'main.py')
-        path_to_main = path_to_main.replace(' ', '\\ ')
-        cmd_prefix = [host.python_interpreter, path_to_main]
+        cmd_prefix = [host.python_interpreter, path_to_main()]
         return host.call(' '.join(cmd_prefix + argv))
 
 
@@ -29,11 +34,7 @@ class IntegrationTestBuild(main_test.TestBuild):
         return Host()
 
     def _call(self, host, args):
-        host_module_path = host.path_to_module(host.__module__)
-        path_to_main = host.join(host.dirname(host_module_path), 'main.py')
-        path_to_main = path_to_main.replace(' ', '\\ ')
-        cmd_prefix = [host.python_interpreter, path_to_main]
-
+        cmd_prefix = [host.python_interpreter, path_to_main()]
         returncode, _, _ = host.call(' '.join(cmd_prefix + args))
         return returncode
 
@@ -42,11 +43,7 @@ class IntegrationTestNinjaParser(parser_test.TestNinjaParser):
     @staticmethod
     def _call(text, files):
         host = Host()
-
-        host_module_path = host.path_to_module(host.__module__)
-        path_to_main = host.join(host.dirname(host_module_path), 'main.py')
-        path_to_main = path_to_main.replace(' ', '\\ ')
-        cmd_prefix = [host.python_interpreter, path_to_main]
+        cmd_prefix = [host.python_interpreter, path_to_main()]
 
         orig_wd = host.getcwd()
         try:

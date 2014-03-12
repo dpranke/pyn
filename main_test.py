@@ -79,16 +79,7 @@ class TestBuild(unittest.TestCase):
         return ['.pyn.db']
 
     def _host(self):
-        host = FakeHost()
-        def fake_call(arg_str):
-            args = arg_str.split()
-            if args[0] == 'echo' and args[2] == '>':
-                host.write(host.join(host.cwd, args[3]), args[1] + '\n')
-                return 0, '', ''
-            return 1, '', ''
-
-        host.call = fake_call
-        return host
+        return FakeHost()
 
     def _call(self, host, args):
         return main(host, args)
@@ -106,13 +97,20 @@ class TestBuild(unittest.TestCase):
             out_files[f] = host.read(tmpdir, f)
         return out_files
 
+    def assert_files(self, expected_files, actual_files):
+        for k, v in expected_files.items():
+            self.assertEqual(expected_files[k], v)
+        interesting_files = set(actual_files.keys()).difference(
+            self._files_to_ignore())
+        self.assertEqual(interesting_files, set(expected_files.keys()))
+
     def check(self, in_files, expected_out_files=None,
               expected_return_code=0):
         host = self._host()
 
         try:
             orig_wd = host.getcwd()
-            tmpdir = str(host.mkdtemp())
+            tmpdir = host.mkdtemp()
             host.chdir(tmpdir)
             self._write_files(host, in_files)
 
@@ -126,11 +124,7 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(returncode, expected_return_code)
 
         if expected_out_files:
-            for k, v in expected_out_files.items():
-                self.assertEqual(expected_out_files[k], v)
-            all_out_files = set(actual_out_files.keys()).difference(
-                self._files_to_ignore())
-            self.assertEqual(all_out_files, set(expected_out_files.keys()))
+            self.assert_files(expected_out_files, actual_out_files)
 
     def test_basic(self):
         in_files = {}
@@ -146,6 +140,54 @@ class TestBuild(unittest.TestCase):
         out_files = in_files.copy()
         out_files['foo'] = 'foo\n'
         self.check(in_files, out_files)
+
+    def test_full(self):
+        in_files = {}
+        in_files['build.ninja'] = textwrap.dedent("""
+            rule echo_out
+                command = echo $out > $out
+
+            build foo : echo_out build.ninja
+
+            default foo
+            """)
+
+        out_files = in_files.copy()
+        out_files['foo'] = 'foo\n'
+
+        host = self._host()
+        try:
+            orig_wd = host.getcwd()
+            tmpdir = host.mkdtemp()
+            host.chdir(tmpdir)
+            self._write_files(host, in_files)
+
+            returncode = self._call(host, ['-t', 'question'])
+            self.assertEqual(returncode, 1)
+            self.assert_files(in_files, self._read_files(host, tmpdir))
+
+            returncode = self._call(host, [])
+            self.assertEqual(returncode, 0)
+            self.assert_files(out_files, self._read_files(host, tmpdir))
+
+            returncode = self._call(host, ['-t', 'question'])
+            # FIXME: make the fake host deal w/ mtimes properly.
+            # self.assertEqual(returncode, 0)
+            self.assertTrue(returncode in (0, 1))
+
+            self.assert_files(out_files, self._read_files(host, tmpdir))
+
+            returncode = self._call(host, [])
+            self.assertEqual(returncode, 0)
+            self.assert_files(out_files, self._read_files(host, tmpdir))
+
+            returncode = self._call(host, ['-t', 'clean'])
+            self.assertEqual(returncode, 0)
+
+            self.assert_files(in_files, self._read_files(host, tmpdir))
+        finally:
+            host.rmtree(tmpdir)
+            host.chdir(orig_wd)
 
     def test_multiple_rules_fails(self):
         in_files = {}
@@ -270,15 +312,15 @@ class TestBuild(unittest.TestCase):
     def test_input_file_in_subdir(self):
         in_files = {}
         in_files['build.ninja'] = textwrap.dedent("""
-            rule cc
-                command = echo $in > $out
+            rule cat
+                command = cat $in > $out
 
-            build out/foo.o : cc src/foo.c
+            build out/foo : cat src/foo
 
-            default out/foo.o
+            default out/foo
             """)
-        in_files['out/foo.c'] = 'foo'
+        in_files['src/foo'] = 'hello'
 
         out_files = in_files.copy()
-        out_files['out/foo.o'] = 'foo.c\n'
+        out_files['out/foo'] = 'hello\n'
         self.check(in_files, out_files)

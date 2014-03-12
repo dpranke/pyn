@@ -64,9 +64,6 @@ class Host(object):
     def mp_pool(self, processes=None):
         return multiprocessing.Pool(processes)
 
-    def path_to_module(self, module_name):
-        return os.path.abspath(sys.modules[module_name].__file__)
-
     def print_err(self, msg, end='\n'):
         self.stderr.write(str(msg) + end)
 

@@ -1,4 +1,6 @@
 # FIXME: make this work w/ python3.
+import multiprocessing
+
 from StringIO import StringIO
 
 
@@ -29,7 +31,18 @@ class FakeHost(object):
 
     def call(self, cmd_str):
         self.cmds.append(cmd_str)
-        return 0, '', ''
+        args = cmd_str.split()
+        if args[0] == 'echo' and args[-2] == '>':
+            out = ' '.join(args[1:len(args) - 2]) + '\n'
+            self.write(self.abspath(args[-1]), out)
+            return 0, '', ''
+        if args[0] == 'cat' and args[-2] == '>':
+            out = ''
+            for f in args[1:len(args) - 2]:
+                out += self.read(f)
+            self.write(self.abspath(args[-1]), out)
+            return 0, '', ''
+        return 1, '', ''
 
     def chdir(self, *comps):
         self.cwd = self.join(*comps)
@@ -47,7 +60,7 @@ class FakeHost(object):
     def files_under(self, top):
         files = []
         for f in self.files:
-            if f.startswith(top):
+            if self.files[f] is not None and f.startswith(top):
                 files.append(self.relpath(f, top))
         return files
 
@@ -78,10 +91,7 @@ class FakeHost(object):
         return FakePool(processes)
 
     def mtime(self, *comps):
-        return self.mtimes[self.join(*comps)]
-
-    def path_to_module(self, module_name):
-        return '/src/pyn/' + module_name
+        return self.mtimes.get(self.join(*comps), 0)
 
     def print_err(self, msg, end='\n'):
         self.stderr.write(msg + end)
@@ -96,10 +106,12 @@ class FakeHost(object):
         return path.replace(start + '/', '')
 
     def remove(self, *comps):
-        del self.files[self.join(*comps)]
+        path = self.abspath(*comps)
+        self.files[path] = None
+        self.written_files[path] = None
 
     def rmtree(self, *comps):
-        path = self.join(*comps)
+        path = self.abspath(*comps)
         for f in self.files:
             if f.startswith(path):
                 self.files[f] = None
@@ -140,11 +152,17 @@ class FakePromise(object):
         self.args = args
         self.result = None
         self.called = False
+        self.num_calls = 0
 
     def ready(self):
-        return True
+        self.num_calls += 1
+        return self._ready()
+
+    def _ready(self):
+        return self.num_calls > 1
 
     def get(self, timeout=None):
+        assert self.ready()
         if not self.called:
             self.result = self.fn(*self.args)
             self.called = True
