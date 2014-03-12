@@ -22,22 +22,25 @@ class Stats(object):
                 elif cn == 'o':
                     now = self._time()
                     if now > self.started_time:
-                        out += '%5.1f' % (self.finished - self.started /
-                                          now - self.started_time)
+                        out += '%5.1f' % (self.finished * 1.0/
+                                          (now - self.started_time))
                     else:
-                        out += '-'
+                        out += ' --- '
                 elif cn == 'p':
-                    out += '%5.1f' % (self.started * 100.0 / self.total)
+                    if self.total:
+                        out += '%5.1f' % (self.started * 100.0 / self.total)
+                    else:
+                        out += ' --- '
                 elif cn == 'r':
                     out += str(self.started - self.finished)
                 elif cn == 's':
                     out += str(self.started)
                 elif cn == 't':
                     out += str(self.total)
-                elif cn == '%%':
+                elif cn == '%':
                     out += '%'
                 else:
-                    out += cn
+                    out += c + cn
                 p += 2
             else:
                 out += c
