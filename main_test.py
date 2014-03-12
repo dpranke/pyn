@@ -360,6 +360,11 @@ class TestTools(unittest.TestCase, UnitTestMixin, CheckMixin):
                                  '  outputs:\n'
                                  '    abcd\n'))
 
+        self.check(in_files, args=['-t', 'query', 'a'],
+                   expected_out=('a\n'
+                                 '  outputs:\n'
+                                 '    ab\n'))
+
     def test_rules(self):
         in_files, _ = default_test_files()
         self.check(in_files, args=['-t', 'rules'],
@@ -383,9 +388,17 @@ class TestTools(unittest.TestCase, UnitTestMixin, CheckMixin):
                                  'cd\n'))
 
         # print all built objects
-        self.check(in_files, args=['-t', 'targets', 'depth', '1'],
+        self.check(in_files, args=['-t', 'targets', 'depth', '2'],
+                   expected_out=('abcd\n'
+                                 '  ab\n'
+                                 '    a\n'
+                                 '    b\n'
+                                 '  cd\n'
+                                 '    c\n'
+                                 '    d\n'))
+
+        # print all built objects
+        self.check(in_files, args=['-t', 'targets', 'depth'],
                    expected_out=('abcd\n'
                                  '  ab\n'
                                  '  cd\n'))
-
-
