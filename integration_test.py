@@ -1,5 +1,4 @@
 import os
-import sys
 import textwrap
 import unittest
 
@@ -9,11 +8,11 @@ import parser_test
 from host import Host
 
 
-path_to_this_module = os.path.abspath(__file__)
+PATH_TO_THIS_MODULE = os.path.abspath(__file__)
 
 
 def path_to_main():
-    path = os.path.join(os.path.dirname(path_to_this_module), 'main.py')
+    path = os.path.join(os.path.dirname(PATH_TO_THIS_MODULE), 'main.py')
     return path.replace(' ', '\\ ')
 
 

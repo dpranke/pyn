@@ -35,7 +35,7 @@ class Host(object):
 
     def files_under(self, top):
         all_files = []
-        for root, dirs, files in os.walk(top):
+        for root, _, files in os.walk(top):
             for f in files:
                 relpath = self.relpath(os.path.join(root, f), top)
                 all_files.append(relpath)

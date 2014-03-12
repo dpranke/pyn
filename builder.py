@@ -60,7 +60,8 @@ class Builder(object):
                 did_work = self._process_completed_jobs(graph, running_jobs)
                 if (not did_work and nodes_to_build and
                         self._failures < self.args.errors):
-                    did_work = self._process_completed_jobs(graph, running_jobs,
+                    did_work = self._process_completed_jobs(graph,
+                                                            running_jobs,
                                                             block=True)
 
             self._pool.close()

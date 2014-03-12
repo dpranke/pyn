@@ -22,7 +22,7 @@ class Stats(object):
                 elif cn == 'o':
                     now = self._time()
                     if now > self.started_time:
-                        out += '%5.1f' % (self.finished * 1.0/
+                        out += '%5.1f' % (self.finished * 1.0 /
                                           (now - self.started_time))
                     else:
                         out += ' --- '

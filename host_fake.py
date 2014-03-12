@@ -1,6 +1,4 @@
 # FIXME: make this work w/ python3.
-import multiprocessing
-
 from StringIO import StringIO
 
 
