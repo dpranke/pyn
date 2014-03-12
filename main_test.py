@@ -246,6 +246,14 @@ class TestBuild(unittest.TestCase):
         # FIXME: write :)
         pass
 
+    def test_ctrl_c(self):
+        # FIXME: write :)
+        pass
+
+    def test_no_work_to_do(self):
+        # FIXME: write :)
+        pass
+
     def test_command_fails(self):
         in_files = {}
         in_files['build.ninja'] = textwrap.dedent("""
