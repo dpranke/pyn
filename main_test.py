@@ -106,8 +106,12 @@ class UnitTestMixin(object):
         return FakeHost()
 
     def _call(self, host, args):
-        return main(host, args)
-
+        host.stdout = StringIO()
+        host.stderr = StringIO()
+        returncode = main(host, args)
+        out = host.stdout.getvalue()
+        err = host.stderr.getvalue()
+        return returncode, out, err
 
 class CheckMixin(object):
     def _write_files(self, host, files):
@@ -131,8 +135,10 @@ class CheckMixin(object):
         self.assertEqual(interesting_files, set(expected_files.keys()))
 
     def check(self, in_files, expected_out_files=None,
-              expected_return_code=0):
+              expected_return_code=0, expected_out=None, expected_err=None,
+              args=None):
         host = self._host()
+        args = args or []
 
         try:
             orig_wd = host.getcwd()
@@ -140,7 +146,7 @@ class CheckMixin(object):
             host.chdir(tmpdir)
             self._write_files(host, in_files)
 
-            returncode = self._call(host, [])
+            returncode, actual_out, actual_err = self._call(host, args)
 
             actual_out_files = self._read_files(host, tmpdir)
         finally:
@@ -148,28 +154,16 @@ class CheckMixin(object):
             host.chdir(orig_wd)
 
         self.assertEqual(returncode, expected_return_code)
-
+        if expected_out is not None:
+            self.assertEqual(expected_out, actual_out)
+        if expected_err is not None:
+            self.assertEqual(expected_err, actual_err)
         if expected_out_files:
             self.assert_files(expected_out_files, actual_out_files)
 
 
 class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
     def test_basic(self):
-        in_files = {}
-        in_files['build.ninja'] = textwrap.dedent("""
-            rule echo_out
-                command = echo $out > $out
-
-            build foo : echo_out build.ninja
-
-            default foo
-            """)
-
-        out_files = in_files.copy()
-        out_files['foo'] = 'foo\n'
-        self.check(in_files, out_files)
-
-    def test_full(self):
         in_files, out_files = default_test_files()
         host = self._host()
         try:
@@ -178,26 +172,26 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
             host.chdir(tmpdir)
             self._write_files(host, in_files)
 
-            returncode = self._call(host, ['-t', 'question'])
+            returncode, _, _ = self._call(host, ['-t', 'question'])
             self.assertEqual(returncode, 1)
             self.assert_files(in_files, self._read_files(host, tmpdir))
 
-            returncode = self._call(host, [])
+            returncode, _, _ = self._call(host, [])
             self.assertEqual(returncode, 0)
             self.assert_files(out_files, self._read_files(host, tmpdir))
 
-            returncode = self._call(host, ['-t', 'question'])
+            returncode, _, _ = self._call(host, ['-t', 'question'])
             # FIXME: make the fake host deal w/ mtimes properly.
             # self.assertEqual(returncode, 0)
             self.assertTrue(returncode in (0, 1))
 
             self.assert_files(out_files, self._read_files(host, tmpdir))
 
-            returncode = self._call(host, [])
+            returncode, _, _ = self._call(host, [])
             self.assertEqual(returncode, 0)
             self.assert_files(out_files, self._read_files(host, tmpdir))
 
-            returncode = self._call(host, ['-t', 'clean'])
+            returncode, _, _ = self._call(host, ['-t', 'clean'])
             self.assertEqual(returncode, 0)
 
             self.assert_files(in_files, self._read_files(host, tmpdir))
@@ -340,3 +334,58 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
         out_files = in_files.copy()
         out_files['out/foo'] = 'hello\n'
         self.check(in_files, out_files)
+
+
+class TestTools(unittest.TestCase, UnitTestMixin, CheckMixin):
+    def test_commands(self):
+        in_files, _ = default_test_files()
+        self.check(in_files, args=['-t', 'commands'],
+                   expected_out=('cat a b > ab\n'
+                                 'cat c d > cd\n'
+                                 'cat ab cd > abcd\n'))
+
+    def test_deps(self):
+        # FIXME: implement w/ real deps tests.
+        in_files, _ = default_test_files()
+        self.check(in_files, args=['-t', 'deps'],
+                   expected_out='abcd: deps not found\n')
+
+    def test_query(self):
+        in_files, _ = default_test_files()
+        self.check(in_files, args=['-t', 'query', 'ab'],
+                   expected_out=('ab\n'
+                                 '  inputs:\n'
+                                 '    a\n'
+                                 '    b\n'
+                                 '  outputs:\n'
+                                 '    abcd\n'))
+
+    def test_rules(self):
+        in_files, _ = default_test_files()
+        self.check(in_files, args=['-t', 'rules'],
+                   expected_out='cat cat $in > $out\n')
+
+    def test_targets(self):
+        in_files, _ = default_test_files()
+
+        # print the leaves (FIXME: sort the output).
+        self.check(in_files, args=['-t', 'targets', 'rule'],
+                   expected_out='a\nc\nb\nd\n')
+
+        # print the outputs built by 'cat'
+        self.check(in_files, args=['-t', 'targets', 'rule', 'cat'],
+                   expected_out='abcd\nab\ncd\n')
+
+        # print all built objects
+        self.check(in_files, args=['-t', 'targets', 'all'],
+                   expected_out=('abcd\n'
+                                 'ab\n'
+                                 'cd\n'))
+
+        # print all built objects
+        self.check(in_files, args=['-t', 'targets', 'depth', '1'],
+                   expected_out=('abcd\n'
+                                 '  ab\n'
+                                 '  cd\n'))
+
+

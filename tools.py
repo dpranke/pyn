@@ -37,7 +37,7 @@ def clean(host, args, _old_graph, graph, _started_time):
 
 def commands(host, args, _old_graph, graph, _started_time):
     """list all commands required to rebuild given targets"""
-    requested_targets = args.targets or graph.default
+    requested_targets = args.targets or graph.defaults
     nodes_to_build = find_nodes_to_build(graph, requested_targets)
     sorted_nodes = tsort(graph, nodes_to_build)
     sorted_nodes = [n for n in sorted_nodes
@@ -48,14 +48,14 @@ def commands(host, args, _old_graph, graph, _started_time):
         rule = graph.rules[node.rule_name]
         host.print_out(expand_vars(rule.scope['command'], node.scope,
                                    rule.scope))
-
+    return 0
 
 def deps(host, args, _old_graph, graph, _started_time):
     """show dependencies stored in the deps log"""
     if args.targets:
         node_names = args.targets
     else:
-        node_names = graph.default
+        node_names = graph.defaults
 
     for node_name in node_names:
         n = graph.nodes[node_name]
@@ -66,7 +66,7 @@ def deps(host, args, _old_graph, graph, _started_time):
                 host.print_out("    %s" % dep)
         else:
             host.print_out("%s: deps not found" % node_name)
-
+    return 0
 
 def question(host, args, old_graph, graph, started_time):
     """check to see if the build is up to date"""
@@ -99,6 +99,7 @@ def query(host, args, _old_graph, graph, _started_time):
         host.print_out("  outputs:")
         for node_name in outputs:
             host.print_out("    " + node_name)
+    return 0
 
 
 def rules(host, _args, _old_graph, graph, _started_time):
@@ -106,6 +107,7 @@ def rules(host, _args, _old_graph, graph, _started_time):
     for rule_name in sorted(graph.rules):
         host.print_out("%s %s" % (rule_name,
                                   graph.rules[rule_name].scope['command']))
+    return 0
 
 
 def targets(host, args, _old_graph, graph, _started_time):
@@ -142,6 +144,7 @@ def targets(host, args, _old_graph, graph, _started_time):
             max_depth = 1
         for d in graph.defaults:
             print_at(d, 0, max_depth)
+    return 0
 
 
 def tool_names():
