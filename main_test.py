@@ -76,9 +76,24 @@ class TestArgs(unittest.TestCase):
 
 
 class TestBuild(unittest.TestCase):
-    def files_to_ignore(self):
+    def _files_to_ignore(self):
         # return ['.ninja_deps', '.ninja_log']
         return ['.pyn.db']
+
+    def _host(self):
+        host = FakeHost()
+        def fake_call(arg_str):
+            args = arg_str.split()
+            if args[0] == 'echo' and args[2] == '>':
+                host.write(host.join(host.cwd, args[3]), args[1] + '\n')
+                return 0, '', ''
+            return 1, '', ''
+
+        host.call = fake_call
+        return host
+
+    def _call(self, host, args):
+        return main(host, args)
 
     def _write_files(self, host, files):
         for path, contents in list(files.items()):
@@ -89,40 +104,26 @@ class TestBuild(unittest.TestCase):
 
     def _read_files(self, host, tmpdir):
         out_files = {}
-        for f in host.files:
-            if f.startswith(tmpdir):
-                out_files[f.replace(tmpdir + '/', '')] = host.files[f]
+        for f in host.files_under(tmpdir):
+            out_files[f] = host.read(tmpdir, f)
         return out_files
 
-    def _call(self, files):
-        host = FakeHost()
-
-        def fake_call(arg_str):
-            args = arg_str.split()
-            if args[0] == 'echo' and args[2] == '>':
-                host.write(host.join(host.cwd, args[3]), args[1] + '\n')
-                return 0, '', ''
-            return 1, '', ''
-
-        host.call = fake_call
+    def check(self, in_files, expected_out_files=None,
+              expected_return_code=0):
+        host = self._host()
 
         try:
             orig_wd = host.getcwd()
             tmpdir = str(host.mkdtemp())
             host.chdir(tmpdir)
-            self._write_files(host, files)
+            self._write_files(host, in_files)
 
-            returncode = main(host, [])
+            returncode = self._call(host, [])
 
-            out_files = self._read_files(host, tmpdir)
-            return returncode, out_files
+            actual_out_files = self._read_files(host, tmpdir)
         finally:
             host.rmtree(tmpdir)
             host.chdir(orig_wd)
-
-    def check(self, in_files, expected_out_files=None,
-              expected_return_code=0):
-        returncode, actual_out_files = self._call(in_files)
 
         self.assertEqual(returncode, expected_return_code)
 
@@ -130,7 +131,7 @@ class TestBuild(unittest.TestCase):
             for k, v in expected_out_files.items():
                 self.assertEqual(expected_out_files[k], v)
             all_out_files = set(actual_out_files.keys()).difference(
-                self.files_to_ignore())
+                self._files_to_ignore())
             self.assertEqual(all_out_files, set(expected_out_files.keys()))
 
     def test_basic(self):
@@ -212,3 +213,17 @@ class TestBuild(unittest.TestCase):
         #out_files['bar'] = 'bar\n'
         #self.check(in_files, out_files)
         self.check(in_files, expected_return_code=1)
+
+    def test_subdirs(self):
+        in_files = {}
+        in_files['build.ninja'] = textwrap.dedent("""
+            rule echo_out
+                command = echo $out > $out
+
+            build out/foo : echo_out build.ninja
+
+            default out/foo
+            """)
+        out_files = in_files.copy()
+        out_files['out/foo'] = 'out/foo\n'
+        self.check(in_files, out_files)

@@ -33,6 +33,14 @@ class Host(object):
     def exists(self, *comps):
         return os.path.exists(self.join(*comps))
 
+    def files_under(self, top):
+        all_files = []
+        for root, dirs, files in os.walk(top):
+            for f in files:
+                relpath = self.relpath(os.path.join(root, f), top)
+                all_files.append(relpath)
+        return all_files
+
     def getcwd(self):
         return os.getcwd()
 
@@ -57,8 +65,7 @@ class Host(object):
         return multiprocessing.Pool(processes)
 
     def path_to_module(self, module_name):
-        # _file__ is always an absolute path.
-        return sys.modules[module_name].__file__
+        return os.path.abspath(sys.modules[module_name].__file__)
 
     def print_err(self, msg, end='\n'):
         self.stderr.write(str(msg) + end)

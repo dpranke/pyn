@@ -1,7 +1,5 @@
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+# FIXME: make this work w/ python3.
+from StringIO import StringIO
 
 
 class FakeHost(object):
@@ -10,23 +8,24 @@ class FakeHost(object):
 
     python_interpreter = 'python'
 
-    def __init__(self, dirs=None, files=None, mtimes=None, cwd='/tmp'):
+    def __init__(self):
         self.stdout = StringIO()
         self.stderr = StringIO()
         self.sep = '/'
-        self.dirs = set(dirs or [])
-        self.files = files or {}
+        self.dirs = set([])
+        self.files = {}
         self.written_files = {}
         self.last_tmpdir = None
         self.current_tmpno = 0
-        self.mtimes = mtimes or {}
+        self.mtimes = {}
         self.cmds = []
-        self.cwd = cwd
-        for f in self.files:
-            d = self.dirname(f)
-            while not d in self.dirs:
-                self.dirs.add(d)
-                d = self.dirname(d)
+        self.cwd = '/tmp'
+
+    def abspath(self, *comps):
+        relpath = self.join(*comps)
+        if relpath.startswith('/'):
+            return relpath
+        return self.join(self.cwd, relpath)
 
     def call(self, cmd_str):
         self.cmds.append(cmd_str)
@@ -45,6 +44,13 @@ class FakeHost(object):
         path = self.join(self.cwd, *comps)
         return path in self.files
 
+    def files_under(self, top):
+        files = []
+        for f in self.files:
+            if f.startswith(top):
+                files.append(self.relpath(f, top))
+        return files
+
     def getcwd(self):
         return self.cwd
 
@@ -53,7 +59,7 @@ class FakeHost(object):
         return default
 
     def join(self, *comps):
-        return '/'.join(comps)
+        return '/'.join(comps).replace('//', '/')
 
     def maybe_mkdir(self, *comps):
         path = self.join(*comps)
@@ -84,7 +90,7 @@ class FakeHost(object):
         self.stdout.write(msg + end)
 
     def read(self, *comps):
-        return self.files[self.join(self.cwd, *comps)]
+        return self.files[self.abspath(*comps)]
 
     def relpath(self, path, start):
         return path.replace(start + '/', '')
@@ -106,7 +112,7 @@ class FakeHost(object):
         return 0
 
     def write(self, path, contents):
-        full_path = self.join(self.cwd, path)
+        full_path = self.abspath(path)
         self.files[full_path] = contents
         self.written_files[full_path] = contents
 
@@ -120,9 +126,6 @@ class FakePool(object):
 
     def apply_async(self, fn, args):
         return FakePromise(fn, args)
-
-    def map(self, fn, iterable):
-        return [fn(i) for i in iterable]
 
     def join(self):
         pass
