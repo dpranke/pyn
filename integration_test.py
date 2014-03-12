@@ -34,8 +34,7 @@ class IntegrationTestBuild(main_test.TestBuild):
 
     def _call(self, host, args):
         cmd_prefix = [host.python_interpreter, path_to_main()]
-        returncode, _, _ = host.call(' '.join(cmd_prefix + args))
-        return returncode
+        return host.call(' '.join(cmd_prefix + args))
 
 
 class IntegrationTestNinjaParser(parser_test.TestNinjaParser):
