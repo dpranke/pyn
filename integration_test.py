@@ -1,7 +1,9 @@
 import os
 import textwrap
 import unittest
+# import StringIO
 
+# import main
 import main_test
 import parser_test
 
@@ -9,6 +11,14 @@ from host import Host
 
 
 PATH_TO_THIS_MODULE = os.path.abspath(__file__)
+
+
+#def run_under_coverage(argv, host=None):
+#    host = host or Host()
+#    host.stdout = StringIO.StringIO()
+#    host.stderr = StringIO.StringIO()
+#    returncode = main.main(host, argv)
+#    return returncode, host.stdout.getvalue(), host.stderr.getvalue()
 
 
 def path_to_main():
@@ -21,10 +31,11 @@ class IntegrationTestArgs(main_test.TestArgs):
     def call(argv):
         host = Host()
         cmd_prefix = [host.python_interpreter, path_to_main()]
+        # return run_under_coverage(argv)
         return host.call(' '.join(cmd_prefix + argv))
 
 
-class IntegrationTestBuild(main_test.TestBuild):
+class IntegrationTestMixin(object):
     def _files_to_ignore(self):
         # return ['.ninja_deps', '.ninja_log']
         return ['.pyn.db']
@@ -34,7 +45,16 @@ class IntegrationTestBuild(main_test.TestBuild):
 
     def _call(self, host, args):
         cmd_prefix = [host.python_interpreter, path_to_main()]
+        # return run_under_coverage(args)
         return host.call(' '.join(cmd_prefix + args))
+
+
+class IntegrationTestBuild(IntegrationTestMixin, main_test.TestBuild):
+    pass
+
+
+class IntegrationTestTools(IntegrationTestMixin, main_test.TestTools):
+    pass
 
 
 class IntegrationTestNinjaParser(parser_test.TestNinjaParser):
@@ -52,6 +72,7 @@ class IntegrationTestNinjaParser(parser_test.TestNinjaParser):
                 host.write(path, contents)
 
             cmd = cmd_prefix + ['-t', 'check']
+            # return run_under_coverage(['-t', 'check'], host=host)
             return host.call(' '.join(cmd))
         finally:
             host.rmtree(tmpdir)
