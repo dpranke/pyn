@@ -51,9 +51,6 @@ class IntegrationTestNinjaParser(parser_test.TestNinjaParser):
             host.chdir(tmpdir)
             host.write('build.ninja', text)
             for path, contents in list(files.items()):
-                dirname = host.dirname(path)
-                if dirname:
-                    host.maybe_mkdir(dirname)
                 host.write(path, contents)
 
             cmd = cmd_prefix + ['-t', 'check']

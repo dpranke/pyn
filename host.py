@@ -61,9 +61,6 @@ class Host(object):
     def mtime(self, *comps):
         return os.stat(self.join(*comps)).st_mtime
 
-    def mp_pool(self, processes=None):
-        return multiprocessing.Pool(processes)
-
     def print_err(self, msg, end='\n'):
         self.stderr.write(str(msg) + end)
 
@@ -84,9 +81,6 @@ class Host(object):
 
     def rmtree(self, path):
         shutil.rmtree(path, ignore_errors=True)
-
-    def sleep(self, time_secs):
-        return time.sleep(time_secs)
 
     def time(self):
         return time.time()

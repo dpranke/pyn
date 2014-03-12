@@ -87,9 +87,6 @@ class FakeHost(object):
         self.last_tmpdir = self.join(dir, '%s_%u_%s' % (prefix, curno, suffix))
         return self.last_tmpdir
 
-    def mp_pool(self, processes=None):
-        return FakePool(processes)
-
     def mtime(self, *comps):
         return self.mtimes.get(self.join(*comps), 0)
 
@@ -117,9 +114,6 @@ class FakeHost(object):
                 self.files[f] = None
                 self.written_files[f] = None
 
-    def sleep(self, time_secs):
-        pass
-
     def time(self):
         return 0
 
@@ -127,43 +121,3 @@ class FakeHost(object):
         full_path = self.abspath(path)
         self.files[full_path] = contents
         self.written_files[full_path] = contents
-
-
-class FakePool(object):
-    def __init__(self, processes=None):
-        self.processes = processes
-
-    def close(self):
-        pass
-
-    def apply_async(self, fn, args):
-        return FakePromise(fn, args)
-
-    def join(self):
-        pass
-
-    def terminate(self):
-        pass
-
-
-class FakePromise(object):
-    def __init__(self, fn, args):
-        self.fn = fn
-        self.args = args
-        self.result = None
-        self.called = False
-        self.num_calls = 0
-
-    def ready(self):
-        self.num_calls += 1
-        return self._ready()
-
-    def _ready(self):
-        return self.num_calls > 1
-
-    def get(self, timeout=None):
-        assert self.ready()
-        if not self.called:
-            self.result = self.fn(*self.args)
-            self.called = True
-        return self.result

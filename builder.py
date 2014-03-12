@@ -1,5 +1,6 @@
 from common import find_nodes_to_build, tsort
 from stats import Stats
+from pool import Pool, Empty
 from printer import Printer
 
 
@@ -14,7 +15,7 @@ class Builder(object):
         self._printer = Printer(host.print_out, self._should_overwrite)
         self._mtimes = {}
         self._failures = 0
-        self._pool = self.host.mp_pool(args.jobs)
+        self._pool = None
 
     def find_nodes_to_build(self, old_graph, graph):
         requested_targets = self.args.targets or graph.defaults
@@ -46,27 +47,27 @@ class Builder(object):
         stats.started_time = self.host.time()
 
         running_jobs = []
+        self._pool = Pool(self.args.jobs, _call)
         try:
             while nodes_to_build and self._failures < self.args.errors:
                 while stats.started - stats.finished < self.args.jobs:
                     n = self._find_next_available_node(graph, nodes_to_build)
                     if n:
-                        p = self._build_node(graph, n)
-                        running_jobs.append((n, p))
+                        self._build_node(graph, n)
+                        running_jobs.append(n)
                     else:
                         break
                 did_work = self._process_completed_jobs(graph, running_jobs)
                 if (not did_work and nodes_to_build and
                         self._failures < self.args.errors):
-                    self.host.sleep(0.01)
+                    did_work = self._process_completed_jobs(graph, running_jobs,
+                                                            block=True)
 
             self._pool.close()
             while running_jobs:
-                self._process_completed_jobs(graph, running_jobs)
-                if not did_work and running_jobs:
-                    self.host.sleep(0.01)
+                did_work = self._process_completed_jobs(graph, running_jobs,
+                                                        block=True)
         finally:
-            self._pool.terminate()
             self._pool.join()
 
         self._printer.flush()
@@ -107,16 +108,20 @@ class Builder(object):
         if not dry_run:
             for o in node.outputs:
                 self.host.maybe_mkdir(self.host.dirname(o))
-        return self._pool.apply_async(_call, (node.name, desc, command,
-                                              dry_run, self.host))
+        self._pool.send((node.name, desc, command, dry_run, self.host))
 
-    def _process_completed_jobs(self, graph, running_jobs):
-        completed_jobs = [(n, p) for n, p in running_jobs if p.ready()]
+    def _process_completed_jobs(self, graph, running_jobs, block=False):
         did_work = False
-        for n, p in completed_jobs:
-            running_jobs.remove((n, p))
-            self._build_node_done(graph, p.get(timeout=0))
-            did_work = True
+        while True:
+            try:
+                resp = self._pool.get(block=block)
+                running_jobs.remove(resp[0])
+                did_work = True
+                self._build_node_done(graph, resp)
+                if block:
+                    break
+            except Empty:
+                break
         return did_work
 
     def _build_node_started(self, node, desc, command):
@@ -174,7 +179,8 @@ class Builder(object):
             self._mtimes[name] = 0
 
 
-def _call(node_name, desc, command, dry_run, host):
+def _call(request):
+    node_name, desc, command, dry_run, host = request
     if dry_run:
         ret, out, err = 0, '', ''
     else:
