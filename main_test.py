@@ -10,6 +10,30 @@ from host_fake import FakeHost
 from main import main, VERSION
 
 
+def default_test_files():
+    in_files = {}
+    in_files['build.ninja'] = textwrap.dedent("""
+        rule cat
+            command = cat $in > $out
+
+        build ab : cat a b
+        build cd : cat c d
+        build abcd : cat ab cd
+
+        default abcd
+        """)
+    in_files['a'] = 'hello '
+    in_files['b'] = 'world\n'
+    in_files['c'] = 'how are '
+    in_files['d'] = 'you?\n'
+    out_files = in_files.copy()
+    out_files['ab'] = 'hello world\n'
+    out_files['cd'] = 'how are you?\n'
+    out_files['abcd'] = 'hello world\nhow are you?\n'
+
+    return in_files, out_files
+
+
 class TestArgs(unittest.TestCase):
     @staticmethod
     def call(argv):
@@ -73,7 +97,7 @@ class TestArgs(unittest.TestCase):
         self.check(['--version'], 0, VERSION + '\n', '')
 
 
-class TestBuild(unittest.TestCase):
+class UnitTestMixin(object):
     def _files_to_ignore(self):
         # return ['.ninja_deps', '.ninja_log']
         return ['.pyn.db']
@@ -84,6 +108,8 @@ class TestBuild(unittest.TestCase):
     def _call(self, host, args):
         return main(host, args)
 
+
+class CheckMixin(object):
     def _write_files(self, host, files):
         for path, contents in list(files.items()):
             dirname = host.dirname(path)
@@ -126,6 +152,8 @@ class TestBuild(unittest.TestCase):
         if expected_out_files:
             self.assert_files(expected_out_files, actual_out_files)
 
+
+class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
     def test_basic(self):
         in_files = {}
         in_files['build.ninja'] = textwrap.dedent("""
@@ -142,19 +170,7 @@ class TestBuild(unittest.TestCase):
         self.check(in_files, out_files)
 
     def test_full(self):
-        in_files = {}
-        in_files['build.ninja'] = textwrap.dedent("""
-            rule echo_out
-                command = echo $out > $out
-
-            build foo : echo_out build.ninja
-
-            default foo
-            """)
-
-        out_files = in_files.copy()
-        out_files['foo'] = 'foo\n'
-
+        in_files, out_files = default_test_files()
         host = self._host()
         try:
             orig_wd = host.getcwd()
