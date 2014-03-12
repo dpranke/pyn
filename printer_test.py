@@ -16,3 +16,20 @@ class TestPrinter(unittest.TestCase):
         pr.update('foo')
         pr.flush()
         self.assertEqual(self.out, ['foo', '\n'])
+
+    def test_elide(self):
+        pr = Printer(self.print_, False, cols=8)
+        pr.update('hello world')
+        pr.flush()
+        self.assertEqual(self.out, ['hel ...', '\n'])
+
+    def test_overwrite(self):
+        pr = Printer(self.print_, True)
+        pr.update('hello world')
+        pr.update('goodbye world')
+        pr.flush()
+        self.assertEqual(self.out,
+                         ['hello world',
+                          '\r           \r',
+                          'goodbye world',
+                          '\n'])
