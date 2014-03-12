@@ -2,10 +2,8 @@ import re
 import textwrap
 import unittest
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
+# FIXME: make this work w/ python3
+from StringIO import StringIO
 
 from host import Host
 from host_fake import FakeHost
@@ -226,4 +224,53 @@ class TestBuild(unittest.TestCase):
             """)
         out_files = in_files.copy()
         out_files['out/foo'] = 'out/foo\n'
+        self.check(in_files, out_files)
+
+    def test_command_line_changes(self):
+        # FIXME: write :)
+        pass
+
+    def test_target_out_of_date(self):
+        # FIXME: write :)
+        pass
+
+    def test_verbose(self):
+        # FIXME: write :)
+        pass
+
+    def test_really_verboses(self):
+        # FIXME: write :)
+        pass
+
+    def test_gcc_deps(self):
+        # FIXME: write :)
+        pass
+
+    def test_command_fails(self):
+        in_files = {}
+        in_files['build.ninja'] = textwrap.dedent("""
+            rule falsify
+                command = false
+
+            build foo.o : falsify foo.c
+
+            default foo.o
+            """)
+        in_files['foo.c'] = 'foo'
+        self.check(in_files, expected_return_code=1)
+
+    def test_input_file_in_subdir(self):
+        in_files = {}
+        in_files['build.ninja'] = textwrap.dedent("""
+            rule cc
+                command = echo $in > $out
+
+            build out/foo.o : cc src/foo.c
+
+            default out/foo.o
+            """)
+        in_files['out/foo.c'] = 'foo'
+
+        out_files = in_files.copy()
+        out_files['out/foo.o'] = 'foo.c\n'
         self.check(in_files, out_files)
