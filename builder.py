@@ -28,7 +28,7 @@ class Builder(object):
         for node_name in sorted_nodes:
             n = graph.nodes[node_name]
             my_stat = self._stat(node_name)
-            if not my_stat or any(self._stat(d) > my_stat for d in n.deps()):
+            if my_stat is None or any(self._stat(d) > my_stat for d in n.deps()):
                 nodes_to_build.append(node_name)
                 continue
 
@@ -171,13 +171,13 @@ class Builder(object):
     def _stat(self, name):
         if not name in self._mtimes:
             self._restat(name)
-        return self._mtimes.get(name, 0)
+        return self._mtimes.get(name, None)
 
     def _restat(self, name):
         if self.host.exists(name):
             self._mtimes[name] = self.host.mtime(name)
         else:
-            self._mtimes[name] = 0
+            self._mtimes[name] = None
 
 
 def _call(request):
