@@ -2,7 +2,7 @@ import threading
 import Queue
 
 
-Empty = Queue.Empty
+Empty = Queue.Empty  # "Invalid name" pylint: disable=C0103
 
 
 class Pool(object):
@@ -12,9 +12,9 @@ class Pool(object):
         self.requests = Queue.Queue()
         self.responses = Queue.Queue()
         self.workers = []
-        for worker_num in range(num_processes):
+        for _ in range(num_processes):
             w = threading.Thread(target=_loop,
-                                 args=(worker_num, callback, self.requests,
+                                 args=(callback, self.requests,
                                        self.responses))
             w.start()
             self.workers.append(w)
@@ -26,7 +26,7 @@ class Pool(object):
         return self.responses.get(block, timeout)
 
     def close(self):
-        for w in self.workers:
+        for _ in self.workers:
             self.requests.put(None)
 
     def join(self):
@@ -34,7 +34,7 @@ class Pool(object):
             w.join()
 
 
-def _loop(worker_num, callback, requests, responses):
+def _loop(callback, requests, responses):
     while True:
         args = requests.get(block=True)
         if not args:

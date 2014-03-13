@@ -3,7 +3,6 @@ rule pycombine
   command = python -B utils/pycombine.py $in > $out && chmod +x $out
 
 rule pycomp
-  # command = python utils/pycomp.py $in
   description = checking $in
   command = python utils/pycomp.py -MMD -MF .$out.d $in
   deps = gcc

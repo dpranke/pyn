@@ -103,7 +103,6 @@ class Builder(object):
         node = graph.nodes[node_name]
         desc = self._description(graph, node_name)
         command = self._command(graph, node_name)
-
         self._build_node_started(node, desc, command)
 
         dry_run = node.rule_name == 'phony' or self.args.dry_run
