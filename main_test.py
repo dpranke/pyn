@@ -70,7 +70,7 @@ class CheckMixin(object):
         self.assertEqual(interesting_files, set(expected_files.keys()))
 
     def check(self, in_files, expected_out_files=None,
-              expected_return_code=0, expected_out=None, expected_err=None,
+              expected_return_code=None, expected_out=None, expected_err=None,
               args=None):
         host = self._host()
         args = args or []
@@ -88,74 +88,75 @@ class CheckMixin(object):
             host.rmtree(tmpdir)
             host.chdir(orig_wd)
 
-        self.assertEqual(returncode, expected_return_code)
+        if expected_return_code is not None:
+            self.assertEqual(returncode, expected_return_code)
         if expected_out is not None:
-            # FIXME: add a test that actual checks stderr for matches.
             self.assertEqual(expected_out, actual_out)
         if expected_err is not None:
             self.assertEqual(expected_err, actual_err)
         if expected_out_files:
             self.assert_files(expected_out_files, actual_out_files)
 
+        return returncode, actual_out, actual_err
 
-class TestArgs(unittest.TestCase, UnitTestMixin):
-    def check(self, argv, returncode, out_regex, err_regex):
-        host = self._host()
-        host.write('build.ninja', textwrap.dedent("""
+
+class TestArgs(unittest.TestCase, UnitTestMixin, CheckMixin):
+    def check_args(self, argv, returncode, out_regex, err_regex):
+        in_files = {}
+        in_files['build.ninja'] = textwrap.dedent("""
             rule cc_binary
                 description = cc_binary $out
                 command = cc -o $out $in
 
             build hello : cc_binary hello.c
-            """))
-        actual_returncode, out, err = self._call(host, argv)
-        if returncode is not None:
-            self.assertEqual(actual_returncode, returncode)
+            """)
+        _, out, err = self.check(in_files, expected_return_code=returncode,
+                                 args=argv)
         self.assertTrue(re.match(out_regex, out, re.MULTILINE),
                         '%s does not match %s' % (out_regex, out))
         self.assertTrue(re.match(err_regex, err, re.MULTILINE),
                         '%s does not match %s' % (err_regex, err))
 
     def test_bad_arg(self):
-        self.check(['--bad-arg'], 2, '', '')
+        self.check_args(['--bad-arg'], 2, '', '')
 
     def test_bad_dir(self):
-        self.check(['-C', 'missing_dir'], 2, '', '"missing_dir" not found\n')
+        self.check_args(['-C', 'missing_dir'], 2, '', '"missing_dir" not found\n')
 
     def test_bad_file(self):
-        self.check(['-f', 'missing_build.ninja'], 2, '',
-                   '"missing_build.ninja" not found\n')
+        self.check_args(['-f', 'missing_build.ninja'], 2, '',
+                         '"missing_build.ninja" not found\n')
 
     def test_bad_tool(self):
-        self.check(['-t', 'foo'], 2, '', 'unsupported tool "foo"\n')
+        self.check_args(['-t', 'foo'], 2, '', 'unsupported tool "foo"\n')
 
     def test_list(self):
-        self.check(['-t', 'list'], 0, '.+', '')
+        self.check_args(['-t', 'list'], 0, '.+', '')
 
     def test_chdir(self):
-        self.check(['-n', '-C', '.'], 0, '', '.*')
+        self.check_args(['-n', '-C', '.'], 0, '', '.*')
 
     def test_check(self):
-        self.check(['-t', 'check'], 0, '', '.*')
+        self.check_args(['-t', 'check'], 0, '', '.*')
 
     def test_clean(self):
-        self.check(['-n', '-t', 'clean'], 0, '', '.*')
+        self.check_args(['-n', '-t', 'clean'], 0, '', '.*')
 
     def test_question(self):
-        self.check(['-t', 'question'], 1, '', '.*')
+        self.check_args(['-t', 'question'], 1, '', '.*')
 
     def test_debug(self):
-        self.check(['-d', 'foo'], 2, '', '-d is not supported yet\n')
+        self.check_args(['-d', 'foo'], 2, '', '-d is not supported yet\n')
 
     def test_dry_run(self):
-        self.check(['-n'], 0, '.+', '')
+        self.check_args(['-n'], 0, '.+', '')
 
     def test_usage(self):
-        self.check(['--help'], 0, 'usage:.+', '')
-        self.check(['-h'], 0, 'usage:.+', '')
+        self.check_args(['--help'], 0, 'usage:.+', '')
+        self.check_args(['-h'], 0, 'usage:.+', '')
 
     def test_version(self):
-        self.check(['--version'], 0, VERSION + '\n', '')
+        self.check_args(['--version'], 0, VERSION + '\n', '')
 
 
 class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
