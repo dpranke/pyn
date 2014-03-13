@@ -54,6 +54,9 @@ class NinjaAnalyzer(object):
         self._add_nodes_to_graph(subgraph.nodes, graph)
         return graph
 
+    def _exp(self, scope, paths):
+        return [self.expand_vars(p, scope) for p in paths]
+
     def _add_vars_to_scope(self, var_decls, scope, expand=True):
         for _, name, val in var_decls:
             if name in scope.objs:
@@ -74,29 +77,30 @@ class NinjaAnalyzer(object):
     def _decl_build(self, graph, scope, decl):
         _, outputs, rule_name, edeps, ideps, odeps, build_vars = decl
 
-        build_name = ' '.join(outputs)
+        build_name = ' '.join(self._exp(scope, outputs))
         build_scope = Scope(build_name, scope)
-        build_scope['out'] = ' '.join(outputs)
-        build_scope['in'] = ' '.join(edeps)
+        build_scope['out'] = ' '.join(self._exp(scope, outputs))
+        build_scope['in'] = ' '.join(self._exp(scope, edeps))
         self._add_vars_to_scope(build_vars, build_scope)
 
-        n = Node(build_name, build_scope, outputs, rule_name, edeps, ideps,
-                 odeps)
+        n = Node(build_name, build_scope, self._exp(scope, outputs), rule_name,
+                 self._exp(scope, edeps), self._exp(scope, ideps),
+                 self._exp(scope, odeps))
         self._add_nodes_to_graph({n.name: n}, graph)
         return graph
 
-    def _decl_default(self, graph, _scope, decl):
+    def _decl_default(self, graph, scope, decl):
         _, defaults = decl
 
-        graph.defaults = graph.defaults + defaults
+        graph.defaults = graph.defaults + self._exp(scope, defaults)
         return graph
 
-    def _decl_include(self, graph, _scope, decl):
+    def _decl_include(self, graph, scope, decl):
         _, path = decl
-        graph.includes.append(path)
+        graph.includes.append(self.expand_vars(path, scope))
         return graph
 
-    def _decl_pool(self, graph, _scope, decl):
+    def _decl_pool(self, graph, scope, decl):
         _, name, pool_vars = decl
 
         if name in graph.pools:
@@ -111,7 +115,7 @@ class NinjaAnalyzer(object):
             raise PynException("pool '%s' has a variable named %s, not "
                                "'depth'" % (name, var_name))
         try:
-            depth = int(var_value)
+            depth = int(self.expand_vars(var_value, scope))
         except ValueError:
             raise PynException("pool '%s'\'s depth value, '%s', is not an int"
                                % (name, var_value))
@@ -131,9 +135,9 @@ class NinjaAnalyzer(object):
         graph.rules[rule_name] = rule
         return graph
 
-    def _decl_subninja(self, graph, _scope, decl):
+    def _decl_subninja(self, graph, scope, decl):
         _, path = decl
-        graph.subninjas.append(path)
+        graph.subninjas.append(self.expand_vars(path, scope))
         return graph
 
     def _decl_var(self, graph, scope, decl):

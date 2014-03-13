@@ -85,13 +85,13 @@ class TestAnalyzer(unittest.TestCase):
         self.err([['include', 'missing.ninja']])
 
     def test_pool(self):
-        self.check([['pool', 'foo', [['var', 'depth', 4]]]])
+        self.check([['pool', 'foo', [['var', 'depth', '4']]]])
         self.err([['pool', 'foo', [['var', 'depth', 'foo']]]])
-        self.err([['pool', 'foo', [['var', 'depth', 4]]],
-                  ['pool', 'foo', [['var', 'depth', 4]]]])
+        self.err([['pool', 'foo', [['var', 'depth', '4']]],
+                  ['pool', 'foo', [['var', 'depth', '4']]]])
         self.err([['pool', 'foo', []]])
-        self.err([['pool', 'foo', [['var', 'foo', 4]]]])
-        self.err([['pool', 'foo', [['var', 'depth', 4],
+        self.err([['pool', 'foo', [['var', 'foo', '4']]]])
+        self.err([['pool', 'foo', [['var', 'depth', '4'],
                                    ['var', 'foo', 'bar']]]])
 
     def test_rule(self):
