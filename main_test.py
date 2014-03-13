@@ -121,11 +121,12 @@ class TestArgs(unittest.TestCase, UnitTestMixin, CheckMixin):
         self.check_args(['--bad-arg'], 2, '', '')
 
     def test_bad_dir(self):
-        self.check_args(['-C', 'missing_dir'], 2, '', '"missing_dir" not found\n')
+        self.check_args(['-C', 'missing_dir'], 2, '',
+                        '"missing_dir" not found\n')
 
     def test_bad_file(self):
         self.check_args(['-f', 'missing_build.ninja'], 2, '',
-                         '"missing_build.ninja" not found\n')
+                        '"missing_build.ninja" not found\n')
 
     def test_bad_tool(self):
         self.check_args(['-t', 'foo'], 2, '', 'unsupported tool "foo"\n')

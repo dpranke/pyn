@@ -26,15 +26,6 @@ def path_to_main():
     return path.replace(' ', '\\ ')
 
 
-class IntegrationTestArgs(main_test.TestArgs):
-    @staticmethod
-    def call(argv):
-        host = Host()
-        cmd_prefix = [host.python_interpreter, path_to_main()]
-        # return run_under_coverage(argv)
-        return host.call(' '.join(cmd_prefix + argv))
-
-
 class IntegrationTestMixin(object):
     def _files_to_ignore(self):
         # return ['.ninja_deps', '.ninja_log']
@@ -49,6 +40,10 @@ class IntegrationTestMixin(object):
         return host.call(' '.join(cmd_prefix + args))
 
 
+class IntegrationTestArgs(IntegrationTestMixin, main_test.TestArgs):
+    pass
+
+
 class IntegrationTestBuild(IntegrationTestMixin, main_test.TestBuild):
     pass
 
@@ -58,8 +53,7 @@ class IntegrationTestTools(IntegrationTestMixin, main_test.TestTools):
 
 
 class IntegrationTestNinjaParser(parser_test.TestNinjaParser):
-    @staticmethod
-    def _call(text, files):
+    def _call(self, text, files):
         host = Host()
         cmd_prefix = [host.python_interpreter, path_to_main()]
 
