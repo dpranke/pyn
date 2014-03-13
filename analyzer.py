@@ -59,9 +59,6 @@ class NinjaAnalyzer(object):
 
     def _add_vars_to_scope(self, var_decls, scope, expand=True):
         for _, name, val in var_decls:
-            if name in scope.objs:
-                raise PynException("'var %s' declared more than once "
-                                   "in %s'" % (name, scope.name))
             if expand:
                 scope.objs[name] = self.expand_vars(val, scope)
             else:

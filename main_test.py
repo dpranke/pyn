@@ -255,14 +255,14 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
             v = bar
 
             build $v : echo_out build.ninja
+
+            default foo bar
             """)
 
-        # FIXME: This should succeed.
-        #out_files = in_files.copy()
-        #out_files['foo'] = 'foo\n'
-        #out_files['bar'] = 'bar\n'
-        #self.check(in_files, out_files)
-        self.check(in_files, expected_return_code=1)
+        out_files = in_files.copy()
+        out_files['foo'] = 'foo\n'
+        out_files['bar'] = 'bar\n'
+        self.check(in_files, out_files)
 
     def test_subdirs(self):
         in_files = {}
