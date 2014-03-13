@@ -19,8 +19,6 @@ def default_test_files():
         build ab : cat a b
         build cd : cat c d
         build abcd : cat ab cd
-
-        default abcd
         """)
     in_files['a'] = 'hello '
     in_files['b'] = 'world\n'
@@ -199,6 +197,23 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
             host.rmtree(tmpdir)
             host.chdir(orig_wd)
 
+    def test_default(self):
+        in_files = {}
+        in_files['build.ninja'] = textwrap.dedent("""
+            rule echo_out
+                command = echo $out > $out
+
+            build foo : echo_out build.ninja
+            build bar : echo_out build.ninja
+
+            default foo
+            """)
+        out_files = in_files.copy()
+        out_files['foo'] = 'foo\n'
+
+        # Note that 'bar' is not executed.
+        self.check(in_files, out_files)
+
     def test_multiple_rules_fails(self):
         in_files = {}
         in_files['build.ninja'] = textwrap.dedent("""
@@ -206,8 +221,6 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
             subninja echo.ninja
 
             build foo : echo_out build.ninja
-
-            default foo
             """)
         in_files['echo.ninja'] = textwrap.dedent("""
             rule echo_out
@@ -230,8 +243,6 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
                 command = echo $out > $out
 
             build foo : echo_out build.ninja
-
-            default foo
             """)
         in_files['echo.ninja'] = textwrap.dedent("""
             """)
@@ -255,8 +266,6 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
             v = bar
 
             build $v : echo_out build.ninja
-
-            default foo bar
             """)
 
         out_files = in_files.copy()
@@ -275,8 +284,6 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
 
             v = bar
             include build_v.ninja
-
-            default foo bar
             """)
         in_files['build_v.ninja'] = textwrap.dedent("""
             build $v : echo_out build.ninja
@@ -294,8 +301,6 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
                 command = echo $out > $out
 
             build out/foo : echo_out build.ninja
-
-            default out/foo
             """)
         out_files = in_files.copy()
         out_files['out/foo'] = 'out/foo\n'
@@ -336,8 +341,6 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
                 command = false
 
             build foo.o : falsify foo.c
-
-            default foo.o
             """)
         in_files['foo.c'] = 'foo'
         self.check(in_files, expected_return_code=1)
@@ -349,8 +352,6 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
                 command = cat $in > $out
 
             build out/foo : cat src/foo
-
-            default out/foo
             """)
         in_files['src/foo'] = 'hello'
 

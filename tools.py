@@ -1,5 +1,5 @@
 from builder import Builder
-from common import find_nodes_to_build, tsort
+from common import find_roots, find_nodes_to_build, tsort
 from var_expander import expand_vars
 
 
@@ -37,8 +37,8 @@ def clean(host, args, _old_graph, graph, _started_time):
 
 def commands(host, args, _old_graph, graph, _started_time):
     """list all commands required to rebuild given targets"""
-    requested_targets = args.targets or graph.defaults
-    nodes_to_build = find_nodes_to_build(graph, requested_targets)
+    node_names = (args.targets or graph.defaults or find_roots(graph))
+    nodes_to_build = find_nodes_to_build(graph, node_names)
     sorted_nodes = tsort(graph, nodes_to_build)
     sorted_nodes = [n for n in sorted_nodes
                     if graph.nodes[n].rule_name != 'phony']
@@ -52,11 +52,7 @@ def commands(host, args, _old_graph, graph, _started_time):
 
 def deps(host, args, _old_graph, graph, _started_time):
     """show dependencies stored in the deps log"""
-    if args.targets:
-        node_names = args.targets
-    else:
-        node_names = graph.defaults
-
+    node_names = (args.targets or graph.defaults or find_roots(graph))
     for node_name in node_names:
         n = graph.nodes[node_name]
         depsfile_deps = n.scope['depsfile_deps']
@@ -70,7 +66,6 @@ def deps(host, args, _old_graph, graph, _started_time):
 
 def question(host, args, old_graph, graph, started_time):
     """check to see if the build is up to date"""
-
     builder = Builder(host, args, expand_vars, started_time)
     nodes_to_build = builder.find_nodes_to_build(old_graph, graph)
     if nodes_to_build:
@@ -142,7 +137,7 @@ def targets(host, args, _old_graph, graph, _started_time):
             max_depth = int(args.targets[1])
         else:
             max_depth = 1
-        for d in graph.defaults:
+        for d in (graph.defaults or find_roots(graph)):
             print_at(d, 0, max_depth)
     return 0
 

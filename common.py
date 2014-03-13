@@ -43,6 +43,20 @@ class Node(object):
         return 'Node(name="%s")' % self.name
 
 
+def find_roots(graph):
+    """Find all the outputs that are not themselves inputs of other outputs."""
+    all_deps = set()
+    roots = set()
+    for n in graph.nodes.values():
+        for d in n.explicit_deps:
+            all_deps.add(d)
+    for n in graph.nodes.values():
+        for d in n.outputs:
+            if not d in all_deps:
+                roots.add(d)
+    return list(roots)
+
+
 def find_nodes_to_build(graph, requested_targets):
     """Return all of the nodes the requested targets depend on."""
     unvisited_nodes = requested_targets[:]

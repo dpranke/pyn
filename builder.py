@@ -1,4 +1,4 @@
-from common import find_nodes_to_build, tsort
+from common import find_roots, find_nodes_to_build, tsort
 from stats import Stats
 from pool import Pool, Empty
 from printer import Printer
@@ -18,8 +18,8 @@ class Builder(object):
         self._pool = None
 
     def find_nodes_to_build(self, old_graph, graph):
-        requested_targets = self.args.targets or graph.defaults
-        nodes_to_build = find_nodes_to_build(graph, requested_targets)
+        node_names = self.args.targets or graph.defaults or find_roots(graph)
+        nodes_to_build = find_nodes_to_build(graph, node_names)
         sorted_nodes = tsort(graph, nodes_to_build)
         sorted_nodes = [n for n in sorted_nodes
                         if graph.nodes[n].rule_name != 'phony']
