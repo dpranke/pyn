@@ -43,7 +43,10 @@ class FakeHost(object):
         return 1, '', ''
 
     def chdir(self, *comps):
-        self.cwd = self.join(*comps)
+        path = self.join(*comps)
+        if not path.startswith('/'):
+            path = self.join(self.cwd, path)
+        self.cwd = path
 
     def cpu_count(self):
         return 2
@@ -53,7 +56,7 @@ class FakeHost(object):
 
     def exists(self, *comps):
         path = self.join(self.cwd, *comps)
-        return path in self.files
+        return path in self.files or path in self.dirs
 
     def files_under(self, top):
         files = []
@@ -70,7 +73,17 @@ class FakeHost(object):
         return default
 
     def join(self, *comps):
-        return '/'.join(comps).replace('//', '/')
+        p = ''
+        for c in comps:
+            if c in ('', '.'):
+                continue
+            elif c.startswith('/'):
+                p = c
+            elif p:
+                p += '/' + c
+            else:
+                p = c
+        return p
 
     def maybe_mkdir(self, *comps):
         path = self.join(*comps)
@@ -117,5 +130,6 @@ class FakeHost(object):
 
     def write(self, path, contents):
         full_path = self.abspath(path)
+        self.maybe_mkdir(self.dirname(full_path))
         self.files[full_path] = contents
         self.written_files[full_path] = contents
