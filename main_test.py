@@ -5,7 +5,6 @@ import unittest
 # FIXME: make this work w/ python3
 from StringIO import StringIO
 
-from host import Host
 from host_fake import FakeHost
 from main import main, VERSION
 
@@ -30,8 +29,6 @@ def default_test_files():
     out_files['abcd'] = 'hello world\nhow are you?\n'
 
     return in_files, out_files
-
-
 
 
 class UnitTestMixin(object):
