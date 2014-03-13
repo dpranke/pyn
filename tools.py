@@ -50,6 +50,7 @@ def commands(host, args, _old_graph, graph, _started_time):
                                    rule.scope))
     return 0
 
+
 def deps(host, args, _old_graph, graph, _started_time):
     """show dependencies stored in the deps log"""
     node_names = (args.targets or graph.defaults or find_roots(graph))
@@ -63,6 +64,7 @@ def deps(host, args, _old_graph, graph, _started_time):
         else:
             host.print_out("%s: deps not found" % node_name)
     return 0
+
 
 def question(host, args, old_graph, graph, started_time):
     """check to see if the build is up to date"""

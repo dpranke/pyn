@@ -111,6 +111,7 @@ class UnitTestMixin(object):
         err = host.stderr.getvalue()
         return returncode, out, err
 
+
 class CheckMixin(object):
     def _write_files(self, host, files):
         for path, contents in list(files.items()):
