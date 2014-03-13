@@ -38,6 +38,8 @@ class VarExpander(object):
 
     def grammar_(self, msg, start, end):
         vs = []
+        if start == end:
+            return '', end, None
         v, p, err = self.chunk_(msg, start, end)
         if not err and v:
             vs.append(v)
@@ -50,7 +52,7 @@ class VarExpander(object):
         return (''.join(vs), p, err)
 
     def chunk_(self, msg, start, end):
-        if end > start and msg[start] == '$':
+        if msg[start] == '$':
             if end - start == 1:
                 return (None, start + 1, "expecting a varname or a '{'")
             elif msg[start + 1] in (' ', ':', '$'):
@@ -73,6 +75,7 @@ class VarExpander(object):
                     return (self.lookup(v), p, None)
         else:
             return msg[start], start + 1, None
+
 
     def varname_(self, msg, start, end):
         vs = []

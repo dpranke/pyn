@@ -136,7 +136,8 @@ build test : pytest $
   parser_test.py $
   printer_test.py $
   stats_test.py $
-  tools_test.py
+  tools_test.py $
+  var_expander_test.py $
 
 build coverage : pycov $
     analyzer_test.py $

@@ -22,6 +22,9 @@ class TestExpandVars(unittest.TestCase):
     def test_noop(self):
         self.check('xyz', 'xyz')
 
+    def test_empty(self):
+        self.check('', '')
+
     def test_simple(self):
         self.check('$foo', 'a')
         self.check('$foo bar', 'a bar')
