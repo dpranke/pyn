@@ -69,6 +69,7 @@ build main_test.pyc : pycomp main_test.py
 build host.pyc : pycomp host.py
 build host_fake.pyc : pycomp host_fake.py
 build integration_test.pyc : pycomp integration_test.py
+build pool.pyc : pycomp pool.py
 build parser.pyc : pycomp parser.py
 build parser_test.pyc : pycomp parser_test.py
 build printer.pyc : pycomp printer.py
@@ -91,6 +92,7 @@ build pylint : pylint_rule $
     integration_test.py $
     main.py main_test.py $
     parser.py parser_test.py $
+    pool.py $
     printer.py printer_test.py $
     stats.py stats_test.py $
     tools.py tools_test.py $
@@ -105,6 +107,7 @@ build pep8 : pep8_rule $
     integration_test.py $
     main.py main_test.py $
     parser.py parser_test.py $
+    pool.py $
     printer.py printer_test.py $
     stats.py stats_test.py $
     tools.py tools_test.py $
@@ -119,6 +122,7 @@ build pyflakes : pyflakes_rule $
     integration_test.py $
     main.py main_test.py $
     parser.py parser_test.py $
+    pool.py $
     printer.py printer_test.py $
     stats.py stats_test.py $
     tools.py tools_test.py $
@@ -155,6 +159,7 @@ build bin/pyn : pycombine $
     builder.py $
     common.py $
     parser.py $
+    pool.py $
     printer.py $
     host.py $
     stats.py $
