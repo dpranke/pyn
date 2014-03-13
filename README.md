@@ -50,6 +50,9 @@ the LICENSE file in the source repo.
 * various debug modes (-d stats, explain, keeprsp)
 * various tools (-t browse, graph, compdb, recompact)
 * have '-t clean targets' only clean specific targets
+* handle unknown / unrecognized targets better
+  - don't crash :)
+  - suggest alternatives that fuzzy match the requested targets.
 
 ## Also
 
