@@ -13,21 +13,12 @@ class NinjaAnalyzer(object):
         scope = Scope(filename, parent_scope)
         graph.scopes[filename] = scope
         graph = self._add_ast(graph, scope, ast)
-        graph = self._add_includes(graph)
         graph = self._add_subninjas(graph)
         return graph
 
     def _add_ast(self, graph, scope, ast):
         for decl in ast:
             graph = getattr(self, '_decl_' + decl[0])(graph, scope, decl)
-        return graph
-
-    def _add_includes(self, graph):
-        for path in graph.includes:
-            if not self.host.exists(path):
-                raise PynException("'%s' not found." % path)
-            ast = self.parse(self.host.read(path), path)
-            graph = self._add_ast(graph, graph.scopes[graph.name], ast)
         return graph
 
     def _add_subninjas(self, graph):
@@ -94,7 +85,12 @@ class NinjaAnalyzer(object):
 
     def _decl_include(self, graph, scope, decl):
         _, path = decl
-        graph.includes.append(self.expand_vars(path, scope))
+        full_path = self.expand_vars(path, scope)
+        if not self.host.exists(full_path):
+            raise PynException("'%s' not found." % full_path)
+        ast = self.parse(self.host.read(full_path), full_path)
+        graph = self._add_ast(graph, graph.scopes[graph.name], ast)
+        graph.includes.append(full_path)
         return graph
 
     def _decl_pool(self, graph, scope, decl):

@@ -30,14 +30,14 @@ class TestAnalyzer(unittest.TestCase):
         self.check([['build', ['foo.o'], 'cc', ['foo.c'], [], [], []]])
         self.err([['build', ['foo.o'], 'cc', ['foo.c'], [], [], []],
                   ['build', ['foo.o'], 'cc', ['foo.c'], [], [], []]])
-        self.err([['build', ['foo.o'], 'cc', ['foo.c'], [], [],
-                   [['var', 'foo', 'bar'],
-                    ['var', 'foo', 'bar']]]])
+        self.check([['build', ['foo.o'], 'cc', ['foo.c'], [], [],
+                    [['var', 'foo', 'bar'],
+                     ['var', 'foo', 'bar']]]])
 
     def test_vars(self):
         self.check([['var', 'foo', 'bar']])
-        self.err([['var', 'foo', 'bar'],
-                  ['var', 'foo', 'bar']])
+        self.check([['var', 'foo', 'bar'],
+                    ['var', 'foo', 'bar']])
 
     def test_vars_are_expanded_immediately(self):
         graph = self.check([['var', 'foo', 'bar'],
@@ -77,11 +77,11 @@ class TestAnalyzer(unittest.TestCase):
         self.assertEqual(expand_vars(r.scope['command'], n.scope, r.scope),
                          'echo s1 2')
 
-    def test_import(self):
+    def test_include(self):
         self.host.files['/tmp/sub.ninja'] = ''
         self.check([['include', 'sub.ninja']])
 
-    def test_import_missing(self):
+    def test_include_missing(self):
         self.err([['include', 'missing.ninja']])
 
     def test_pool(self):
@@ -100,8 +100,10 @@ class TestAnalyzer(unittest.TestCase):
 
         self.err([['rule', 'cc', [['var', 'command', 'cc -o $out $in']]],
                   ['rule', 'cc', [['var', 'command', 'cc -o $out $in']]]])
-        self.err([['rule', 'cc', [['var', 'command', 'cc -o $out $in'],
-                                  ['var', 'command', 'touch $out']]]])
+
+        # Note that duplicate variables are okay.
+        self.check([['rule', 'cc', [['var', 'command', 'cc -o $out $in'],
+                                    ['var', 'command', 'touch $out']]]])
 
     def test_default(self):
         self.check([['default', ['all']]])

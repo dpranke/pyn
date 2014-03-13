@@ -264,6 +264,29 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
         out_files['bar'] = 'bar\n'
         self.check(in_files, out_files)
 
+    def test_var_expansion_across_includes(self):
+        in_files = {}
+        in_files['build.ninja'] = textwrap.dedent("""
+            rule echo_out
+                command = echo $out > $out
+
+            v = foo
+            include build_v.ninja
+
+            v = bar
+            include build_v.ninja
+
+            default foo bar
+            """)
+        in_files['build_v.ninja'] = textwrap.dedent("""
+            build $v : echo_out build.ninja
+            """)
+
+        out_files = in_files.copy()
+        out_files['foo'] = 'foo\n'
+        out_files['bar'] = 'bar\n'
+        self.check(in_files, out_files)
+
     def test_subdirs(self):
         in_files = {}
         in_files['build.ninja'] = textwrap.dedent("""
