@@ -193,13 +193,13 @@ class NinjaParser(object):
         return ['var', n, v], p, None
 
     def value_(self, start):
-        """ (~eol (('$' ' ' -> ' ')|('$' '\n' ' '+ -> '')|anything))*:vs
+        """ (~'\n' (('$' ' ' -> ' ')|('$' '\n' ' '+ -> '')|anything))*:vs
             -> ''.join(vs) """
         msg, p, end = self.msg, start, self.end
 
         vs = []
-        _, _, err = self.eol_(p)
-        while err and p < end:
+        # _, _, err = self.eol_(p)
+        while p < end and msg[p] != '\n':
             if p < (end - 1) and msg[p:p + 2] == '$ ':
                 vs.append(' ')
                 p += 2
@@ -209,7 +209,7 @@ class NinjaParser(object):
             else:
                 vs.append(msg[p])
                 p += 1
-            _, _, err = self.eol_(p)
+            # _, _, err = self.eol_(p)
         return ''.join(vs), p, None
 
     def subninja_(self, start):

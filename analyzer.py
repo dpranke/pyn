@@ -63,20 +63,23 @@ class NinjaAnalyzer(object):
             graph.nodes[name] = node
 
     def _decl_build(self, graph, scope, decl):
-        _, outputs, rule_name, edeps, ideps, odeps, build_vars = decl
+        _, outs, rule_name, edeps, ideps, odeps, build_vars = decl
 
-        exp_outputs = self._exp(scope, outputs)
-        build_name = ' '.join(exp_outputs)
-        build_scope = Scope(build_name, scope)
-        build_scope['out'] = build_name
-        build_scope['in'] = ' '.join(self._exp(scope, edeps))
+        exp_outs = self._exp(scope, outs)
+        quoted_outs = ' '.join(('"%s"' % o if ' ' in o else o)
+                               for o in exp_outs)
+        exp_edeps = self._exp(scope, edeps)
+        quoted_edeps = ' '.join(('"%s"' % o if ' ' in o else o)
+                                for o in exp_edeps)
+        build_scope = Scope(quoted_outs, scope)
+        build_scope['out'] = quoted_outs
+        build_scope['in'] = quoted_edeps
         self._add_vars_to_scope(build_vars, build_scope)
 
-        n = Node(build_name, build_scope, self._exp(scope, outputs), rule_name,
-                 self._exp(scope, edeps), self._exp(scope, ideps),
-                 self._exp(scope, odeps))
+        n = Node(quoted_outs, build_scope, exp_outs, rule_name,
+                 exp_edeps, self._exp(scope, ideps), self._exp(scope, odeps))
         nodes = {}
-        for o in exp_outputs:
+        for o in exp_outs:
             nodes[o] =n
         self._add_nodes_to_graph({o: n}, graph)
 
