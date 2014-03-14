@@ -76,7 +76,6 @@ class VarExpander(object):
         else:
             return msg[start], start + 1, None
 
-
     def varname_(self, msg, start, end):
         vs = []
         p = start

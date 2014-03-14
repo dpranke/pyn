@@ -38,7 +38,7 @@ build lint : phony pyflakes pylint pep8 $
 build pylint : pylint_rule $
     analyzer.py analyzer_test.py $
     args.py $
-    builder.py builder_test.py $
+    builder.py $
     build_graph.py build_graph_test.py $
     host.py host_fake.py $
     integration_test.py $
@@ -48,13 +48,13 @@ build pylint : pylint_rule $
     printer.py printer_test.py $
     pyn_exceptions.py $
     stats.py stats_test.py $
-    tools.py tools_test.py $
+    tools.py $
     var_expander.py var_expander_test.py 
 
 build pep8 : pep8_rule $
     analyzer.py analyzer_test.py $
     args.py $
-    builder.py builder_test.py $
+    builder.py $
     build_graph.py build_graph_test.py $
     host.py host_fake.py $
     integration_test.py $
@@ -64,13 +64,13 @@ build pep8 : pep8_rule $
     printer.py printer_test.py $
     pyn_exceptions.py $
     stats.py stats_test.py $
-    tools.py tools_test.py $
+    tools.py $
     var_expander.py var_expander_test.py 
 
 build pyflakes : pyflakes_rule $
     analyzer.py analyzer_test.py $
     args.py $
-    builder.py builder_test.py $
+    builder.py $
     build_graph.py build_graph_test.py $
     host.py host_fake.py $
     integration_test.py $
@@ -80,29 +80,25 @@ build pyflakes : pyflakes_rule $
     printer.py printer_test.py $
     pyn_exceptions.py $
     stats.py stats_test.py $
-    tools.py tools_test.py $
+    tools.py $
     var_expander.py var_expander_test.py 
 
 build test : pytest $
   analyzer_test.py $
-  builder_test.py $
   build_graph_test.py $
   main_test.py $
   parser_test.py $
   printer_test.py $
   stats_test.py $
-  tools_test.py $
   var_expander_test.py $
 
 build coverage : pycov $
     analyzer_test.py $
-    builder_test.py $
     build_graph_test.py $
     main_test.py $
     parser_test.py $
     printer_test.py $
     stats_test.py $
-    tools_test.py $
     var_expander_test.py
 
 build all : phony bin/pyn

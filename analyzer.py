@@ -81,8 +81,8 @@ class NinjaAnalyzer(object):
                  exp_edeps, self._exp(scope, ideps), self._exp(scope, odeps))
         nodes = {}
         for o in exp_outs:
-            nodes[o] =n
-        self._add_nodes_to_graph({o: n}, graph)
+            nodes[o] = n
+        self._add_nodes_to_graph(nodes, graph)
 
         return graph
 
