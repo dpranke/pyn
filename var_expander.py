@@ -1,4 +1,4 @@
-from common import PynException
+from pyn_exceptions import PynException
 
 
 def expand_vars(msg, scope, rule_scope=None):

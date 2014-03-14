@@ -32,53 +32,6 @@ rule shell
   command = $shell_cmd
   description = $shell_desc
 
-build compile_python : phony $
-  analyzer.pyc $
-  analyzer_test.pyc $
-  args.pyc $
-  builder.pyc $
-  builder_test.pyc $
-  common.pyc $
-  common_test.pyc $
-  host.pyc $
-  host_fake.pyc $
-  integration_test.pyc $
-  main.pyc $
-  main_test.pyc $
-  parser.pyc $
-  parser_test.pyc $
-  printer.pyc $
-  printer_test.pyc $
-  tools.pyc $
-  tools_test.pyc $
-  stats.pyc $
-  stats_test.pyc $
-  var_expander.pyc $
-  var_expander_test.pyc
-
-build analyzer.pyc : pycomp analyzer.py
-build analyzer_test.pyc : pycomp analyzer_test.py
-build args.pyc : pycomp args.py
-build builder.pyc : pycomp builder.py
-build builder_test.pyc : pycomp builder_test.py
-build common.pyc : pycomp common.py
-build common_test.pyc : pycomp common_test.py
-build main.pyc : pycomp main.py
-build main_test.pyc : pycomp main_test.py
-build host.pyc : pycomp host.py
-build host_fake.pyc : pycomp host_fake.py
-build integration_test.pyc : pycomp integration_test.py
-build pool.pyc : pycomp pool.py
-build parser.pyc : pycomp parser.py
-build parser_test.pyc : pycomp parser_test.py
-build printer.pyc : pycomp printer.py
-build printer_test.pyc : pycomp printer_test.py
-build stats.pyc : pycomp stats.py
-build stats_test.pyc : pycomp stats_test.py
-build tools.pyc : pycomp tools.py
-build tools_test.pyc : pycomp tools_test.py
-build var_expander.pyc : pycomp var_expander.py
-build var_expander_test.pyc : pycomp var_expander_test.py
 
 build lint : phony pyflakes pylint pep8 $
 
@@ -86,13 +39,14 @@ build pylint : pylint_rule $
     analyzer.py analyzer_test.py $
     args.py $
     builder.py builder_test.py $
-    common.py common_test.py $
+    build_graph.py build_graph_test.py $
     host.py host_fake.py $
     integration_test.py $
     main.py main_test.py $
     parser.py parser_test.py $
     pool.py $
     printer.py printer_test.py $
+    pyn_exceptions.py $
     stats.py stats_test.py $
     tools.py tools_test.py $
     var_expander.py var_expander_test.py 
@@ -101,13 +55,14 @@ build pep8 : pep8_rule $
     analyzer.py analyzer_test.py $
     args.py $
     builder.py builder_test.py $
-    common.py common_test.py $
+    build_graph.py build_graph_test.py $
     host.py host_fake.py $
     integration_test.py $
     main.py main_test.py $
     parser.py parser_test.py $
     pool.py $
     printer.py printer_test.py $
+    pyn_exceptions.py $
     stats.py stats_test.py $
     tools.py tools_test.py $
     var_expander.py var_expander_test.py 
@@ -116,22 +71,22 @@ build pyflakes : pyflakes_rule $
     analyzer.py analyzer_test.py $
     args.py $
     builder.py builder_test.py $
-    common.py common_test.py $
+    build_graph.py build_graph_test.py $
     host.py host_fake.py $
     integration_test.py $
     main.py main_test.py $
     parser.py parser_test.py $
     pool.py $
     printer.py printer_test.py $
+    pyn_exceptions.py $
     stats.py stats_test.py $
     tools.py tools_test.py $
     var_expander.py var_expander_test.py 
 
-
 build test : pytest $
   analyzer_test.py $
   builder_test.py $
-  common_test.py $
+  build_graph_test.py $
   main_test.py $
   parser_test.py $
   printer_test.py $
@@ -142,7 +97,7 @@ build test : pytest $
 build coverage : pycov $
     analyzer_test.py $
     builder_test.py $
-    common_test.py $
+    build_graph_test.py $
     main_test.py $
     parser_test.py $
     printer_test.py $
@@ -150,20 +105,21 @@ build coverage : pycov $
     tools_test.py $
     var_expander_test.py
 
-build all : phony compile_python bin/pyn
+build all : phony bin/pyn
 
 build bin/pyn : pycombine $
     main.py $
     analyzer.py $
     args.py $
     builder.py $
-    common.py $
+    build_graph.py $
     parser.py $
     pool.py $
     printer.py $
+    pyn_exceptions.py $
     host.py $
     stats.py $
     tools.py $
-    var_expander.py || compile_python
+    var_expander.py
 
 default all

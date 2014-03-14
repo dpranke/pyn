@@ -1,4 +1,5 @@
-from common import Graph, Node, PynException, Rule, Scope
+from build_graph import Graph, Node, Scope
+from pyn_exceptions import PynException
 
 
 class NinjaAnalyzer(object):
@@ -31,11 +32,11 @@ class NinjaAnalyzer(object):
         return graph
 
     def _merge_graphs(self, graph, subgraph):
-        for name, rule in subgraph.rules.items():
-            if name in graph.rules:
+        for rule_name, rule_scope in subgraph.rules.items():
+            if rule_name in graph.rules:
                 raise PynException("rule '%s' declared in multiple files " %
-                                   name)
-            graph.rules[name] = rule
+                                   rule_name)
+            graph.rules[rule_name] = rule_scope
         for name, scope in subgraph.scopes.items():
             if name in graph.scopes:
                 raise PynException("scope '%s' declared in multiple files " %
@@ -132,8 +133,7 @@ class NinjaAnalyzer(object):
 
         rule_scope = Scope(rule_name, scope)
         self._add_vars_to_scope(rule_vars, rule_scope, expand=False)
-        rule = Rule(rule_name, rule_scope)
-        graph.rules[rule_name] = rule
+        graph.rules[rule_name] = rule_scope
         return graph
 
     def _decl_subninja(self, graph, scope, decl):

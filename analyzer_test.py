@@ -1,10 +1,10 @@
 import unittest
 
 from analyzer import NinjaAnalyzer
-from common import PynException
 from host_fake import FakeHost
-from var_expander import expand_vars
 from parser import parse
+from pyn_exceptions import PynException
+from var_expander import expand_vars
 
 
 class TestAnalyzer(unittest.TestCase):
@@ -68,13 +68,15 @@ class TestAnalyzer(unittest.TestCase):
         graph = analyzer.analyze(ast, 'build.ninja')
 
         n = graph.nodes['one']
-        r = graph.rules[n.rule_name]
-        self.assertEqual(expand_vars(r.scope['command'], n.scope, r.scope),
+        rule_scope = graph.rules[n.rule_name]
+        self.assertEqual(expand_vars(rule_scope['command'], n.scope,
+                                     rule_scope),
                          'echo 1 2')
 
         n = graph.nodes['two']
-        r = graph.rules[n.rule_name]
-        self.assertEqual(expand_vars(r.scope['command'], n.scope, r.scope),
+        rule_scope = graph.rules[n.rule_name]
+        self.assertEqual(expand_vars(rule_scope['command'], n.scope,
+                                     rule_scope),
                          'echo s1 2')
 
     def test_include(self):

@@ -4,9 +4,9 @@ import sys
 from analyzer import NinjaAnalyzer
 from args import parse_args
 from builder import Builder
-from common import PynException
 from host import Host
 from parser import parse
+from pyn_exceptions import PynException
 from tools import tool_names, list_tools, run_tool
 from var_expander import expand_vars
 

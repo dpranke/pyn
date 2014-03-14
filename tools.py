@@ -1,5 +1,4 @@
 from builder import Builder
-from common import find_roots, find_nodes_to_build, tsort
 from var_expander import expand_vars
 
 
@@ -37,23 +36,23 @@ def clean(host, args, _old_graph, graph, _started_time):
 
 def commands(host, args, _old_graph, graph, _started_time):
     """list all commands required to rebuild given targets"""
-    node_names = (args.targets or graph.defaults or find_roots(graph))
-    nodes_to_build = find_nodes_to_build(graph, node_names)
-    sorted_nodes = tsort(graph, nodes_to_build)
+    node_names = (args.targets or graph.defaults or graph.roots())
+    nodes_to_build = graph.closure(node_names)
+    sorted_nodes = graph.tsort(nodes_to_build)
     sorted_nodes = [n for n in sorted_nodes
                     if graph.nodes[n].rule_name != 'phony']
 
     for node_name in sorted_nodes:
         node = graph.nodes[node_name]
-        rule = graph.rules[node.rule_name]
-        host.print_out(expand_vars(rule.scope['command'], node.scope,
-                                   rule.scope))
+        rule_scope = graph.rules[node.rule_name]
+        host.print_out(expand_vars(rule_scope['command'], node.scope,
+                                   rule_scope))
     return 0
 
 
 def deps(host, args, _old_graph, graph, _started_time):
     """show dependencies stored in the deps log"""
-    node_names = (args.targets or graph.defaults or find_roots(graph))
+    node_names = (args.targets or graph.defaults or graph.roots())
     for node_name in node_names:
         n = graph.nodes[node_name]
         depsfile_deps = n.scope['depsfile_deps']
@@ -103,7 +102,7 @@ def rules(host, _args, _old_graph, graph, _started_time):
     """list all the rules"""
     for rule_name in sorted(graph.rules):
         host.print_out("%s %s" % (rule_name,
-                                  graph.rules[rule_name].scope['command']))
+                                  graph.rules[rule_name]['command']))
     return 0
 
 
@@ -139,7 +138,7 @@ def targets(host, args, _old_graph, graph, _started_time):
             max_depth = int(args.targets[1])
         else:
             max_depth = 1
-        for d in (graph.defaults or find_roots(graph)):
+        for d in (graph.defaults or graph.roots()):
             print_at(d, 0, max_depth)
     return 0
 

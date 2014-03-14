@@ -1,4 +1,3 @@
-from common import find_roots, find_nodes_to_build, tsort
 from stats import Stats
 from pool import Pool, Empty
 from printer import Printer
@@ -18,9 +17,9 @@ class Builder(object):
         self._pool = None
 
     def find_nodes_to_build(self, old_graph, graph):
-        node_names = self.args.targets or graph.defaults or find_roots(graph)
-        nodes_to_build = find_nodes_to_build(graph, node_names)
-        sorted_nodes = tsort(graph, nodes_to_build)
+        node_names = self.args.targets or graph.defaults or graph.roots()
+        nodes_to_build = graph.closure(node_names)
+        sorted_nodes = graph.tsort(nodes_to_build)
         sorted_nodes = [n for n in sorted_nodes
                         if graph.nodes[n].rule_name != 'phony']
 
@@ -90,14 +89,14 @@ class Builder(object):
 
     def _command(self, graph, node_name):
         node = graph.nodes[node_name]
-        rule = graph.rules[node.rule_name]
-        return self.expand_vars(rule.scope['command'], node.scope, rule.scope)
+        rule_scope = graph.rules[node.rule_name]
+        return self.expand_vars(rule_scope['command'], node.scope, rule_scope)
 
     def _description(self, graph, node_name):
         node = graph.nodes[node_name]
-        rule = graph.rules[node.rule_name]
-        desc = rule.scope['description'] or rule.scope['command']
-        return self.expand_vars(desc, node.scope, rule.scope)
+        rule_scope = graph.rules[node.rule_name]
+        desc = rule_scope['description'] or rule_scope['command']
+        return self.expand_vars(desc, node.scope, rule_scope)
 
     def _build_node(self, graph, node_name):
         node = graph.nodes[node_name]
@@ -136,11 +135,11 @@ class Builder(object):
     def _build_node_done(self, graph, result):
         node_name, desc, command, ret, out, err = result
         n = graph.nodes[node_name]
-        rule = graph.rules[n.rule_name]
+        rule_scope = graph.rules[n.rule_name]
         n.running = False
 
         if n.scope['depfile'] and n.scope['deps'] == 'gcc':
-            path = self.expand_vars(n.scope['depfile'], n.scope, rule.scope)
+            path = self.expand_vars(n.scope['depfile'], n.scope, rule_scope)
             if self.host.exists(path):
                 depsfile_deps = self.host.read(path).split()[2:]
                 self.host.remove(path)

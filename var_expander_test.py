@@ -1,7 +1,8 @@
 import unittest
 
 
-from common import PynException, Scope
+from build_graph import Scope
+from pyn_exceptions import PynException
 from var_expander import expand_vars
 
 
