@@ -365,6 +365,9 @@ class TestTools(unittest.TestCase, UnitTestMixin, CheckMixin):
         # FIXME: write a test for clean -v
         pass
 
+    def test_clean_single_target(self):
+        pass
+
     def test_commands(self):
         in_files, _ = default_test_files()
         self.check(in_files, args=['-t', 'commands'],
