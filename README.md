@@ -49,7 +49,8 @@ the LICENSE file in the source repo.
 * NINJA_STATUS option %c 
 * various debug modes (-d stats, explain, keeprsp)
 * various tools (-t browse, graph, compdb, recompact)
-* suggest alternatives that fuzzy match the requested targets.
+* suggest alternatives that fuzzy match the requested targets when the
+  requested targets are missing.
 
 ## Also
 
