@@ -64,11 +64,11 @@ class Builder(object):
                                                             running_jobs,
                                                             block=True)
 
-            self._pool.close()
             while running_jobs:
                 did_work = self._process_completed_jobs(graph, running_jobs,
                                                         block=True)
         finally:
+            self._pool.close()
             self._pool.join()
 
         self._printer.flush()

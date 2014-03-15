@@ -273,6 +273,19 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
         out_files['bar'] = 'bar\n'
         self.check(in_files, out_files)
 
+    def test_var_expansion_with_spaces(self):
+        in_files = {}
+        in_files['build.ninja'] = textwrap.dedent("""
+            v = foo bar
+            rule echo_out
+                command = echo '$out' > $out
+
+            build $v : echo_out
+            """)
+        out_files = in_files.copy()
+        out_files['foo bar'] = '"foo bar"\n'
+        self.check(in_files, out_files)
+
     def test_var_expansion_across_includes(self):
         in_files = {}
         in_files['build.ninja'] = textwrap.dedent("""

@@ -1,3 +1,5 @@
+import shlex
+
 # FIXME: make this work w/ python3.
 from StringIO import StringIO
 
@@ -29,7 +31,7 @@ class FakeHost(object):
 
     def call(self, cmd_str):
         self.cmds.append(cmd_str)
-        args = cmd_str.split()
+        args = shlex.split(cmd_str)
         if args[0] == 'echo' and args[-2] == '>':
             out = ' '.join(args[1:len(args) - 2]) + '\n'
             self.write(self.abspath(args[-1]), out)
