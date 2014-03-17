@@ -10,9 +10,10 @@ def check(host, _args, _old_graph, _graph, _started_time):
 
 def clean(host, args, _old_graph, graph, _started_time):
     """clean built files"""
-
+    node_names = args.targets or graph.roots()
     files_to_remove = []
-    for output_name, node in graph.nodes.items():
+    for output_name in graph.closure(node_names):
+        node = graph.nodes[output_name]
         if (node.rule_name != 'phony' and host.exists(output_name) and
                 (node.scope['generator'] != '1' or '-g' in args.targets)):
             files_to_remove.append(output_name)
@@ -24,7 +25,7 @@ def clean(host, args, _old_graph, graph, _started_time):
     else:
         host.print_err('Cleaning... ', end='')
 
-    for f in files_to_remove:
+    for f in sorted(files_to_remove):
         if args.verbose:
             host.print_err('Remove %s' % f)
         if not args.dry_run:

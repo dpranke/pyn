@@ -110,6 +110,7 @@ class TestArgs(unittest.TestCase, UnitTestMixin, CheckMixin):
 
             build hello : cc_binary hello.c
             """)
+        in_files['hello.c'] = ''
         _, out, err = self.check(in_files, expected_return_code=returncode,
                                  args=argv)
         self.assertTrue(re.match(out_regex, out, re.MULTILINE),
@@ -253,6 +254,28 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
         #self.check(in_files, out_files)
         self.check(in_files, expected_return_code=1)
 
+    def test_unknown_dependency(self):
+        in_files = {}
+        in_files['build.ninja'] = textwrap.dedent("""
+            rule cc
+                command = cc -o $out $in
+            build foo: cc foo.c
+            """)
+        returncode, out, err = self.check(in_files)
+        self.assertEqual(returncode, 1)
+        self.assertEqual(out, '')
+        self.assertEqual(err,
+                         ("error: 'foo.c', needed by 'foo', missing "
+                          "and no known rule to make it\n"))
+
+    def test_unknown_target(self):
+        in_files = {}
+        in_files['build.ninja'] = ''
+        returncode, out, err = self.check(in_files, args=['foo'])
+        self.assertEqual(returncode, 1)
+        self.assertEqual(out, '')
+        self.assertEqual(err, "error: unknown target 'foo'\n")
+
     def test_var_expansion(self):
         in_files = {}
         in_files['build.ninja'] = textwrap.dedent("""
@@ -271,6 +294,19 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
         out_files = in_files.copy()
         out_files['foo'] = 'foo\n'
         out_files['bar'] = 'bar\n'
+        self.check(in_files, out_files)
+
+    def test_var_expansion_with_spaces(self):
+        in_files = {}
+        in_files['build.ninja'] = textwrap.dedent("""
+            v = foo bar
+            rule echo_out
+                command = echo '$out' > $out
+
+            build $v : echo_out
+            """)
+        out_files = in_files.copy()
+        out_files['foo bar'] = '"foo bar"\n'
         self.check(in_files, out_files)
 
     def test_var_expansion_across_includes(self):
@@ -363,6 +399,9 @@ class TestTools(unittest.TestCase, UnitTestMixin, CheckMixin):
 
     def test_clean_verbose(self):
         # FIXME: write a test for clean -v
+        pass
+
+    def test_clean_single_target(self):
         pass
 
     def test_commands(self):

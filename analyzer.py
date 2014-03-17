@@ -77,7 +77,10 @@ class NinjaAnalyzer(object):
         build_scope['in'] = quoted_edeps
         self._add_vars_to_scope(build_vars, build_scope)
 
-        n = Node(quoted_outs, build_scope, exp_outs, rule_name,
+        # FIXME: using exp_outs instead of quoted_outs might get us
+        # into trouble; we should probably have a different kind of name
+        # entirely.
+        n = Node(' '.join(exp_outs), build_scope, exp_outs, rule_name,
                  exp_edeps, self._exp(scope, ideps), self._exp(scope, odeps))
         nodes = {}
         for o in exp_outs:

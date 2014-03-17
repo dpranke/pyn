@@ -1,3 +1,4 @@
+from pyn_exceptions import PynException
 from stats import Stats
 from pool import Pool, Empty
 from printer import Printer
@@ -18,7 +19,11 @@ class Builder(object):
 
     def find_nodes_to_build(self, old_graph, graph):
         node_names = self.args.targets or graph.defaults or graph.roots()
-        nodes_to_build = graph.closure(node_names)
+        try:
+            nodes_to_build = graph.closure(node_names)
+        except KeyError as e:
+            raise PynException('error: unknown target %s' % str(e))
+
         sorted_nodes = graph.tsort(nodes_to_build)
         sorted_nodes = [n for n in sorted_nodes
                         if graph.nodes[n].rule_name != 'phony']
@@ -64,11 +69,11 @@ class Builder(object):
                                                             running_jobs,
                                                             block=True)
 
-            self._pool.close()
             while running_jobs:
                 did_work = self._process_completed_jobs(graph, running_jobs,
                                                         block=True)
         finally:
+            self._pool.close()
             self._pool.join()
 
         self._printer.flush()
@@ -84,6 +89,14 @@ class Builder(object):
                 break
 
         if next_node:
+            # Ensure all of the dependencies actually exist.
+            # FIXME: is there a better place for this check?
+            for d in n.deps():
+                if not self.host.exists(d):
+                    raise PynException("error: '%s', needed by '%s', %s" %
+                                       (d, next_node,
+                                        "missing and no known rule to make "
+                                        "it"))
             nodes_to_build.remove(next_node)
         return next_node
 

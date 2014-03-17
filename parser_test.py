@@ -61,6 +61,7 @@ class TestNinjaParser(unittest.TestCase):
         self.check('foo = ba$ r', [['var', 'foo', 'ba r']])
         self.check('foo = ba$\n  r', [['var', 'foo', 'bar']])
         self.check('foo = ba $\n  r', [['var', 'foo', 'ba r']])
+        self.check('foo = bar  \n', [['var', 'foo', 'bar  ']])
 
     def test_include(self):
         self.check('include foo.ninja', [['include', 'foo.ninja']],
