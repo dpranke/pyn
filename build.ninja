@@ -10,7 +10,7 @@ rule pycomp
 
 rule pycov
   description = generating python coverage
-  command = pytest -c -q $in
+  command = typ -c -q $in
 
 rule pep8_rule
   command = pep8 $in
@@ -24,8 +24,8 @@ rule pylint_rule
   command = pylint --rcfile pylintrc $in
   description = pylint $in
 
-rule pytest
-  command = pytest -q $in
+rule typ
+  command = typ $in
   description = running python tests
 
 rule shell
@@ -83,7 +83,7 @@ build pyflakes : pyflakes_rule $
     tools.py $
     var_expander.py var_expander_test.py 
 
-build test : pytest $
+build test : typ $
   analyzer_test.py $
   build_graph_test.py $
   main_test.py $
