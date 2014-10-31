@@ -13,7 +13,18 @@
 # limitations under the License.
 
 import cPickle
+import os
 import sys
+
+# This ensures that absolute imports of pyn modules will work when
+# running pyn/main.py as a script even if pyn is not installed.
+path_to_file = os.path.realpath(__file__)
+if path_to_file.endswith('.pyc'):  # pragma: no cover
+    path_to_file = path_to_file[:-1]
+dir_above_pyn = os.path.dirname(os.path.dirname(path_to_file))
+if dir_above_pyn not in sys.path:  # pragma: no cover
+    sys.path.append(dir_above_pyn)
+
 
 from pyn.analyzer import NinjaAnalyzer
 from pyn.args import parse_args

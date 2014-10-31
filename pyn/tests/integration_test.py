@@ -15,34 +15,23 @@
 import os
 import textwrap
 import unittest
-# import StringIO
 
-# import main
-import main_test
-import parser_test
-
-from host import Host
+from pyn.host import Host
+from pyn.tests import main_test
+from pyn.tests import parser_test
 
 
 PATH_TO_THIS_MODULE = os.path.abspath(__file__)
 
 
-#def run_under_coverage(argv, host=None):
-#    host = host or Host()
-#    host.stdout = StringIO.StringIO()
-#    host.stderr = StringIO.StringIO()
-#    returncode = main.main(host, argv)
-#    return returncode, host.stdout.getvalue(), host.stderr.getvalue()
-
-
 def path_to_main():
-    path = os.path.join(os.path.dirname(PATH_TO_THIS_MODULE), 'main.py')
+    path = os.path.join(os.path.dirname(os.path.dirname(PATH_TO_THIS_MODULE)),
+                        'main.py')
     return path.replace(' ', '\\ ')
 
 
 class IntegrationTestMixin(object):
     def _files_to_ignore(self):
-        # return ['.ninja_deps', '.ninja_log']
         return ['.pyn.db']
 
     def _host(self):
@@ -50,7 +39,6 @@ class IntegrationTestMixin(object):
 
     def _call(self, host, args):
         cmd_prefix = [host.python_interpreter, path_to_main()]
-        # return run_under_coverage(args)
         return host.call(' '.join(cmd_prefix + args))
 
 
@@ -80,7 +68,6 @@ class IntegrationTestNinjaParser(parser_test.TestNinjaParser):
                 host.write(path, contents)
 
             cmd = cmd_prefix + ['-t', 'check']
-            # return run_under_coverage(['-t', 'check'], host=host)
             return host.call(' '.join(cmd))
         finally:
             host.rmtree(tmpdir)

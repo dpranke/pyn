@@ -19,8 +19,8 @@ import unittest
 # FIXME: make this work w/ python3
 from StringIO import StringIO
 
-from host_fake import FakeHost
-from main import main, VERSION
+from pyn.host_fake import FakeHost
+from pyn.main import main, VERSION
 
 
 def default_test_files():
