@@ -77,7 +77,7 @@ class TestAnalyzer(unittest.TestCase):
             '/tmp/sub.ninja': ('foo = s1\n'
                                'build two: echo\n'),
         }
-        ast = parse(self.host.read('build.ninja'), 'build.ninja')
+        ast = parse(self.host.read_text_file('build.ninja'), 'build.ninja')
         analyzer = NinjaAnalyzer(self.host, self.args, parse, expand_vars)
         graph = analyzer.analyze(ast, 'build.ninja')
 

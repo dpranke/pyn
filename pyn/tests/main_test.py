@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import re
+import shlex
 import textwrap
 import unittest
 
@@ -45,13 +46,31 @@ def default_test_files():
     return in_files, out_files
 
 
+class CustomFakeHost(FakeHost):
+    def call(self, argv, stdin=None, env=None):
+        assert argv[0] == 'bash'
+        assert argv[1] == '-c'
+        argv = shlex.split(argv[2])
+        self.cmds.append(argv)
+        if argv[0] == 'echo' and argv[-2] == '>':
+            out = ' '.join(argv[1:len(argv) - 2]) + '\n'
+            self.write_text_file(self.abspath(argv[-1]), out)
+            return 0, '', ''
+        if argv[0] == 'cat' and argv[-2] == '>':
+            out = ''
+            for f in argv[1:len(argv) - 2]:
+                out += self.read_text_file(f)
+            self.write_text_file(self.abspath(argv[-1]), out)
+            return 0, '', ''
+        return 1, '', ''
+
+
 class UnitTestMixin(object):
     def _files_to_ignore(self):
-        # return ['.ninja_deps', '.ninja_log']
         return ['.pyn.db']
 
     def _host(self):
-        return FakeHost()
+        return CustomFakeHost()
 
     def _call(self, host, args):
         host.stdout = StringIO()
@@ -68,12 +87,12 @@ class CheckMixin(object):
             dirname = host.dirname(path)
             if dirname:
                 host.maybe_mkdir(dirname)
-            host.write(path, contents)
+            host.write_text_file(path, contents)
 
     def _read_files(self, host, tmpdir):
         out_files = {}
         for f in host.files_under(tmpdir):
-            out_files[f] = host.read(tmpdir, f)
+            out_files[f] = host.read_text_file(tmpdir, f)
         return out_files
 
     def assert_files(self, expected_files, actual_files):

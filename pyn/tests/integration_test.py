@@ -38,8 +38,7 @@ class IntegrationTestMixin(object):
         return Host()
 
     def _call(self, host, args):
-        cmd_prefix = [host.python_interpreter, path_to_main()]
-        return host.call(' '.join(cmd_prefix + args))
+        return host.call([host.python_interpreter, path_to_main()] + args)
 
 
 class IntegrationTestArgs(IntegrationTestMixin, main_test.TestArgs):
@@ -63,12 +62,11 @@ class IntegrationTestNinjaParser(parser_test.TestNinjaParser):
         try:
             tmpdir = str(host.mkdtemp())
             host.chdir(tmpdir)
-            host.write('build.ninja', text)
+            host.write_text_file('build.ninja', text)
             for path, contents in list(files.items()):
-                host.write(path, contents)
+                host.write_text_file(path, contents)
 
-            cmd = cmd_prefix + ['-t', 'check']
-            return host.call(' '.join(cmd))
+            return host.call(cmd_prefix + ['-t', 'check'])
         finally:
             host.rmtree(tmpdir)
             host.chdir(orig_wd)

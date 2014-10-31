@@ -34,7 +34,7 @@ setup(
     package_data={'': ['../README.rst']},
     entry_points={
         'console_scripts': [
-            'typ=pyn.main:main',
+            'pyn=pyn.main:main',
         ]
     },
     install_requires=[

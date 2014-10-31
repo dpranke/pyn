@@ -14,9 +14,8 @@
 
 import sys  # pragma: no cover
 
-from pyn.host import Host
 from pyn.main import main  # pragma: no cover
 
 
 if __name__ == '__main__':  # pragma: no cover
-    sys.exit(main(Host()))
+    sys.exit(main())

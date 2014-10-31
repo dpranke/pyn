@@ -40,7 +40,7 @@ class NinjaAnalyzer(object):
         for path in graph.subninjas:
             if not self.host.exists(path):
                 raise PynException("'%s' not found." % path)
-            ast = self.parse(self.host.read(path), path)
+            ast = self.parse(self.host.read_text_file(path), path)
             subgraph = self.analyze(ast, path, graph.scopes[graph.name])
             graph = self._merge_graphs(graph, subgraph)
         return graph
@@ -114,7 +114,7 @@ class NinjaAnalyzer(object):
         full_path = self.expand_vars(path, scope)
         if not self.host.exists(full_path):
             raise PynException("'%s' not found." % full_path)
-        ast = self.parse(self.host.read(full_path), full_path)
+        ast = self.parse(self.host.read_text_file(full_path), full_path)
         graph = self._add_ast(graph, graph.scopes[graph.name], ast)
         graph.includes.append(full_path)
         return graph

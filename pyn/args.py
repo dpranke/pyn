@@ -30,7 +30,7 @@ def parse_args(host, argv, version, tool_names):
         def exit(self, status=0, message=None):
             self.returncode = status
             if message:
-                host.print_err(message)
+                host.print_(message, stream=host.stderr)
 
     overwrite_by_default = host.stderr.isatty()
 
@@ -77,10 +77,10 @@ def parse_args(host, argv, version, tool_names):
         return ap.returncode, None
 
     if args.debug:
-        host.print_err('-d is not supported yet')
+        host.print_('-d is not supported yet', stream=host.stderr)
         return 2, None
     if args.tool and args.tool not in tool_names:
-        host.print_err('unsupported tool "%s"' % args.tool)
+        host.print_('unsupported tool "%s"' % args.tool, stream=host.stderr)
         return 2, None
 
     return None, args

@@ -3,10 +3,7 @@
 *.pyc.d
 *.py,cover
 
-.pyn.db
-.ninja_deps
-.ninja_log
 .coverage*
 .profiler_data
-.pylint*
-.pytest*
+
+pyn.egg-info

@@ -37,7 +37,8 @@ from pyn.var_expander import expand_vars
 from pyn.version import VERSION
 
 
-def main(host, argv=None):
+def main(host=None, argv=None):
+    host = host or Host()
     started_time = host.time()
 
     returncode, args = parse_args(host, argv, VERSION, tool_names())
@@ -45,7 +46,7 @@ def main(host, argv=None):
         return returncode
 
     if args.version:
-        host.print_out(VERSION)
+        host.print_(VERSION)
         return 0
 
     if args.tool == 'list':
@@ -54,11 +55,11 @@ def main(host, argv=None):
 
     if args.dir:
         if not host.exists(args.dir):
-            host.print_err('"%s" not found' % args.dir)
+            host.print_('"%s" not found' % args.dir, stream=host.stderr)
             return 2
         host.chdir(args.dir)
     if not host.exists(args.file):
-        host.print_err('"%s" not found' % args.file)
+        host.print_('"%s" not found' % args.file, stream=host.stderr)
         return 2
 
     try:
@@ -74,16 +75,16 @@ def main(host, argv=None):
             res = builder.build(graph, nodes_to_build)
             if graph.is_dirty:
                 graph_str = cPickle.dumps(graph)
-                host.write('.pyn.db', graph_str)
+                host.write_text_file('.pyn.db', graph_str)
         else:
-            host.print_out('pyn: no work to do.')
+            host.print_('pyn: no work to do.')
             res = 0
         return res
     except PynException as e:
-        host.print_err(str(e))
+        host.print_(str(e), stream=host.stderr)
         return 1
     except KeyboardInterrupt as e:
-        host.print_err('Interrupted, exiting ..')
+        host.print_('Interrupted, exiting ..', stream=host.stderr)
         return 130  # SIGINT
 
 
@@ -91,7 +92,7 @@ def _load_graphs(host, args):
     old_graph = None
     needs_rescan = True
     if host.exists('.pyn.db'):
-        graph_str = host.read('.pyn.db')
+        graph_str = host.read_text_file('.pyn.db')
         old_graph = cPickle.loads(graph_str)
 
         graph_mtime = host.mtime('.pyn.db')
@@ -103,7 +104,7 @@ def _load_graphs(host, args):
                             f in old_graph.subninjas))
 
     if needs_rescan:
-        ast = parse(host.read(args.file), args.file)
+        ast = parse(host.read_text_file(args.file), args.file)
         analyzer = NinjaAnalyzer(host, args, parse, expand_vars)
         graph = analyzer.analyze(ast, args.file)
         graph.is_dirty = True

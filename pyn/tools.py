@@ -18,7 +18,7 @@ from pyn.var_expander import expand_vars
 
 def check(host, _args, _old_graph, _graph, _started_time):
     """check the syntax of the build files"""
-    host.print_out('pyn: syntax is correct.')
+    host.print_('pyn: syntax is correct.')
     return 0
 
 
@@ -35,17 +35,17 @@ def clean(host, args, _old_graph, graph, _started_time):
     if host.exists('.pyn.db') and '-g' in args.targets:
         files_to_remove.append('.pyn.db')
     if args.verbose:
-        host.print_err('Cleaning...')
+        host.print_('Cleaning...', stream=host.stderr)
     else:
-        host.print_err('Cleaning... ', end='')
+        host.print_('Cleaning... ', end='', stream=host.stderr)
 
     for f in sorted(files_to_remove):
         if args.verbose:
-            host.print_err('Remove %s' % f)
+            host.print_('Remove %s' % f, stream=host.stderr)
         if not args.dry_run:
             host.remove(f)
 
-    host.print_err('%d files.' % len(files_to_remove))
+    host.print_('%d files.' % len(files_to_remove), stream=host.stderr)
     return 0
 
 
@@ -60,8 +60,7 @@ def commands(host, args, _old_graph, graph, _started_time):
     for node_name in sorted_nodes:
         node = graph.nodes[node_name]
         rule_scope = graph.rules[node.rule_name]
-        host.print_out(expand_vars(rule_scope['command'], node.scope,
-                                   rule_scope))
+        host.print_(expand_vars(rule_scope['command'], node.scope, rule_scope))
     return 0
 
 
@@ -72,11 +71,11 @@ def deps(host, args, _old_graph, graph, _started_time):
         n = graph.nodes[node_name]
         depsfile_deps = n.scope['depsfile_deps']
         if depsfile_deps:
-            host.print_out("%s: #deps %d" % (node_name, len(depsfile_deps)))
+            host.print_("%s: #deps %d" % (node_name, len(depsfile_deps)))
             for dep in depsfile_deps:
-                host.print_out("    %s" % dep)
+                host.print_("    %s" % dep)
         else:
-            host.print_out("%s: deps not found" % node_name)
+            host.print_("%s: deps not found" % node_name)
     return 0
 
 
@@ -85,10 +84,10 @@ def question(host, args, old_graph, graph, started_time):
     builder = Builder(host, args, expand_vars, started_time)
     nodes_to_build = builder.find_nodes_to_build(old_graph, graph)
     if nodes_to_build:
-        host.print_out('pyn: build is not up to date.')
+        host.print_('pyn: build is not up to date.')
         return 1
     else:
-        host.print_out('pyn: no work to do.')
+        host.print_('pyn: no work to do.')
         return 0
 
 
@@ -101,22 +100,22 @@ def query(host, args, _old_graph, graph, _started_time):
         inputs = []
     outputs = [node_name for node_name in graph.nodes if
                target in graph.nodes[node_name].deps()]
-    host.print_out(target)
+    host.print_(target)
     if inputs:
-        host.print_out("  inputs:")
+        host.print_("  inputs:")
         for node_name in inputs:
-            host.print_out("    " + node_name)
+            host.print_("    " + node_name)
     if outputs:
-        host.print_out("  outputs:")
+        host.print_("  outputs:")
         for node_name in outputs:
-            host.print_out("    " + node_name)
+            host.print_("    " + node_name)
     return 0
 
 
 def rules(host, _args, _old_graph, graph, _started_time):
     """list all the rules"""
     for rule_name in sorted(graph.rules):
-        host.print_out("%s %s" % (rule_name,
+        host.print_("%s %s" % (rule_name,
                                   graph.rules[rule_name]['command']))
     return 0
 
@@ -127,7 +126,7 @@ def targets(host, args, _old_graph, graph, _started_time):
         if len(args.targets) == 2:
             for node_name, node in graph.nodes.items():
                 if node.rule_name == args.targets[1]:
-                    host.print_out(node_name)
+                    host.print_(node_name)
         else:
             leaves = set()
             for node in graph.nodes.values():
@@ -135,15 +134,14 @@ def targets(host, args, _old_graph, graph, _started_time):
                     if d not in graph.nodes:
                         leaves.add(d)
             for leaf in leaves:
-                host.print_out(leaf)
+                host.print_(leaf)
     elif args.targets[0] == 'all':
         for node_name in graph.nodes:
-            host.print_out(node_name)
+            host.print_(node_name)
     elif args.targets[0] == 'depth':
 
         def print_at(name, depth, max_depth):
-            host.print_out("%s%s" % ('  ' * depth,
-                                     name))
+            host.print_("%s%s" % ('  ' * depth, name))
             if not max_depth or depth < max_depth:
                 if name in graph.nodes:
                     for d in graph.nodes[name].deps():
@@ -165,9 +163,9 @@ def tool_names():
 def list_tools(host):
     """print this message"""
 
-    host.print_out('pyn subtools:')
+    host.print_('pyn subtools:')
     for tool in sorted(_TOOLS.keys()):
-        host.print_out("%10s  %s" % (tool, _TOOLS[tool].__doc__))
+        host.print_("%10s  %s" % (tool, _TOOLS[tool].__doc__))
 
 
 def run_tool(host, args, old_graph, graph, started_time):

@@ -26,7 +26,7 @@ class Builder(object):
         self.expand_vars = expand_vars
         self.stats = Stats(host.getenv('NINJA_STATUS', '[%s/%t] '),
                            host.time, started_time)
-        self._printer = Printer(host.print_out, self._should_overwrite)
+        self._printer = Printer(host.print_, self._should_overwrite)
         self._mtimes = {}
         self._failures = 0
         self._pool = None
@@ -168,7 +168,7 @@ class Builder(object):
         if n.scope['depfile'] and n.scope['deps'] == 'gcc':
             path = self.expand_vars(n.scope['depfile'], n.scope, rule_scope)
             if self.host.exists(path):
-                depsfile_deps = self.host.read(path).split()[2:]
+                depsfile_deps = self.host.read_text_file(path).split()[2:]
                 self.host.remove(path)
                 if n.depsfile_deps != depsfile_deps:
                     n.depsfile_deps = depsfile_deps
@@ -186,9 +186,9 @@ class Builder(object):
         if out or err:
             self._printer.flush()
         if out:
-            self.host.print_out(out, end='')
+            self.host.print_(out, end='')
         if err:
-            self.host.print_err(err, end='')
+            self.host.print_(err, end='', stream=host.stderr)
 
     def _update(self, msg, prefix=None, elide=True):
         prefix = prefix or self.stats.format()
@@ -211,5 +211,5 @@ def _call(request):
     if dry_run:
         ret, out, err = 0, '', ''
     else:
-        ret, out, err = host.call(command)
+        ret, out, err = host.call(['bash', '-c', command])
     return (node_name, desc, command, ret, out, err)
