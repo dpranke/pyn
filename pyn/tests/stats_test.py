@@ -14,17 +14,18 @@
 
 import unittest
 
-from pyn.stats import Stats
+from typ.stats import Stats
 
 
 class TestStats(unittest.TestCase):
+
     def test_basic(self):
-        s = Stats('foo', None, None)
+        s = Stats('foo', lambda: 0, 32)
         self.assertEqual(s.format(), 'foo')
 
     def test_edges(self):
-        s = Stats('[%s/%f/%t/%r/%p]', None, None)
-        self.assertEqual(s.format(), '[0/0/0/0/ --- ]')
+        s = Stats('[%s/%f/%t/%r/%p]', lambda: 0, 32)
+        self.assertEqual(s.format(), '[0/0/0/0/-]')
         s.started = 3
         s.total = 5
         s.finished = 1
@@ -35,22 +36,39 @@ class TestStats(unittest.TestCase):
         self.assertEqual(s.format(), '[5/5/5/0/100.0]')
 
     def test_elapsed_time(self):
-        s = Stats('[%e]', lambda: 0.4, 0)
+        times = [0.0, 0.4]
+        s = Stats('[%e]', lambda: times.pop(0), 32)
         self.assertEqual(s.format(), '[0.400]')
 
+        s = Stats('[%e]', lambda: 0, 32)
+        self.assertEqual(s.format(), '[0.000]')
+
+    def test_current_rate(self):
+        times = [0.0, 0.1, 0.2]
+        s = Stats('[%c]', lambda: times.pop(0), 1)
+        self.assertEquals(s.format(), '[-]')
+        s.add_time()
+        s.add_time()
+        self.assertEquals(s.format(), '[ 10.0]')
+
     def test_overall_rate(self):
-        times = [0, 5]
-        s = Stats('[%o]', lambda: times.pop(0), 0)
-        self.assertEqual(s.format(), '[ --- ]')
+        times = [0, 0, 5]
+        s = Stats('[%o]', lambda: times.pop(0), 32)
+        self.assertEqual(s.format(), '[-]')
         s.started = 3
         s.finished = 1
         s.total = 5
         self.assertEqual(s.format(), '[  0.2]')
 
     def test_escaped_percent(self):
-        s = Stats('%%', None, None)
+        s = Stats('%%', lambda: 0, 32)
         self.assertEqual(s.format(), '%')
 
     def test_unrecognized_escape(self):
-        s = Stats('%x', None, None)
+        s = Stats('%x', lambda: 0, 32)
         self.assertEqual(s.format(), '%x')
+
+    def test_remaining(self):
+        s = Stats('%u', lambda: 0, 32)
+        s.total = 2
+        self.assertEqual(s.format(), '2')

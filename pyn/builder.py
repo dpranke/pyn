@@ -25,7 +25,7 @@ class Builder(object):
         self._should_overwrite = args.overwrite_status and not args.verbose
         self.expand_vars = expand_vars
         self.stats = Stats(host.getenv('NINJA_STATUS', '[%s/%t] '),
-                           host.time, started_time)
+                           host.time, self.args.jobs)
         self._printer = Printer(host.print_, self._should_overwrite)
         self._mtimes = {}
         self._failures = 0
