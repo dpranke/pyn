@@ -14,7 +14,6 @@ is_python3 = bool(sys.version_info.major == 3)
 has_python34 = False
 verbose = False
 repo_dir = os.path.abspath(os.path.dirname(__file__))
-path_to_cov = os.path.join(repo_dir, 'tools', 'cov.py')
 
 
 def call(*args, **kwargs):
@@ -99,15 +98,10 @@ def run_clean(args):
 
 
 def run_coverage(args):
-    if not args.path:
-        args.path = [repo_dir]
-    if not args.source:
-        args.source = [os.path.join(repo_dir, 'pyn')]
-    argv = cov.argv_from_args(args)
-    cov_args = [path_to_runner, '-j', '1']
-    call(['python', path_to_cov] + argv + cov_args)
+    argv = ['-m', 'typ', '-c', '--coverage-source', 'pyn']
+    call(['python'] + argv)
     if has_python34:
-        call(['python3', path_to_cov] + argv + cov_args)
+        call(['python3'] + argv)
 
 
 def run_develop(args):
