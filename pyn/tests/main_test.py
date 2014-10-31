@@ -243,9 +243,9 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
             """)
 
         # FIXME: Make multiple definitions of the same rule a warning?
-        #out_files = in_files.copy()
-        #out_files['foo'] = 'foo\n'
-        #self.check(in_files, out_files)
+        # out_files = in_files.copy()
+        # out_files['foo'] = 'foo\n'
+        # self.check(in_files, out_files)
         self.check(in_files, expected_return_code=1)
 
     def test_multiple_subninja_vars_fails(self):
@@ -263,9 +263,9 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
             """)
 
         # FIXME: Make multiple inclusions of the same subninja work?.
-        #out_files = in_files.copy()
-        #out_files['foo'] = 'foo\n'
-        #self.check(in_files, out_files)
+        # out_files = in_files.copy()
+        # out_files['foo'] = 'foo\n'
+        # self.check(in_files, out_files)
         self.check(in_files, expected_return_code=1)
 
     def test_unknown_dependency(self):

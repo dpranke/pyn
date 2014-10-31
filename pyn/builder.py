@@ -195,7 +195,7 @@ class Builder(object):
         self._printer.update(prefix + msg, elide=elide)
 
     def _stat(self, name):
-        if not name in self._mtimes:
+        if name not in self._mtimes:
             self._restat(name)
         return self._mtimes.get(name, None)
 

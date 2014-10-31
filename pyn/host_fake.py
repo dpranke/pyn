@@ -103,7 +103,7 @@ class FakeHost(object):
 
     def maybe_mkdir(self, *comps):
         path = self.join(*comps)
-        if not path in self.dirs:
+        if path not in self.dirs:
             self.dirs.add(path)
 
     def mkdtemp(self, suffix='', prefix='tmp', dir=None, **_kwargs):

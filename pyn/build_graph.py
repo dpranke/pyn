@@ -39,7 +39,7 @@ class Graph(object):
                 all_deps.add(d)
         for n in self.nodes.values():
             for d in n.outputs:
-                if not d in all_deps:
+                if d not in all_deps:
                     roots.add(d)
         return list(roots)
 

@@ -109,7 +109,7 @@ def run_develop(args):
 
 
 def run_format(args):
-    call('autopep8 --in-place *.py */*.py */*/*.py', shell=True)
+    call('autopep8 --in-place *.py pyn/*.py pyn/*/*.py', shell=True)
 
 
 def run_help(args):
@@ -127,8 +127,8 @@ def run_install(args):
 
 
 def run_lint(args):
-    call('pylint --rcfile=tools/pylintrc */*.py */*/*.py', shell=True)
-    call('pep8 *.py */*.py */*/*.py', shell=True)
+    call('pylint --rcfile=tools/pylintrc *.py pyn/*.py pyn/*/*.py', shell=True)
+    call('pep8 *.py pyn/*.py pyn/*/*.py', shell=True)
 
 
 def run_tests(args):
