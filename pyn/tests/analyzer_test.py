@@ -15,8 +15,8 @@
 import unittest
 
 from pyn.analyzer import NinjaAnalyzer
+from pyn.common.host_fake import FakeHost
 from pyn.exceptions import PynException
-from pyn.host_fake import FakeHost
 from pyn.parser import parse
 from pyn.var_expander import expand_vars
 

@@ -20,7 +20,7 @@ import unittest
 # FIXME: make this work w/ python3
 from StringIO import StringIO
 
-from pyn.host_fake import FakeHost
+from pyn.common.host_fake import FakeHost
 from pyn.main import main, VERSION
 
 

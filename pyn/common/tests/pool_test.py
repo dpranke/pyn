@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from typ import test_case
-from typ.host import Host
-from typ.pool import make_pool, _MessageType, _ProcessPool, _loop
+from ..host import Host
+from ..pool import make_pool, _MessageType, _ProcessPool, _loop
 
 
 def _pre(host, worker_num, context):  # pylint: disable=W0613

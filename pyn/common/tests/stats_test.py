@@ -14,7 +14,7 @@
 
 import unittest
 
-from typ.stats import Stats
+from ..stats import Stats
 
 
 class TestStats(unittest.TestCase):

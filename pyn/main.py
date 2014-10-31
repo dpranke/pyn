@@ -29,8 +29,8 @@ if dir_above_pyn not in sys.path:  # pragma: no cover
 from pyn.analyzer import NinjaAnalyzer
 from pyn.args import parse_args
 from pyn.builder import Builder
+from pyn.common.host import Host
 from pyn.exceptions import PynException
-from pyn.host import Host
 from pyn.parser import parse
 from pyn.tools import tool_names, list_tools, run_tool
 from pyn.var_expander import expand_vars

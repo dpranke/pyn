@@ -17,7 +17,7 @@ import multiprocessing
 import Queue
 import pickle
 
-from pyn.host import Host
+from .host import Host
 
 
 Empty = Queue.Empty

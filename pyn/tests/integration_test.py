@@ -16,7 +16,7 @@ import os
 import textwrap
 import unittest
 
-from pyn.host import Host
+from pyn.common.host import Host
 from pyn.tests import main_test
 from pyn.tests import parser_test
 

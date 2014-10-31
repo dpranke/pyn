@@ -14,7 +14,7 @@
 
 import unittest
 
-from typ.printer import Printer
+from ..printer import Printer
 
 
 class TestPrinter(unittest.TestCase):

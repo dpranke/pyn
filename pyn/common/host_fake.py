@@ -17,7 +17,7 @@ import io
 import logging
 import sys
 
-from typ.host import _TeedStream
+from .host import _TeedStream
 
 
 is_python3 = bool(sys.version_info.major == 3)
