@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from builder import Builder
-from var_expander import expand_vars
+from pyn.builder import Builder
+from pyn.var_expander import expand_vars
 
 
 def check(host, _args, _old_graph, _graph, _started_time):
