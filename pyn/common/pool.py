@@ -17,13 +17,13 @@ import multiprocessing
 import Queue
 import pickle
 
-from .host import Host
+from pyn.common.host import Host
 
 
 Empty = Queue.Empty
 
 
-def _stub_pre(host, worker_num, context):  # pylint: disable=W0212
+def _stub_pre(host, worker_num, context):  # pylint: disable=W0613
     return context
 
 
@@ -204,7 +204,7 @@ class _AsyncPool(object):
     def send(self, msg):
         self.msgs.append(msg)
 
-    def get(self, block=True):
+    def get(self, block=True):  # pylint: disable=W0613
         if not self.msgs:
             raise Empty()
         return self.callback(self.context_after_pre, self.msgs.pop(0))

@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typ import test_case
-from ..host import Host
-from ..pool import make_pool, _MessageType, _ProcessPool, _loop
+import unittest
+
+from pyn.common.host import Host
+from pyn.common.pool import make_pool, _MessageType, _ProcessPool, _loop
 
 
 def _pre(host, worker_num, context):  # pylint: disable=W0613
@@ -43,7 +44,7 @@ def _stub(*args):  # pylint: disable=W0613
     return None
 
 
-class TestPool(test_case.TestCase):
+class TestPool(unittest.TestCase):
 
     def run_basic_test(self, jobs):
         host = Host()

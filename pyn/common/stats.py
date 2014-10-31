@@ -15,12 +15,12 @@
 
 class Stats(object):
 
-    def __init__(self, status_format, time_fn, size):
+    def __init__(self, status_format, time_fn, size, started_time=None):
         self.fmt = status_format
         self.finished = 0
         self.started = 0
         self.total = 0
-        self.started_time = time_fn()
+        self.started_time = started_time or time_fn()
         self._times = []
         self._size = size
         self._time = time_fn

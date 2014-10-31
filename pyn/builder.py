@@ -25,7 +25,7 @@ class Builder(object):
         self._should_overwrite = args.overwrite_status and not args.verbose
         self.expand_vars = expand_vars
         self.stats = Stats(host.getenv('NINJA_STATUS', '[%s/%t] '),
-                           host.time, self.args.jobs)
+                           host.time, self.args.jobs, started_time)
         self._printer = Printer(host.print_, self._should_overwrite,
                                 host.terminal_width())
         self._mtimes = {}
@@ -189,7 +189,7 @@ class Builder(object):
         if out:
             self.host.print_(out, end='')
         if err:
-            self.host.print_(err, end='', stream=host.stderr)
+            self.host.print_(err, end='', stream=self.host.stderr)
 
     def _update(self, msg, prefix=None, elide=True):
         prefix = prefix or self.stats.format()
@@ -207,7 +207,7 @@ class Builder(object):
             self._mtimes[name] = None
 
 
-def _call(context, request):
+def _call(context, request):  # pylint: disable=W0613
     node_name, desc, command, dry_run, host = request
     if dry_run:
         ret, out, err = 0, '', ''

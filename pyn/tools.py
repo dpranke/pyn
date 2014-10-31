@@ -115,8 +115,7 @@ def query(host, args, _old_graph, graph, _started_time):
 def rules(host, _args, _old_graph, graph, _started_time):
     """list all the rules"""
     for rule_name in sorted(graph.rules):
-        host.print_("%s %s" % (rule_name,
-                                  graph.rules[rule_name]['command']))
+        host.print_("%s %s" % (rule_name, graph.rules[rule_name]['command']))
     return 0
 
 

@@ -14,7 +14,7 @@
 
 import unittest
 
-from ..printer import Printer
+from pyn.common.printer import Printer
 
 
 class TestPrinter(unittest.TestCase):
