@@ -97,7 +97,7 @@ class CheckMixin(object):
 
     def assert_files(self, expected_files, actual_files):
         for k, v in expected_files.items():
-            self.assertEqual(expected_files[k], v)
+            self.assertEqual(actual_files[k], v)
         interesting_files = set(actual_files.keys()).difference(
             self._files_to_ignore())
         self.assertEqual(interesting_files, set(expected_files.keys()))
@@ -421,7 +421,7 @@ class TestBuild(unittest.TestCase, UnitTestMixin, CheckMixin):
         in_files['src/foo'] = 'hello'
 
         out_files = in_files.copy()
-        out_files['out/foo'] = 'hello\n'
+        out_files['out/foo'] = 'hello'
         self.check(in_files, out_files)
 
 
