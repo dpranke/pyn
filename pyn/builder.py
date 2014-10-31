@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from pyn.exceptions import PynException
-from pyn.pool import Pool, Empty
+from pyn.pool import make_pool, Empty
 from pyn.printer import Printer
 from pyn.stats import Stats
 
@@ -67,7 +67,7 @@ class Builder(object):
         stats.started_time = self.host.time()
 
         running_jobs = []
-        self._pool = Pool(self.args.jobs, _call)
+        self._pool = make_pool(self.host, self.args.jobs, _call)
         try:
             while nodes_to_build and self._failures < self.args.errors:
                 while stats.started - stats.finished < self.args.jobs:
@@ -207,7 +207,7 @@ class Builder(object):
             self._mtimes[name] = None
 
 
-def _call(request):
+def _call(context, request):
     node_name, desc, command, dry_run, host = request
     if dry_run:
         ret, out, err = 0, '', ''
