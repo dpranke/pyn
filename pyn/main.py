@@ -34,9 +34,7 @@ from pyn.host import Host
 from pyn.parser import parse
 from pyn.tools import tool_names, list_tools, run_tool
 from pyn.var_expander import expand_vars
-
-
-VERSION = '0.7'
+from pyn.version import VERSION
 
 
 def main(host, argv=None):
