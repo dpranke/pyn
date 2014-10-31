@@ -26,7 +26,8 @@ class Builder(object):
         self.expand_vars = expand_vars
         self.stats = Stats(host.getenv('NINJA_STATUS', '[%s/%t] '),
                            host.time, self.args.jobs)
-        self._printer = Printer(host.print_, self._should_overwrite)
+        self._printer = Printer(host.print_, self._should_overwrite,
+                                host.terminal_width())
         self._mtimes = {}
         self._failures = 0
         self._pool = None

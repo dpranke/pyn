@@ -14,10 +14,11 @@
 
 import unittest
 
-from pyn.printer import Printer
+from typ.printer import Printer
 
 
 class TestPrinter(unittest.TestCase):
+
     def setUp(self):
         # 'Invalid name' pylint: disable=C0103
         self.out = []
@@ -26,19 +27,19 @@ class TestPrinter(unittest.TestCase):
         self.out.append(msg + end)
 
     def test_basic(self):
-        pr = Printer(self.print_, False)
+        pr = Printer(self.print_, False, 80)
         pr.update('foo')
         pr.flush()
         self.assertEqual(self.out, ['foo', '\n'])
 
     def test_elide(self):
-        pr = Printer(self.print_, False, cols=8)
+        pr = Printer(self.print_, False, 8)
         pr.update('hello world')
         pr.flush()
-        self.assertEqual(self.out, ['hel ...', '\n'])
+        self.assertEqual(self.out, ['h...d', '\n'])
 
     def test_overwrite(self):
-        pr = Printer(self.print_, True)
+        pr = Printer(self.print_, True, 80)
         pr.update('hello world')
         pr.update('goodbye world')
         pr.flush()
@@ -46,4 +47,15 @@ class TestPrinter(unittest.TestCase):
                          ['hello world',
                           '\r           \r',
                           'goodbye world',
+                          '\n'])
+
+    def test_last_line_flushed_when_not_overwriting(self):
+        pr = Printer(self.print_, False, 80)
+        pr.update('foo\nbar')
+        pr.update('baz')
+        pr.flush()
+        self.assertEqual(self.out,
+                         ['foo\nbar',
+                          '\n',
+                          'baz',
                           '\n'])

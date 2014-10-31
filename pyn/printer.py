@@ -14,7 +14,8 @@
 
 
 class Printer(object):
-    def __init__(self, print_, should_overwrite, cols=80):
+
+    def __init__(self, print_, should_overwrite, cols):
         self.print_ = print_
         self.should_overwrite = should_overwrite
         self.cols = cols
@@ -26,8 +27,10 @@ class Printer(object):
             self.last_line = ''
 
     def update(self, msg, elide=True):
-        if elide and len(msg) > self.cols - 5:
-            msg = msg[:self.cols - 5] + ' ...'
+        msg_len = len(msg)
+        if elide and self.cols and msg_len > self.cols - 5:
+            new_len = int((self.cols - 5) / 2)
+            msg = msg[:new_len] + '...' + msg[-new_len:]
         if self.should_overwrite and self.last_line:
             self.print_('\r' + ' ' * len(self.last_line) + '\r', end='')
         elif self.last_line:
