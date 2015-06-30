@@ -28,12 +28,11 @@ from pyn.parser import parse
 from pyn.pyn_exceptions import PynException
 from pyn.tools import tool_names, list_tools, run_tool
 from pyn.var_expander import expand_vars
+from pyn.version import VERSION
 
 
-VERSION = '0.7'
-
-
-def main(host, argv=None):
+def main(host=None, argv=None):
+    host = host or Host()
     started_time = host.time()
 
     returncode, args = parse_args(host, argv, VERSION, tool_names())
@@ -110,4 +109,4 @@ def _load_graphs(host, args):
 
 
 if __name__ == '__main__':
-    sys.exit(main(Host()))
+    sys.exit(main())

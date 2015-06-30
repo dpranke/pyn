@@ -1,4 +1,3 @@
-#!/bin/bash
 # Copyright 2014 Dirk Pranke. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,12 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if readlink $0 > /dev/null
-then
-    SCRIPTDIR=$(dirname $(readlink $0))
-else
-    pushd $(dirname $0) > /dev/null
-    SCRIPTDIR=$(pwd -P)
-    popd > /dev/null
-fi
-python -B $SCRIPTDIR/main.py $@
+VERSION = '0.8'
