@@ -15,19 +15,15 @@
 import os
 import textwrap
 import unittest
-# import StringIO
-
-# import main
 import main_test
 import parser_test
 
-from host import Host
-
-
-PATH_TO_THIS_MODULE = os.path.abspath(__file__)
+from pyn.host import Host
 
 
 #def run_under_coverage(argv, host=None):
+#    import StringIO
+#    import main
 #    host = host or Host()
 #    host.stdout = StringIO.StringIO()
 #    host.stderr = StringIO.StringIO()
@@ -36,7 +32,8 @@ PATH_TO_THIS_MODULE = os.path.abspath(__file__)
 
 
 def path_to_main():
-    path = os.path.join(os.path.dirname(PATH_TO_THIS_MODULE), 'main.py')
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                        '..', 'main.py'))
     return path.replace(' ', '\\ ')
 
 

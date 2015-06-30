@@ -13,16 +13,21 @@
 # limitations under the License.
 
 import cPickle
+import os
 import sys
 
-from analyzer import NinjaAnalyzer
-from args import parse_args
-from builder import Builder
-from host import Host
-from parser import parse
-from pyn_exceptions import PynException
-from tools import tool_names, list_tools, run_tool
-from var_expander import expand_vars
+d = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+if not d in sys.path:
+    sys.path.append(d)
+
+from pyn.analyzer import NinjaAnalyzer
+from pyn.args import parse_args
+from pyn.builder import Builder
+from pyn.host import Host
+from pyn.parser import parse
+from pyn.pyn_exceptions import PynException
+from pyn.tools import tool_names, list_tools, run_tool
+from pyn.var_expander import expand_vars
 
 
 VERSION = '0.7'

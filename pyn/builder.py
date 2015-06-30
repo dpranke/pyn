@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pyn_exceptions import PynException
-from stats import Stats
-from pool import Pool, Empty
-from printer import Printer
+from pyn.pyn_exceptions import PynException
+from pyn.stats import Stats
+from pyn.pool import Pool, Empty
+from pyn.printer import Printer
 
 
 class Builder(object):
